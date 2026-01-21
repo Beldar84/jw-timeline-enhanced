@@ -26,8 +26,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ player, onSelectCard, placement
   const title = disabled ? "Esperando tu turno..." : titleText;
   
   const containerClasses = `flex justify-start items-center space-x-2 md:space-x-4 p-2 landscape:space-x-1 landscape:p-1 rounded-lg transition-all duration-300 min-w-max ${placementMode && !disabled ? 'bg-yellow-400/20' : ''}`;
-  
-  const handContainerStyle = disabled ? { opacity: 0.6, pointerEvents: 'none' as const } : {};
+
+  // Permitir scroll y zoom incluso cuando disabled (las cartas manejan el onClick)
+  const handContainerStyle = disabled ? { opacity: 0.7 } : {};
 
   return (
     <div>

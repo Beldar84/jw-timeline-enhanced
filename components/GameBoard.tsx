@@ -68,8 +68,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
   };
 
   const handleCardClick = (card: CardType, element: HTMLDivElement) => {
-    if (!canInteract) return;
     soundService.playClick();
+    // Siempre permitir zoom de cartas propias, incluso cuando no es tu turno
+    if (!canInteract) {
+      setZoomedCard(card);
+      return;
+    }
     if (selectedTimelineIndex !== null) {
       setSelectedCard({ card, element });
     } else {
@@ -97,8 +101,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
     
   const handPlayer = gameMode === 'local' || gameMode === 'ai' ? currentPlayer : localPlayer;
 
-  // Matching dimensions from Card.tsx
-  const containerDimensions = "w-[150px] h-[219px] landscape:w-[120px] landscape:h-[176px] md:w-[260px] md:h-[380px]";
+  // Dimensiones reducidas para móvil para evitar desbordamiento
+  const containerDimensions = "w-[100px] h-[146px] landscape:w-[90px] landscape:h-[132px] md:w-[260px] md:h-[380px]";
 
   return (
     <div className="space-y-1 md:space-y-2 flex flex-col h-full w-full overflow-y-auto overflow-x-hidden">
@@ -121,7 +125,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
             {finalMessage}
         </div>
         <div className="flex justify-between items-start">
-            <div className="flex items-center space-x-2 md:space-x-4">
+            <div className="flex items-center space-x-1 md:space-x-4 landscape:space-x-1">
                 <div id="discard-pile-container" ref={discardRef} className={containerDimensions}>
                   {discardPile.length > 0 ? (
                     <Card card={discardPile[0]} showYear={true} onClick={() => handleZoomCard(discardPile[0])} />
@@ -130,14 +134,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
                   )}
                 </div>
                 {gameMode === 'online' && (
-                  <div className="text-left">
+                  <div className="text-left hidden md:block landscape:hidden md:landscape:block">
                       <h3 className="text-base md:text-xl font-bold text-yellow-300 landscape:text-sm md:landscape:text-base">Descartes</h3>
                       <p className="text-sm md:text-base landscape:text-xs md:landscape:text-sm">{discardPile.length} {discardPile.length === 1 ? 'carta' : 'cartas'}</p>
                   </div>
                 )}
             </div>
-            <div className="flex items-center space-x-2 md:space-x-4">
-                <div className="text-right">
+            <div className="flex items-center space-x-1 md:space-x-4 landscape:space-x-1">
+                <div className="text-right hidden md:block landscape:hidden md:landscape:block">
                     <h3 className="text-base md:text-xl font-bold text-yellow-300 landscape:text-sm md:landscape:text-base">Mazo</h3>
                     <p className="text-sm md:text-base landscape:text-xs md:landscape:text-sm">{deckSize} cartas</p>
                 </div>
