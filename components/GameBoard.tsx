@@ -68,15 +68,17 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
   };
 
   const handleCardClick = (card: CardType, element: HTMLDivElement) => {
-    soundService.playClick();
     // Siempre permitir zoom de cartas propias, incluso cuando no es tu turno
     if (!canInteract) {
+      soundService.playCardFlip();
       setZoomedCard(card);
       return;
     }
     if (selectedTimelineIndex !== null) {
+      soundService.playClick();
       setSelectedCard({ card, element });
     } else {
+      soundService.playCardFlip();
       setZoomedCard(card);
     }
   };
@@ -86,7 +88,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
   };
   
   const handleZoomCard = (card: CardType) => {
-    soundService.playClick();
+    soundService.playCardFlip();
     setZoomedCard(card);
   };
 
@@ -152,7 +154,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
         </div>
       </div>
       
-      <div className="overflow-x-auto p-2 md:p-4 bg-black/30 rounded-lg shrink-0 flex-grow flex flex-col justify-center">
+      <div className="overflow-x-auto p-2 md:p-6 bg-black/30 rounded-lg shrink-0 flex-grow flex flex-col justify-center min-h-[200px] md:min-h-[350px]">
           <Timeline 
             cards={timeline} 
             onSelectSlot={handleSelectSlot}

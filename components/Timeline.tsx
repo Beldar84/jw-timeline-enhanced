@@ -21,10 +21,10 @@ interface PlacementSlotProps {
 
 const PlacementSlot = forwardRef<HTMLDivElement, PlacementSlotProps>(({ id, onClick, isSelected, disabled }, ref) => {
     // Updated dimensions to match Card.tsx
-    // Base: w-16, h-[219px]
+    // Base: w-16, h-[219px] (móvil)
     // Landscape: h-[176px]
-    // Desktop: w-24, h-[380px]
-    const baseStyle = 'group w-16 h-[219px] landscape:h-[176px] md:w-24 md:h-[380px] flex-shrink-0 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-600 transition-all duration-300';
+    // Desktop: w-32, h-[450px] (más grande en PC)
+    const baseStyle = 'group w-16 h-[219px] landscape:h-[176px] md:w-32 md:h-[450px] flex-shrink-0 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-600 transition-all duration-300';
     const selectedStyle = isSelected ? 'bg-yellow-400/30 border-yellow-400 scale-105' : 'bg-gray-700/50';
     const hoverStyle = !disabled ? 'hover:bg-yellow-400/20 hover:border-yellow-400 cursor-pointer' : 'cursor-not-allowed';
     
