@@ -128,7 +128,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
             <div className="flex items-center space-x-1 md:space-x-4 landscape:space-x-1">
                 <div id="discard-pile-container" ref={discardRef} className={containerDimensions}>
                   {discardPile.length > 0 ? (
-                    <Card card={discardPile[0]} showYear={true} onClick={() => handleZoomCard(discardPile[0])} />
+                    <Card card={discardPile[0]} showYear={true} onClick={() => handleZoomCard(discardPile[0])} className="w-full h-full" />
                   ) : (
                     <div className="w-full h-full rounded-lg border-2 border-dashed border-gray-600 bg-black/20 flex items-center justify-center text-gray-500 text-xs md:text-base">Vacío</div>
                   )}
@@ -146,7 +146,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
                     <p className="text-sm md:text-base landscape:text-xs md:landscape:text-sm">{deckSize} cartas</p>
                 </div>
                 <div id="deck-container" ref={deckRef} className={containerDimensions}>
-                   {deckSize > 0 && <Card card={{id: -1, name: 'deck', year: 0, imageUrl: CARD_BACK_URL}} isFaceDown={true} />}
+                   {deckSize > 0 && <Card card={{id: -1, name: 'deck', year: 0, imageUrl: CARD_BACK_URL}} isFaceDown={true} className="w-full h-full" />}
                 </div>
             </div>
         </div>

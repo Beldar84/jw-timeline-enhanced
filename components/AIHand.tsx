@@ -15,6 +15,9 @@ const AIHand: React.FC<AIHandProps> = ({ player, showTitle = true, isOpponent = 
 
   // Si es oponente en modo online, mostrar grupo compacto de cartas con número
   if (isOpponent) {
+    // Mostrar el número real de cartas que tiene (1, 2 o 3 como máximo visualmente)
+    const cardsToShow = Math.min(player.hand.length, 3);
+
     return (
       <div className="relative inline-block">
         {showTitle && (
@@ -22,17 +25,21 @@ const AIHand: React.FC<AIHandProps> = ({ player, showTitle = true, isOpponent = 
             {title}
           </h3>
         )}
-        <div className="relative inline-block">
+        <div className="relative inline-block pt-4">
+          {/* Badge con número de cartas - ARRIBA de las cartas */}
+          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black font-bold rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-sm md:text-lg shadow-lg border-2 border-yellow-300 landscape:w-6 landscape:h-6 landscape:text-xs z-50">
+            {player.hand.length}
+          </div>
           {/* Grupo de cartas apiladas */}
           <div className="flex items-center">
-            {/* Mostrar máximo 3 cartas en el grupo visual */}
-            {[...Array(Math.min(3, player.hand.length))].map((_, index) => (
+            {/* Mostrar el número real de cartas (1, 2 o 3) */}
+            {[...Array(cardsToShow)].map((_, index) => (
               <div
                 key={`card-stack-${index}`}
                 style={{
                   marginLeft: index === 0 ? 0 : '-50px',
                   transform: `rotate(${(index - 1) * 3}deg)`,
-                  zIndex: index
+                  zIndex: 10 + index
                 }}
                 className="landscape:ml-0 landscape:-ml-[40px]"
               >
@@ -42,10 +49,6 @@ const AIHand: React.FC<AIHandProps> = ({ player, showTitle = true, isOpponent = 
                 />
               </div>
             ))}
-          </div>
-          {/* Badge con número de cartas */}
-          <div className="absolute -top-2 -right-2 bg-yellow-500 text-black font-bold rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-sm md:text-lg shadow-lg border-2 border-yellow-300 landscape:w-6 landscape:h-6 landscape:text-xs">
-            {player.hand.length}
           </div>
         </div>
       </div>

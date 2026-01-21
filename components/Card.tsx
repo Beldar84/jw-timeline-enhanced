@@ -23,7 +23,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({ card, isFaceDown, onClick,
   if (isZoomed) {
     if (!card) return null;
     return (
-      <div className="relative h-[80vh] max-w-[90vw] aspect-[500/734] rounded-lg shadow-2xl overflow-hidden border-2 border-yellow-300/50 bg-gray-900">
+      <div className="relative h-[85vh] max-w-[90vw] aspect-[500/734] rounded-lg shadow-2xl overflow-hidden border-2 border-yellow-300/50 bg-gray-900 mb-4">
         <img
           src={card.imageUrl}
           alt={card.name}
@@ -43,18 +43,19 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({ card, isFaceDown, onClick,
             minHeight: '100%',
           }}
         />
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 pt-24 text-center">
-          <h3 className="font-bold text-3xl text-white leading-tight drop-shadow-lg">{card.name}</h3>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-4 pt-20 pb-6 text-center">
+          <h3 className="font-bold text-2xl md:text-3xl text-white leading-tight drop-shadow-lg px-2">{card.name}</h3>
         </div>
       </div>
     );
   }
 
-  // Increased dimensions to improve visibility
-  // Base: w-[150px] h-[219px]
-  // Landscape: w-[120px] h-[176px]
-  // Desktop (md): w-[260px] h-[380px]
-  const cardBaseStyle = "relative w-[150px] h-[219px] landscape:w-[120px] landscape:h-[176px] md:w-[260px] md:h-[380px] flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600";
+  // Dimensiones de la carta - se adaptan al contenedor si tiene clase custom
+  // Por defecto: Base w-[150px] h-[219px], Landscape w-[120px] h-[176px], Desktop w-[260px] h-[380px]
+  const hasCustomSize = className.includes('w-') || className.includes('h-');
+  const cardBaseStyle = hasCustomSize
+    ? "relative w-full h-full flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600"
+    : "relative w-[150px] h-[219px] landscape:w-[120px] landscape:h-[176px] md:w-[260px] md:h-[380px] flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600";
   const selectableStyle = onClick ? "cursor-pointer hover:scale-105 hover:shadow-2xl hover:border-yellow-400" : "";
   
   if (isPlaceholder || isFaceDown) {
