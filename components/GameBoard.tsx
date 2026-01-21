@@ -105,7 +105,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
   const containerDimensions = "w-[100px] h-[146px] landscape:w-[90px] landscape:h-[132px] md:w-[260px] md:h-[380px]";
 
   return (
-    <div className="space-y-1 md:space-y-2 flex flex-col h-full w-full overflow-y-auto overflow-x-hidden">
+    <div className="space-y-1 md:space-y-2 flex flex-col h-full w-full overflow-y-auto overflow-x-hidden pb-8 md:pb-4">
       {gameMode === 'online' && localPlayer && (
         <div className="bg-black/30 p-2 rounded-lg flex-shrink-0 landscape:py-1 landscape:px-2">
           <h3 className="text-center text-yellow-200 font-semibold mb-2 text-sm md:text-base landscape:hidden">Oponentes</h3>
@@ -162,7 +162,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
           />
       </div>
 
-      <div ref={handRef} id={handPlayer?.isAI ? 'ai-hand-container' : 'player-hand-container'} className="bg-black/30 p-2 md:p-4 rounded-lg flex-shrink-0 landscape:py-1 landscape:px-2 md:landscape:p-4">
+      <div ref={handRef} id={handPlayer?.isAI ? 'ai-hand-container' : 'player-hand-container'} className="bg-black/30 p-2 md:p-4 rounded-lg flex-shrink-0 landscape:py-1 landscape:px-2 md:landscape:p-4 mb-4">
         {handPlayer ? (
           handPlayer.isAI ? (
             <AIHand player={handPlayer} showTitle={true} />

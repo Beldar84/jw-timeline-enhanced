@@ -35,7 +35,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({ player, onSelectCard, placement
       <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-4 text-center text-yellow-200 landscape:text-sm landscape:mb-1 md:landscape:text-base md:landscape:mb-2">
         {title}
       </h3>
-      <div style={handContainerStyle} className="overflow-x-auto pb-2 landscape:pb-1">
+      <div style={handContainerStyle} className="overflow-x-auto pb-4 landscape:pb-2 md:pb-2">
         <div className={containerClasses}>
           {player.hand.length > 0 ? (
             player.hand.map((card) => {
