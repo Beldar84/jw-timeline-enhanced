@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { statsService, PlayerStats } from '../services/statsService';
+import { statsService, PlayerStats, DeckStats } from '../services/statsService';
 import { deckService } from '../services/deckService';
 import { soundService } from '../services/soundService';
 
@@ -246,7 +246,8 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ onClose }) => {
                   <p className="text-sm mt-2">¡Comienza a jugar para ver tus estadísticas por mazo!</p>
                 </div>
               ) : (
-                Object.entries(stats.deckStats).map(([deckId, deckStats]) => {
+                Object.entries(stats.deckStats).map(([deckId, deckStatsData]) => {
+                  const deckStats = deckStatsData as DeckStats;
                   const deck = deckService.getDeckById(deckId);
                   if (!deck) return null;
 

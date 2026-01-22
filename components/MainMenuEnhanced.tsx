@@ -1,15 +1,30 @@
 import React, { useState } from 'react';
 import RulesModal from './RulesModal';
 import { soundService } from '../services/soundService';
+import { profileService } from '../services/profileService';
 
 interface MainMenuEnhancedProps {
   onSelectMode: (mode: 'local' | 'ai' | 'online') => void;
   onShowStats: () => void;
   onShowTutorial: () => void;
+  onShowProfile: () => void;
+  onShowLeaderboard: () => void;
+  onShowSoundSettings: () => void;
 }
 
-const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({ onSelectMode, onShowStats, onShowTutorial }) => {
+const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
+  onSelectMode,
+  onShowStats,
+  onShowTutorial,
+  onShowProfile,
+  onShowLeaderboard,
+  onShowSoundSettings,
+}) => {
   const [showRules, setShowRules] = useState(false);
+  const [isMuted, setIsMuted] = useState(soundService.isMuted());
+
+  // Get player info for display
+  const profile = profileService.getProfileSummary();
 
   const handleModeSelect = (mode: 'local' | 'ai' | 'online') => {
     soundService.playClick();
@@ -31,9 +46,47 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({ onSelectMode, onSho
     onShowTutorial();
   };
 
+  const handleShowProfile = () => {
+    soundService.playClick();
+    onShowProfile();
+  };
+
+  const handleShowLeaderboard = () => {
+    soundService.playClick();
+    onShowLeaderboard();
+  };
+
+  const handleShowSoundSettings = () => {
+    soundService.playClick();
+    onShowSoundSettings();
+  };
+
+  const handleQuickMute = () => {
+    const muted = soundService.toggleMute();
+    setIsMuted(muted);
+    if (!muted) {
+      soundService.playClick();
+    }
+  };
+
   return (
     <>
-      <div className="flex flex-col items-center justify-center bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm">
+      <div className="flex flex-col items-center justify-center bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm relative">
+        {/* Player Info Bar */}
+        <div
+          onClick={handleShowProfile}
+          className="w-full max-w-sm mb-4 p-3 bg-gradient-to-r from-indigo-600/30 to-purple-600/30 rounded-lg border border-indigo-500/30 cursor-pointer hover:border-indigo-400/50 transition"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{profile.level.icon}</span>
+            <div className="flex-1">
+              <p className="font-bold text-white">{profile.name}</p>
+              <p className="text-xs text-indigo-300">{profile.level.title} • Nivel {profile.level.level}</p>
+            </div>
+            <span className="text-gray-400 text-sm">✏️</span>
+          </div>
+        </div>
+
         {/* Main Game Modes */}
         <div className="w-full max-w-sm space-y-4">
           <button
@@ -56,7 +109,7 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({ onSelectMode, onSho
           </button>
         </div>
 
-        {/* Secondary Options - Two columns */}
+        {/* Secondary Options - Grid */}
         <div className="w-full max-w-sm mt-6 grid grid-cols-2 gap-3">
           <button
             onClick={handleShowStats}
@@ -65,10 +118,22 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({ onSelectMode, onSho
             📊 Estadísticas
           </button>
           <button
+            onClick={handleShowLeaderboard}
+            className="px-4 py-3 bg-amber-600 text-sm md:text-base font-bold rounded-lg hover:bg-amber-700 transition transform hover:scale-105"
+          >
+            🏆 Clasificación
+          </button>
+          <button
             onClick={handleShowTutorial}
             className="px-4 py-3 bg-cyan-600 text-sm md:text-base font-bold rounded-lg hover:bg-cyan-700 transition transform hover:scale-105"
           >
             🎓 Tutorial
+          </button>
+          <button
+            onClick={handleShowSoundSettings}
+            className="px-4 py-3 bg-pink-600 text-sm md:text-base font-bold rounded-lg hover:bg-pink-700 transition transform hover:scale-105"
+          >
+            🔊 Sonido
           </button>
         </div>
 
@@ -81,6 +146,19 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({ onSelectMode, onSho
             📖 Reglas
           </button>
         </div>
+
+        {/* Quick Mute Button - Bottom corner */}
+        <button
+          onClick={handleQuickMute}
+          className={`absolute -bottom-12 right-0 p-3 rounded-full transition-all ${
+            isMuted
+              ? 'bg-red-600/80 hover:bg-red-700'
+              : 'bg-gray-700/80 hover:bg-gray-600'
+          }`}
+          title={isMuted ? 'Activar sonido' : 'Silenciar'}
+        >
+          <span className="text-xl">{isMuted ? '🔇' : '🔊'}</span>
+        </button>
       </div>
 
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}

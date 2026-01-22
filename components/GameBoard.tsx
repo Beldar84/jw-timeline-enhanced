@@ -24,9 +24,27 @@ interface GameBoardProps {
   isAnimating: boolean;
   onPlaceCardOnline?: (card: CardType, timelineIndex: number) => void;
   onExitGame?: () => void;
+  isStudyMode?: boolean;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline, onAttemptPlaceCard, deckSize, topOfDeck, discardPile, message, revealedAICard, gameMode, localPlayer, hidingCardId, isAnimating, onPlaceCardOnline, onExitGame }) => {
+const GameBoard: React.FC<GameBoardProps> = ({
+  players,
+  currentPlayer,
+  timeline,
+  onAttemptPlaceCard,
+  deckSize,
+  topOfDeck,
+  discardPile,
+  message,
+  revealedAICard,
+  gameMode,
+  localPlayer,
+  hidingCardId,
+  isAnimating,
+  onPlaceCardOnline,
+  onExitGame,
+  isStudyMode = false,
+}) => {
   const [selectedTimelineIndex, setSelectedTimelineIndex] = useState<number | null>(null);
   const [selectedSlotElement, setSelectedSlotElement] = useState<HTMLElement | null>(null);
   const [selectedCard, setSelectedCard] = useState<{ card: CardType, element: HTMLElement } | null>(null);
@@ -87,7 +105,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
   const handleCloseZoom = () => {
     setZoomedCard(null);
   };
-  
+
   const handleZoomCard = (card: CardType) => {
     soundService.playCardFlip();
     setZoomedCard(card);
@@ -115,7 +133,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
   const finalMessage = selectedTimelineIndex !== null && canInteract
     ? "Ahora selecciona una carta de tu mano para colocarla."
     : dynamicMessage;
-    
+
   const handPlayer = gameMode === 'local' || gameMode === 'ai' ? currentPlayer : localPlayer;
 
   // Dimensiones reducidas para móvil para evitar desbordamiento
@@ -132,6 +150,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
           ✕ Salir
         </button>
       )}
+
+      {/* Study Mode Indicator */}
+      {isStudyMode && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 bg-green-600/90 text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg flex items-center gap-2">
+          📚 Modo Estudio
+        </div>
+      )}
+
       {gameMode === 'online' && localPlayer && (
         <div className="bg-black/30 p-2 rounded-lg flex-shrink-0 landscape:py-1 landscape:px-2">
           <h3 className="text-center text-yellow-200 font-semibold mb-2 text-sm md:text-base landscape:hidden">Oponentes</h3>
@@ -177,10 +203,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
             </div>
         </div>
       </div>
-      
+
       <div className="overflow-x-auto p-2 md:p-6 bg-black/30 rounded-lg shrink-0 flex-grow flex flex-col justify-center min-h-[200px] md:min-h-[350px]">
-          <Timeline 
-            cards={timeline} 
+          <Timeline
+            cards={timeline}
             onSelectSlot={handleSelectSlot}
             selectedSlotIndex={selectedTimelineIndex}
             onCardClick={handleZoomCard}
@@ -199,6 +225,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
               placementMode={selectedTimelineIndex !== null}
               disabled={!canInteract}
               hidingCardId={hidingCardId}
+              isStudyMode={isStudyMode}
             />
           )
         ) : null}
