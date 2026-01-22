@@ -3,6 +3,17 @@ import { soundService } from '../services/soundService';
 import { profileService } from '../services/profileService';
 import { AI_DIFFICULTIES, AIDifficulty } from '../types';
 
+// Nombres bíblicos para los bots de IA
+const BIBLICAL_NAMES = [
+  'David', 'Abigail', 'Ruth', 'Pablo', 'Sara', 'Abraham', 'Moisés', 'María',
+  'José', 'Rebeca', 'Isaac', 'Raquel', 'Jacob', 'Lea', 'Samuel', 'Ana',
+  'Daniel', 'Ester', 'Elías', 'Eliseo', 'Noé', 'Jonás', 'Pedro', 'Juan'
+];
+
+function getRandomBiblicalName(): string {
+  return BIBLICAL_NAMES[Math.floor(Math.random() * BIBLICAL_NAMES.length)];
+}
+
 interface AISetupProps {
   onStartGame: (playerNames: string[], difficulty: AIDifficulty, isStudyMode: boolean) => void;
 }
@@ -33,7 +44,8 @@ const AISetup: React.FC<AISetupProps> = ({ onStartGame }) => {
         profileService.createProfile(trimmedPlayerName);
       }
       profileService.updateLastPlayed();
-      onStartGame([trimmedPlayerName, 'IA 1'], difficulty, isStudyMode);
+      const aiName = getRandomBiblicalName();
+      onStartGame([trimmedPlayerName, aiName], difficulty, isStudyMode);
     }
   };
 

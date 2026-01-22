@@ -4,7 +4,7 @@ import { soundService } from '../services/soundService';
 import { profileService } from '../services/profileService';
 
 interface MainMenuEnhancedProps {
-  onSelectMode: (mode: 'local' | 'ai' | 'online') => void;
+  onSelectMode: (mode: 'local' | 'ai' | 'online' | 'study') => void;
   onShowStats: () => void;
   onShowTutorial: () => void;
   onShowProfile: () => void;
@@ -26,7 +26,7 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
   // Get player info for display
   const profile = profileService.getProfileSummary();
 
-  const handleModeSelect = (mode: 'local' | 'ai' | 'online') => {
+  const handleModeSelect = (mode: 'local' | 'ai' | 'online' | 'study') => {
     soundService.playClick();
     onSelectMode(mode);
   };
@@ -106,6 +106,12 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
             className="w-full px-6 py-3 md:px-8 md:py-4 bg-purple-600 text-lg md:text-xl font-bold rounded-lg hover:bg-purple-700 transition transform hover:scale-105 shadow-lg"
           >
             🌐 Jugar online
+          </button>
+          <button
+            onClick={() => handleModeSelect('study')}
+            className="w-full px-6 py-3 md:px-8 md:py-4 bg-emerald-600 text-lg md:text-xl font-bold rounded-lg hover:bg-emerald-700 transition transform hover:scale-105 shadow-lg"
+          >
+            📚 Modo Estudio
           </button>
         </div>
 
