@@ -409,6 +409,15 @@ const AppEnhanced: React.FC = () => {
     setStats(statsService.loadStats());
   };
 
+  const handleExitGame = () => {
+    // Si es online, desconectar y notificar a otros jugadores
+    if (gameMode === 'online' && onlineGameState) {
+      gameService.disconnect();
+    }
+    // Volver al menú
+    handleRestart();
+  };
+
   const handleJoinLobby = async (playerName: string, gameId?: string) => {
     setLocalPlayerId(null);
     if (gameId) {
@@ -501,6 +510,7 @@ const AppEnhanced: React.FC = () => {
                 localPlayer={localPlayer}
                 isAnimating={!!animation}
                 revealedAICard={null}
+                onExitGame={handleExitGame}
               />
             ) : <div>Sincronizando partida online...</div>
         }
@@ -518,6 +528,7 @@ const AppEnhanced: React.FC = () => {
             gameMode={gameMode}
             hidingCardId={hidingCardId}
             isAnimating={!!animation}
+            onExitGame={handleExitGame}
           />
         ) : <div>Cargando...</div>;
       case GamePhase.TRANSITION:
