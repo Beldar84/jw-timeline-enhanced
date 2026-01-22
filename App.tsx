@@ -545,7 +545,7 @@ const AppEnhanced: React.FC = () => {
   const showLogo = [GamePhase.MENU, GamePhase.SETUP, GamePhase.LOBBY].includes(gamePhase) && !showDeckSelector;
 
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center p-2 md:p-4 text-white font-sans overflow-hidden">
+    <div className="w-screen h-screen flex flex-col items-center justify-center p-2 md:p-4 text-white font-sans overflow-auto">
       {showPlayerStatus && currentPlayer && (
         <PlayerStatus players={players} currentPlayerId={currentPlayer.id} discardPileCount={discardPile.length} />
       )}
