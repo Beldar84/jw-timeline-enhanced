@@ -4,6 +4,7 @@ import { GamePhase, Card as CardType, Player, GameState, OnlineGamePhase, AIDiff
 import { deckService } from './services/deckService';
 import { statsService, PlayerStats, Achievement } from './services/statsService';
 import { leaderboardService } from './services/leaderboardService';
+import { profileService } from './services/profileService';
 import { LOGO_URL, CARD_BACK_URL } from './data/cards';
 import { shuffleArray } from './utils/shuffle';
 import GameSetup from './components/GameSetup';
@@ -432,19 +433,47 @@ const AppEnhanced: React.FC = () => {
     statsService.startSession(selectedDeckId, studyMode);
   };
 
-  const handleSelectMode = (mode: 'local' | 'ai' | 'online') => {
-    setGameMode(mode);
-    if (mode === 'online') {
-      setGamePhase(GamePhase.SETUP);
-    } else {
+  const handleSelectMode = (mode: 'local' | 'ai' | 'online' | 'study') => {
+    if (mode === 'study') {
+      // Study mode is a special case of AI mode with study enabled
+      setGameMode('ai');
+      setIsStudyMode(true);
       setShowDeckSelector(true);
+    } else {
+      setGameMode(mode);
+      setIsStudyMode(false);
+      if (mode === 'online') {
+        setGamePhase(GamePhase.SETUP);
+      } else {
+        setShowDeckSelector(true);
+      }
     }
   };
 
   const handleDeckSelected = (deckId: string) => {
     setSelectedDeckId(deckId);
     setShowDeckSelector(false);
-    setGamePhase(GamePhase.SETUP);
+
+    // If study mode was pre-selected, start the game directly
+    if (isStudyMode && gameMode === 'ai') {
+      // Get player name from profile
+      const profile = profileService.getProfile();
+      const playerName = profile.name || 'Estudiante';
+
+      // Get a random biblical name for the AI
+      const biblicalNames = [
+        'David', 'Abigail', 'Ruth', 'Pablo', 'Sara', 'Abraham', 'Moisés', 'María',
+        'José', 'Rebeca', 'Isaac', 'Raquel', 'Jacob', 'Lea', 'Samuel', 'Ana'
+      ];
+      const aiName = biblicalNames[Math.floor(Math.random() * biblicalNames.length)];
+
+      // Start game with easy difficulty in study mode
+      setTimeout(() => {
+        startGame([playerName, aiName], true, 'easy', true);
+      }, 100);
+    } else {
+      setGamePhase(GamePhase.SETUP);
+    }
   };
 
   const handleStartLocalGame = (playerNames: string[]) => {
