@@ -1,4 +1,6 @@
 // Service for tracking player statistics and achievements
+import { deckService } from './deckService';
+
 export interface PlayerStats {
   gamesPlayed: number;
   gamesWon: number;
@@ -38,6 +40,7 @@ export interface GameSession {
   cardsPlaced: number;
   correctPlacements: number;
   incorrectPlacements: number;
+  isStudyMode?: boolean;
 }
 
 const STORAGE_KEY = 'jw_timeline_stats';
@@ -110,13 +113,14 @@ class StatsService {
   }
 
   // Start a new game session
-  startSession(deckId: string): void {
+  startSession(deckId: string, isStudyMode: boolean = false): void {
     this.currentSession = {
       startTime: Date.now(),
       deckId,
       cardsPlaced: 0,
       correctPlacements: 0,
       incorrectPlacements: 0,
+      isStudyMode,
     };
   }
 
@@ -135,6 +139,12 @@ class StatsService {
   // End the current session and update stats
   endSession(playerWon: boolean): PlayerStats {
     if (!this.currentSession) {
+      return this.loadStats();
+    }
+
+    // Don't count study mode games in stats
+    if (this.currentSession.isStudyMode) {
+      this.currentSession = null;
       return this.loadStats();
     }
 
@@ -228,8 +238,23 @@ class StatsService {
     if (accuracy >= 80) this.unlockAchievement(stats, 'accuracy_80', now);
     if (accuracy >= 90) this.unlockAchievement(stats, 'accuracy_90', now);
 
-    // All decks played
-    // This will be checked later when we have multiple decks
+    // All decks played - check if player has played at least one game with each deck
+    this.checkAllDecksAchievement(stats, now);
+  }
+
+  // Check if player has played all decks
+  private checkAllDecksAchievement(stats: PlayerStats, timestamp: number): void {
+    const allDecks = deckService.getAllDecks();
+    const playedDeckIds = Object.keys(stats.deckStats).filter(
+      deckId => stats.deckStats[deckId].gamesPlayed > 0
+    );
+
+    // Check if all deck IDs are in the played list
+    const allDecksPlayed = allDecks.every(deck => playedDeckIds.includes(deck.id));
+
+    if (allDecksPlayed && allDecks.length > 0) {
+      this.unlockAchievement(stats, 'all_decks', timestamp);
+    }
   }
 
   private unlockAchievement(stats: PlayerStats, achievementId: string, timestamp: number): void {
@@ -262,6 +287,18 @@ class StatsService {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // Get decks played count for UI
+  getDecksPlayedCount(stats: PlayerStats): { played: number; total: number } {
+    const allDecks = deckService.getAllDecks();
+    const playedDeckIds = Object.keys(stats.deckStats).filter(
+      deckId => stats.deckStats[deckId].gamesPlayed > 0
+    );
+    return {
+      played: playedDeckIds.length,
+      total: allDecks.length,
+    };
   }
 }
 
