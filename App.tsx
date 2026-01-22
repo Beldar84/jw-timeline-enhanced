@@ -1,9 +1,11 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { GamePhase, Card as CardType, Player, GameState, OnlineGamePhase } from './types';
+import { GamePhase, Card as CardType, Player, GameState, OnlineGamePhase, AIDifficulty, AI_DIFFICULTIES } from './types';
 import { deckService } from './services/deckService';
 import { statsService, PlayerStats, Achievement } from './services/statsService';
+import { leaderboardService } from './services/leaderboardService';
 import { LOGO_URL, CARD_BACK_URL } from './data/cards';
+import { shuffleArray } from './utils/shuffle';
 import GameSetup from './components/GameSetup';
 import GameBoard from './components/GameBoard';
 import GameOver from './components/GameOver';
@@ -17,24 +19,51 @@ import DeckSelector from './components/DeckSelector';
 import StatsPanel from './components/StatsPanel';
 import Tutorial, { shouldShowTutorial } from './components/Tutorial';
 import AchievementNotification from './components/AchievementNotification';
+import SoundControls from './components/SoundControls';
+import ProfilePanel from './components/ProfilePanel';
+import LeaderboardPanel from './components/LeaderboardPanel';
 import { gameService } from './services/gameService';
 import { soundService } from './services/soundService';
 import AnimationLayerEnhanced, { AnimationInfo } from './components/AnimationLayerEnhanced';
 
-const shuffleArray = <T,>(array: T[]): T[] => {
-  return [...array].sort(() => Math.random() - 0.5);
-};
+// Register Service Worker for offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('SW registered:', registration.scope);
+
+        // Pre-cache card images
+        const cardUrls = deckService.getDefaultDeck().cards.map(card => card.imageUrl);
+        if (registration.active) {
+          registration.active.postMessage({
+            type: 'CACHE_CARDS',
+            urls: cardUrls,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log('SW registration failed:', error);
+      });
+  });
+}
 
 interface PlayerStatusProps {
   players: Player[];
   currentPlayerId: string;
   discardPileCount: number;
+  isStudyMode?: boolean;
 }
 
-const PlayerStatus: React.FC<PlayerStatusProps> = ({ players, currentPlayerId, discardPileCount }) => {
+const PlayerStatus: React.FC<PlayerStatusProps> = ({ players, currentPlayerId, discardPileCount, isStudyMode }) => {
   return (
     <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-black/50 p-2 md:p-3 rounded-lg z-10">
       <h3 className="text-base md:text-lg font-bold text-yellow-200 mb-2">Jugadores</h3>
+      {isStudyMode && (
+        <div className="mb-2 px-2 py-1 bg-green-600/30 rounded text-xs text-green-300 flex items-center gap-1">
+          📚 Modo Estudio
+        </div>
+      )}
       <ul className="space-y-1">
         {players.map(player => (
           <li key={player.id} className={`text-sm md:text-base transition-colors ${player.id === currentPlayerId ? 'text-yellow-300 font-bold' : 'text-white'}`}>
@@ -56,6 +85,10 @@ const AppEnhanced: React.FC = () => {
   const [gameMode, setGameMode] = useState<'local' | 'ai' | 'online' | null>(null);
   const [selectedDeckId, setSelectedDeckId] = useState<string>('complete');
 
+  // AI and Study Mode settings
+  const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('normal');
+  const [isStudyMode, setIsStudyMode] = useState(false);
+
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [timeline, setTimeline] = useState<CardType[]>([]);
@@ -75,16 +108,18 @@ const AppEnhanced: React.FC = () => {
   const [localPlayerId, setLocalPlayerId] = useState<string | null>(null);
   const localPlayer = useMemo(() => onlineGameState?.players.find(p => p.id === localPlayerId) || null, [onlineGameState, localPlayerId]);
 
-  // New state for enhanced features
+  // Enhanced features state
   const [showDeckSelector, setShowDeckSelector] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showSoundSettings, setShowSoundSettings] = useState(false);
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [stats, setStats] = useState<PlayerStats>(statsService.loadStats());
 
   // Show tutorial on first launch (only on desktop)
   useEffect(() => {
-    // Use matchMedia for more reliable mobile detection
     const isMobile = window.matchMedia('(max-width: 767px)').matches;
     if (shouldShowTutorial() && gamePhase === GamePhase.MENU && !isMobile) {
       setShowTutorial(true);
@@ -114,8 +149,10 @@ const AppEnhanced: React.FC = () => {
   }, [currentPlayerIndex, players, gameMode]);
 
   const handlePlacementResult = (player: Player, card: CardType, isCorrect: boolean, timelineIndex: number) => {
-    // Record placement in stats
-    statsService.recordPlacement(isCorrect);
+    // Record placement in stats (only if not study mode)
+    if (!isStudyMode) {
+      statsService.recordPlacement(isCorrect);
+    }
 
     const newHand = player.hand.filter(c => c.id !== card.id);
 
@@ -136,6 +173,9 @@ const AppEnhanced: React.FC = () => {
             const updatedStats = statsService.endSession(playerWon);
             setStats(updatedStats);
 
+            // Update leaderboard
+            leaderboardService.updateLeaderboard();
+
             // Check for newly unlocked achievements
             const newlyUnlocked = updatedStats.achievements.find(
               a => a.unlockedAt && (!stats.achievements.find(sa => sa.id === a.id)?.unlockedAt)
@@ -150,6 +190,13 @@ const AppEnhanced: React.FC = () => {
         soundService.playIncorrect();
         const newDiscard = [card, ...discardPile];
         setDiscardPile(newDiscard);
+
+        // In study mode, don't draw a new card (no penalty)
+        if (isStudyMode) {
+          setPlayers(players.map(p => p.id === player.id ? { ...p, hand: newHand } : p));
+          handleNextTurn();
+          return;
+        }
 
         if (deck.length > 0) {
             const [drawnCard, ...remainingDeck] = deck;
@@ -253,8 +300,10 @@ const AppEnhanced: React.FC = () => {
         }
     }
 
-    const MISTAKE_CHANCE = 0.3;
-    const shouldMakeMistake = Math.random() < MISTAKE_CHANCE;
+    // Get error rate from difficulty setting
+    const difficultyConfig = AI_DIFFICULTIES.find(d => d.id === aiDifficulty);
+    const errorRate = difficultyConfig?.errorRate ?? 0.3;
+    const shouldMakeMistake = Math.random() < errorRate;
 
     if (correctMoves.length > 0 && !shouldMakeMistake) {
         return correctMoves[Math.floor(Math.random() * correctMoves.length)];
@@ -344,9 +393,13 @@ const AppEnhanced: React.FC = () => {
     setAiMove(null);
   }, [aiMove, animation, timeline, currentPlayer]);
 
-  const startGame = (playerNames: string[], withAI: boolean) => {
+  const startGame = (playerNames: string[], withAI: boolean, difficulty?: AIDifficulty, studyMode?: boolean) => {
     const selectedDeck = deckService.getDeckById(selectedDeckId);
     if (!selectedDeck) return;
+
+    // Set game options
+    if (difficulty) setAiDifficulty(difficulty);
+    if (studyMode !== undefined) setIsStudyMode(studyMode);
 
     const shuffledDeck = shuffleArray(selectedDeck.cards);
     const initialTimelineCard = shuffledDeck.pop();
@@ -376,7 +429,7 @@ const AppEnhanced: React.FC = () => {
     setGamePhase(GamePhase.PLAYING);
 
     // Start stats session
-    statsService.startSession(selectedDeckId);
+    statsService.startSession(selectedDeckId, studyMode);
   };
 
   const handleSelectMode = (mode: 'local' | 'ai' | 'online') => {
@@ -398,14 +451,14 @@ const AppEnhanced: React.FC = () => {
     startGame(playerNames, false);
   };
 
-  const handleStartAIGame = (playerNames: string[]) => {
-    startGame(playerNames, true);
+  const handleStartAIGame = (playerNames: string[], difficulty: AIDifficulty, studyMode: boolean) => {
+    startGame(playerNames, true, difficulty, studyMode);
   };
 
   const handleRestart = () => {
-    // Primero desconectar para limpiar todo el estado de red
+    // Disconnect for online cleanup
     gameService.disconnect();
-    // Luego limpiar el estado local
+    // Clear local state
     setOnlineGameState(null);
     setLocalPlayerId(null);
     setGameMode(null);
@@ -416,17 +469,17 @@ const AppEnhanced: React.FC = () => {
     setCurrentPlayerIndex(0);
     setWinner(null);
     setMessage(null);
-    // Finalmente cambiar a menú
+    setIsStudyMode(false);
+    setAiDifficulty('normal');
+    // Return to menu
     setGamePhase(GamePhase.MENU);
     setStats(statsService.loadStats());
   };
 
   const handleExitGame = () => {
-    // Si es online, desconectar y notificar a otros jugadores
     if (gameMode === 'online' && onlineGameState) {
       gameService.disconnect();
     }
-    // Volver al menú
     handleRestart();
   };
 
@@ -489,6 +542,9 @@ const AppEnhanced: React.FC = () => {
             onSelectMode={handleSelectMode}
             onShowStats={() => setShowStats(true)}
             onShowTutorial={() => setShowTutorial(true)}
+            onShowProfile={() => setShowProfile(true)}
+            onShowLeaderboard={() => setShowLeaderboard(true)}
+            onShowSoundSettings={() => setShowSoundSettings(true)}
           />
         );
       case GamePhase.SETUP:
@@ -542,6 +598,7 @@ const AppEnhanced: React.FC = () => {
             hidingCardId={hidingCardId}
             isAnimating={!!animation}
             onExitGame={handleExitGame}
+            isStudyMode={isStudyMode}
           />
         ) : <div>Cargando...</div>;
       case GamePhase.TRANSITION:
@@ -560,7 +617,12 @@ const AppEnhanced: React.FC = () => {
   return (
     <div className="w-screen h-screen flex flex-col items-center justify-center p-2 md:p-4 text-white font-sans overflow-auto">
       {showPlayerStatus && currentPlayer && (
-        <PlayerStatus players={players} currentPlayerId={currentPlayer.id} discardPileCount={discardPile.length} />
+        <PlayerStatus
+          players={players}
+          currentPlayerId={currentPlayer.id}
+          discardPileCount={discardPile.length}
+          isStudyMode={isStudyMode}
+        />
       )}
 
       {showLogo && (
@@ -588,6 +650,7 @@ const AppEnhanced: React.FC = () => {
 
       <AnimationLayerEnhanced animation={animation} />
 
+      {/* Modal Panels */}
       {showStats && <StatsPanel onClose={() => setShowStats(false)} />}
       {showTutorial && (
         <Tutorial
@@ -595,6 +658,9 @@ const AppEnhanced: React.FC = () => {
           onSkip={() => setShowTutorial(false)}
         />
       )}
+      {showProfile && <ProfilePanel onClose={() => setShowProfile(false)} />}
+      {showLeaderboard && <LeaderboardPanel onClose={() => setShowLeaderboard(false)} />}
+      {showSoundSettings && <SoundControls onClose={() => setShowSoundSettings(false)} />}
       {newAchievement && (
         <AchievementNotification
           achievement={newAchievement}
