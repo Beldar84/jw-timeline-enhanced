@@ -33,12 +33,12 @@ const DeckSelector: React.FC<DeckSelectorProps> = ({ onSelectDeck, onBack }) => 
   };
 
   return (
-    <div className="w-full max-w-6xl bg-gray-800/50 p-4 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm">
-      <h2 className="text-2xl md:text-4xl font-bold text-center text-yellow-200 mb-6" style={{fontFamily: "'Trajan Pro', serif"}}>
+    <div className="w-full max-w-6xl bg-gray-800/50 p-4 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm max-h-[90vh] overflow-y-auto flex flex-col">
+      <h2 className="text-2xl md:text-4xl font-bold text-center text-yellow-200 mb-4 md:mb-6 flex-shrink-0" style={{fontFamily: "'Trajan Pro', serif"}}>
         Selecciona un Mazo
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 max-h-[60vh] overflow-y-auto p-2 pb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 md:mb-6 p-2">
         {decks.map((deck) => {
           const colors = deckService.getColorClasses(deck.color);
           const difficultyInfo = deckService.getDifficultyInfo(deck.difficulty);
@@ -99,12 +99,12 @@ const DeckSelector: React.FC<DeckSelectorProps> = ({ onSelectDeck, onBack }) => 
 
       {/* Selected Deck Preview */}
       {selectedDeck && (
-        <div className="bg-gray-700/50 p-4 rounded-lg mb-4">
+        <div className="bg-gray-700/50 p-3 md:p-4 rounded-lg mb-3 md:mb-4 flex-shrink-0">
           <div className="flex items-center gap-4">
-            <span className="text-4xl">{selectedDeck.icon}</span>
+            <span className="text-3xl md:text-4xl">{selectedDeck.icon}</span>
             <div className="flex-1">
-              <h3 className="text-xl font-bold text-yellow-200">{selectedDeck.name}</h3>
-              <p className="text-sm text-gray-300">{selectedDeck.description}</p>
+              <h3 className="text-lg md:text-xl font-bold text-yellow-200">{selectedDeck.name}</h3>
+              <p className="text-xs md:text-sm text-gray-300">{selectedDeck.description}</p>
               <div className="flex gap-2 mt-2">
                 <span className={`${deckService.getDifficultyInfo(selectedDeck.difficulty).color} px-2 py-1 rounded text-xs font-bold`}>
                   {deckService.getDifficultyInfo(selectedDeck.difficulty).label}
@@ -119,10 +119,10 @@ const DeckSelector: React.FC<DeckSelectorProps> = ({ onSelectDeck, onBack }) => 
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-4">
+      <div className="flex gap-3 md:gap-4 flex-shrink-0 pb-2">
         <button
           onClick={handleBackClick}
-          className="flex-1 px-6 py-3 bg-gray-600 text-lg font-bold rounded-lg hover:bg-gray-700 transition"
+          className="flex-1 px-4 py-2.5 md:px-6 md:py-3 bg-gray-600 text-base md:text-lg font-bold rounded-lg hover:bg-gray-700 transition"
         >
           Volver
         </button>
@@ -130,7 +130,7 @@ const DeckSelector: React.FC<DeckSelectorProps> = ({ onSelectDeck, onBack }) => 
           onClick={handleConfirm}
           disabled={!selectedDeck}
           className={`
-            flex-1 px-6 py-3 text-lg font-bold rounded-lg transition transform
+            flex-1 px-4 py-2.5 md:px-6 md:py-3 text-base md:text-lg font-bold rounded-lg transition transform
             ${selectedDeck
               ? 'bg-green-600 hover:bg-green-700 hover:scale-105'
               : 'bg-gray-500 cursor-not-allowed opacity-50'
