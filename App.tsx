@@ -82,9 +82,10 @@ const AppEnhanced: React.FC = () => {
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [stats, setStats] = useState<PlayerStats>(statsService.loadStats());
 
-  // Show tutorial on first launch
+  // Show tutorial on first launch (only on desktop)
   useEffect(() => {
-    if (shouldShowTutorial() && gamePhase === GamePhase.MENU) {
+    const isMobile = window.innerWidth < 768;
+    if (shouldShowTutorial() && gamePhase === GamePhase.MENU && !isMobile) {
       setShowTutorial(true);
     }
   }, []);
@@ -482,7 +483,7 @@ const AppEnhanced: React.FC = () => {
       case GamePhase.SETUP:
         if (gameMode === 'local') return <GameSetup onStartGame={handleStartLocalGame} />;
         if (gameMode === 'ai') return <AISetup onStartGame={handleStartAIGame} />;
-        if (gameMode === 'online') return <OnlineSetup onJoinLobby={handleJoinLobby} />;
+        if (gameMode === 'online') return <OnlineSetup onJoinLobby={handleJoinLobby} onBack={handleRestart} />;
         return null;
       case GamePhase.LOBBY:
         return onlineGameState && localPlayerId ? (
@@ -491,6 +492,7 @@ const AppEnhanced: React.FC = () => {
             localPlayerId={localPlayerId}
             onStartGame={handleStartOnlineGame}
             onAddBot={handleAddBotOnline}
+            onBack={handleRestart}
           />
         ) : <div>Cargando...</div>
       case GamePhase.PLAYING:
