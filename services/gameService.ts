@@ -17,12 +17,9 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 };
 
 const generateShortId = () => {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let result = '';
-  for (let i = 0; i < 4; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return `JW-${result}`;
+  // Genera un número aleatorio de 4 dígitos (1000-9999)
+  const number = Math.floor(Math.random() * 9000) + 1000;
+  return `JW-${number}`;
 };
 
 const PEER_CONFIG = {
@@ -30,13 +27,39 @@ const PEER_CONFIG = {
   secure: true,
   config: {
     iceServers: [
+      // STUN servers (para NAT traversal)
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:stun3.l.google.com:19302' },
-      { urls: 'stun:stun4.l.google.com:19302' },
-      { urls: 'stun:global.stun.twilio.com:3478' }
+      { urls: 'stun:global.stun.twilio.com:3478' },
+
+      // TURN servers (para conexiones entre redes diferentes)
+      // OpenRelay - TURN server público gratuito
+      {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      // Backup TURN server
+      {
+        urls: 'turn:numb.viagenie.ca',
+        username: 'webrtc@live.com',
+        credential: 'muazkh'
+      }
     ],
+    // Configuración adicional para mejorar conectividad
+    iceTransportPolicy: 'all', // Permite usar tanto STUN como TURN
+    iceCandidatePoolSize: 10 // Mayor pool para encontrar mejores candidatos
   },
 };
 
@@ -165,14 +188,14 @@ class GameService {
     return new Promise((resolve) => {
         let resolved = false;
         
-        // Timeout to prevent hanging indefinitely
+        // Timeout increased for TURN server negotiation (can take longer across networks)
         const timeout = setTimeout(() => {
             if (!resolved) {
                 resolved = true;
                 this.disconnect();
-                resolve({ success: false, playerId: '', error: 'Tiempo de espera agotado. Verifica el ID.' });
+                resolve({ success: false, playerId: '', error: 'Tiempo de espera agotado. Verifica el ID o tu conexión.' });
             }
-        }, 15000); // 15 seconds timeout
+        }, 30000); // 30 seconds timeout para conexiones entre redes
 
         try {
             // Client doesn't need a specific ID, let PeerJS generate one
