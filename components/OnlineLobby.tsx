@@ -8,9 +8,10 @@ interface OnlineLobbyProps {
   localPlayerId: string;
   onStartGame: (gameId: string) => void;
   onAddBot: (gameId: string) => void;
+  onBack: () => void;
 }
 
-const OnlineLobby: React.FC<OnlineLobbyProps> = ({ gameState, localPlayerId, onStartGame, onAddBot }) => {
+const OnlineLobby: React.FC<OnlineLobbyProps> = ({ gameState, localPlayerId, onStartGame, onAddBot, onBack }) => {
   const [copied, setCopied] = useState(false);
 
   const isHost = gameState.hostId === localPlayerId;
@@ -35,6 +36,11 @@ const OnlineLobby: React.FC<OnlineLobbyProps> = ({ gameState, localPlayerId, onS
   const handleStartGameClick = () => {
     soundService.playClick();
     onStartGame(gameState.id);
+  }
+
+  const handleBack = () => {
+    soundService.playClick();
+    onBack();
   }
 
   const canStart = gameState.players.length >= 2;
@@ -94,10 +100,24 @@ const OnlineLobby: React.FC<OnlineLobbyProps> = ({ gameState, localPlayerId, onS
             >
               Empezar Partida
             </button>
+            <button
+              onClick={handleBack}
+              className="w-full px-4 py-2 md:px-6 md:py-2.5 bg-gray-600 text-sm md:text-base font-bold rounded-lg hover:bg-gray-700 transition"
+            >
+              Volver al Menú
+            </button>
         </div>
       )}
       {!isHost && (
-          <p className="text-yellow-100 text-sm md:text-base pb-6">Esperando a que el anfitrión inicie la partida...</p>
+        <div className="flex flex-col items-center w-full max-w-md space-y-3 pb-6">
+          <p className="text-yellow-100 text-sm md:text-base">Esperando a que el anfitrión inicie la partida...</p>
+          <button
+            onClick={handleBack}
+            className="w-full px-4 py-2 md:px-6 md:py-2.5 bg-gray-600 text-sm md:text-base font-bold rounded-lg hover:bg-gray-700 transition"
+          >
+            Volver al Menú
+          </button>
+        </div>
       )}
     </div>
   );

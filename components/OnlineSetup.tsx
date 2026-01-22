@@ -4,9 +4,10 @@ import { soundService } from '../services/soundService';
 
 interface OnlineSetupProps {
   onJoinLobby: (playerName: string, gameId?: string) => Promise<void>;
+  onBack: () => void;
 }
 
-const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby }) => {
+const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onBack }) => {
   const [playerName, setPlayerName] = useState('');
   const [gameId, setGameId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -16,8 +17,8 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby }) => {
     soundService.playClick();
     setError(null);
     const trimmedPlayerName = playerName.trim();
-    const trimmedGameId = gameId.trim(); 
-    
+    const trimmedGameId = gameId.trim();
+
     if (trimmedPlayerName) {
       setIsLoading(true);
       try {
@@ -30,6 +31,11 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby }) => {
           setIsLoading(false);
       }
     }
+  };
+
+  const handleBack = () => {
+    soundService.playClick();
+    onBack();
   };
 
   const buttonText = isLoading 
@@ -76,19 +82,29 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby }) => {
         </div>
 
       </div>
-      <button
-        onClick={handleStart}
-        disabled={!playerName.trim() || isLoading}
-        className="w-full px-4 py-2.5 md:px-8 md:py-4 bg-purple-600 text-base md:text-xl font-bold rounded-lg hover:bg-purple-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition transform hover:scale-105 flex justify-center items-center mb-2"
-      >
-        {isLoading && (
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-        )}
-        {buttonText}
-      </button>
+
+      <div className="flex gap-3 w-full space-y-0 pb-2">
+        <button
+          onClick={handleBack}
+          disabled={isLoading}
+          className="flex-1 px-4 py-2.5 md:px-6 md:py-3 bg-gray-600 text-base md:text-lg font-bold rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        >
+          Volver
+        </button>
+        <button
+          onClick={handleStart}
+          disabled={!playerName.trim() || isLoading}
+          className="flex-1 px-4 py-2.5 md:px-8 md:py-4 bg-purple-600 text-base md:text-xl font-bold rounded-lg hover:bg-purple-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition transform hover:scale-105 flex justify-center items-center"
+        >
+          {isLoading && (
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+          )}
+          {buttonText}
+        </button>
+      </div>
     </div>
   );
 };
