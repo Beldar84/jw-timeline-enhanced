@@ -84,11 +84,12 @@ const AppEnhanced: React.FC = () => {
 
   // Show tutorial on first launch (only on desktop)
   useEffect(() => {
-    const isMobile = window.innerWidth < 768;
+    // Use matchMedia for more reliable mobile detection
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
     if (shouldShowTutorial() && gamePhase === GamePhase.MENU && !isMobile) {
       setShowTutorial(true);
     }
-  }, []);
+  }, [gamePhase]);
 
   const currentPlayer = useMemo(() => {
     if (gameMode === 'online' && onlineGameState) {
@@ -402,11 +403,21 @@ const AppEnhanced: React.FC = () => {
   };
 
   const handleRestart = () => {
-    setGamePhase(GamePhase.MENU);
-    setGameMode(null);
+    // Primero desconectar para limpiar todo el estado de red
+    gameService.disconnect();
+    // Luego limpiar el estado local
     setOnlineGameState(null);
     setLocalPlayerId(null);
-    gameService.disconnect();
+    setGameMode(null);
+    setPlayers([]);
+    setTimeline([]);
+    setDeck([]);
+    setDiscardPile([]);
+    setCurrentPlayerIndex(0);
+    setWinner(null);
+    setMessage(null);
+    // Finalmente cambiar a menú
+    setGamePhase(GamePhase.MENU);
     setStats(statsService.loadStats());
   };
 
