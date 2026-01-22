@@ -22,46 +22,61 @@ const generateShortId = () => {
   return `JW-${number}`;
 };
 
-const PEER_CONFIG = {
-  debug: 2,
-  secure: true,
-  config: {
-    iceServers: [
-      // STUN servers (para NAT traversal)
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:global.stun.twilio.com:3478' },
+// Tu API Key de Metered (jwtimeline)
+const METERED_API_KEY = '0733bc6c94842b6c27cad4dd606e83f9dfd8';
+const METERED_API_URL = 'https://jwtimeline.metered.live/api/v1/turn/credentials';
 
-      // TURN servers (para conexiones entre redes diferentes)
-      // OpenRelay - TURN server público gratuito
-      {
-        urls: 'turn:openrelay.metered.ca:80',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
-      // Backup TURN server
-      {
-        urls: 'turn:numb.viagenie.ca',
-        username: 'webrtc@live.com',
-        credential: 'muazkh'
-      }
-    ],
-    // Configuración adicional para mejorar conectividad
-    iceTransportPolicy: 'all', // Permite usar tanto STUN como TURN
-    iceCandidatePoolSize: 10 // Mayor pool para encontrar mejores candidatos
-  },
-};
+// Cache para las credenciales TURN (evita llamadas repetidas a la API)
+let cachedIceServers: any[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+// Función para obtener credenciales TURN dinámicas de Metered
+async function getIceServers(): Promise<any[]> {
+  // Usar cache si está disponible y no ha expirado
+  if (cachedIceServers && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
+    return cachedIceServers;
+  }
+
+  try {
+    const response = await fetch(`${METERED_API_URL}?apiKey=${METERED_API_KEY}`);
+    if (response.ok) {
+      cachedIceServers = await response.json();
+      cacheTimestamp = Date.now();
+      console.log('[GameService] Credenciales TURN obtenidas de Metered');
+      return cachedIceServers!;
+    }
+  } catch (error) {
+    console.warn('[GameService] Error obteniendo credenciales TURN, usando fallback:', error);
+  }
+
+  // Fallback: servidores STUN de Google (funcionan para conexiones simples)
+  return [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+  ];
+}
+
+// Función para crear la configuración de Peer con credenciales dinámicas
+async function createPeerConfig() {
+  const iceServers = await getIceServers();
+
+  return {
+    debug: 2,
+    secure: true,
+    host: '0.peerjs.com',
+    port: 443,
+    path: '/',
+    config: {
+      iceServers: iceServers,
+      iceTransportPolicy: 'all',
+      iceCandidatePoolSize: 10,
+      bundlePolicy: 'max-bundle',
+      rtcpMuxPolicy: 'require'
+    },
+  };
+}
 
 class GameService {
   private peer: any = null;
@@ -111,6 +126,9 @@ class GameService {
     this.disconnect();
     this.isHost = true;
 
+    // Obtener configuración con credenciales TURN dinámicas
+    const peerConfig = await createPeerConfig();
+
     return new Promise((resolve, reject) => {
         const tryCreate = (attempts: number) => {
             if (attempts > 5) {
@@ -122,7 +140,7 @@ class GameService {
 
             try {
                 // Attempt to register with a custom short ID
-                const peer = new Peer(shortId, PEER_CONFIG);
+                const peer = new Peer(shortId, peerConfig);
                 
                 peer.on('open', (id: string) => {
                     this.peer = peer;
@@ -185,9 +203,12 @@ class GameService {
     this.disconnect();
     this.isHost = false;
 
+    // Obtener configuración con credenciales TURN dinámicas
+    const peerConfig = await createPeerConfig();
+
     return new Promise((resolve) => {
         let resolved = false;
-        
+
         // Timeout increased for TURN server negotiation (can take longer across networks)
         const timeout = setTimeout(() => {
             if (!resolved) {
@@ -199,7 +220,7 @@ class GameService {
 
         try {
             // Client doesn't need a specific ID, let PeerJS generate one
-            this.peer = new Peer(PEER_CONFIG);
+            this.peer = new Peer(peerConfig);
             
             this.peer.on('open', () => {
                 const localId = crypto.randomUUID();
@@ -254,11 +275,45 @@ class GameService {
                 if (!resolved) {
                     resolved = true;
                     clearTimeout(timeout);
-                    if (err.type === 'peer-unavailable') {
-                        resolve({ success: false, playerId: '', error: 'Sala no encontrada. Verifica el código.' });
-                    } else {
-                        resolve({ success: false, playerId: '', error: `Error de conexión: ${err.type || 'Desconocido'}` });
+
+                    let errorMessage = 'Error de conexión desconocido.';
+
+                    switch (err.type) {
+                        case 'peer-unavailable':
+                            errorMessage = 'Sala no encontrada. Verifica el código de partida.';
+                            break;
+                        case 'network':
+                            errorMessage = 'Error de red. Verifica tu conexión a internet y que no haya un firewall bloqueando.';
+                            break;
+                        case 'server-error':
+                            errorMessage = 'El servidor de conexión no está disponible. Intenta de nuevo en unos minutos.';
+                            break;
+                        case 'socket-error':
+                            errorMessage = 'Error de conexión con el servidor. Verifica tu conexión a internet.';
+                            break;
+                        case 'socket-closed':
+                            errorMessage = 'La conexión se cerró inesperadamente. Intenta de nuevo.';
+                            break;
+                        case 'unavailable-id':
+                            errorMessage = 'El ID de sala ya está en uso. Intenta crear otra partida.';
+                            break;
+                        case 'invalid-id':
+                            errorMessage = 'El código de partida no es válido.';
+                            break;
+                        case 'browser-incompatible':
+                            errorMessage = 'Tu navegador no soporta conexiones P2P. Usa Chrome, Firefox o Edge.';
+                            break;
+                        case 'disconnected':
+                            errorMessage = 'Te has desconectado del servidor. Intenta reconectar.';
+                            break;
+                        case 'ssl-unavailable':
+                            errorMessage = 'Se requiere una conexión segura (HTTPS).';
+                            break;
+                        default:
+                            errorMessage = `Error de conexión: ${err.type || err.message || 'Desconocido'}. Intenta de nuevo.`;
                     }
+
+                    resolve({ success: false, playerId: '', error: errorMessage });
                 }
             });
 
