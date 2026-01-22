@@ -5,12 +5,34 @@ import { CARD_DATA } from '../data/cards';
 // Declare PeerJS global type since we are loading it via CDN
 declare const Peer: any;
 
-type NetworkAction = 
+type NetworkAction =
   | { type: 'JOIN'; payload: { name: string; id: string } }
   | { type: 'STATE_UPDATE'; payload: GameState }
   | { type: 'PLACE_CARD'; payload: { playerId: string; cardId: number; timelineIndex: number } }
   | { type: 'ADD_BOT'; payload: null }
-  | { type: 'START_GAME'; payload: null };
+  | { type: 'START_GAME'; payload: null }
+  | { type: 'PLAYER_LEFT'; payload: { playerName: string } }
+  | { type: 'GAME_CANCELLED'; payload: { reason: string } };
+
+// Nombres bíblicos para los bots de IA
+const BIBLICAL_NAMES = [
+  'David', 'Abigail', 'Ruth', 'Pablo', 'Sara', 'Abraham', 'Moisés', 'María',
+  'José', 'Rebeca', 'Isaac', 'Raquel', 'Jacob', 'Lea', 'Samuel', 'Ana',
+  'Daniel', 'Ester', 'Elías', 'Eliseo', 'Noé', 'Jonás', 'Pedro', 'Juan',
+  'Mateo', 'Lucas', 'Marcos', 'Timoteo', 'Lidia', 'Priscila', 'Aquila', 'Bernabé',
+  'Silas', 'Tito', 'Filemón', 'Dorcas', 'Cornelio', 'Esteban', 'Felipe', 'Andrés'
+];
+
+// Función para obtener un nombre bíblico aleatorio no usado
+function getRandomBiblicalName(usedNames: string[]): string {
+  const availableNames = BIBLICAL_NAMES.filter(name => !usedNames.includes(name));
+  if (availableNames.length === 0) {
+    // Si todos los nombres están usados, añadir un número
+    const randomName = BIBLICAL_NAMES[Math.floor(Math.random() * BIBLICAL_NAMES.length)];
+    return `${randomName} ${Math.floor(Math.random() * 100)}`;
+  }
+  return availableNames[Math.floor(Math.random() * availableNames.length)];
+}
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   return [...array].sort(() => Math.random() - 0.5);
@@ -234,12 +256,15 @@ class GameService {
                 
                 const handleOpen = () => {
                     if (resolved) return;
-                    
+
                     this.hostConnection = conn;
-                    
+
+                    // Configurar detección de desconexión del host
+                    this.setupHostDisconnectDetection();
+
                     // Send Join Request immediately
-                    conn.send({ 
-                        type: 'JOIN', 
+                    conn.send({
+                        type: 'JOIN',
                         payload: { name: playerName, id: localId }
                     });
 
@@ -344,7 +369,10 @@ class GameService {
 
   private handleIncomingConnection(conn: any) {
     this.connections.push(conn);
-    
+
+    // Guardar el ID del jugador asociado a esta conexión
+    let connectedPlayerId: string | null = null;
+
     conn.on('data', (data: NetworkAction) => {
         // Host logic
         if (data.type === 'JOIN') {
@@ -360,14 +388,17 @@ class GameService {
                     };
                     this.gameState.players.push(newPlayer);
                 }
-                
+
+                // Asociar esta conexión con el ID del jugador
+                connectedPlayerId = data.payload.id;
+
                 // CRITICAL: Send state immediately to this specific connection
                 try {
                     conn.send({ type: 'STATE_UPDATE', payload: this.gameState });
                 } catch (e) {
                     console.error("Failed to send initial state:", e);
                 }
-                
+
                 // Then notify everyone else
                 this.broadcastState();
             }
@@ -375,9 +406,35 @@ class GameService {
             this.processPlaceCard(data.payload.playerId, data.payload.cardId, data.payload.timelineIndex);
         }
     });
-    
+
     conn.on('close', () => {
         this.connections = this.connections.filter(c => c.peer !== conn.peer);
+
+        // Si hay un juego en curso y un jugador se desconecta
+        if (this.gameState && connectedPlayerId) {
+            const disconnectedPlayer = this.gameState.players.find(p => p.id === connectedPlayerId);
+
+            if (disconnectedPlayer && !disconnectedPlayer.isAI) {
+                // Si estamos en partida (no en lobby), cancelar el juego
+                if (this.gameState.phase === OnlineGamePhase.PLAYING) {
+                    this.gameState.phase = OnlineGamePhase.GAME_OVER;
+                    this.gameState.message = `${disconnectedPlayer.name} ha abandonado la partida. El juego ha terminado.`;
+                    this.gameState.winner = null;
+
+                    // Notificar a todos
+                    this.broadcastState();
+                } else if (this.gameState.phase === OnlineGamePhase.LOBBY) {
+                    // En lobby, simplemente eliminar al jugador
+                    this.gameState.players = this.gameState.players.filter(p => p.id !== connectedPlayerId);
+                    this.gameState.message = `${disconnectedPlayer.name} ha salido de la sala.`;
+                    this.broadcastState();
+                }
+            }
+        }
+    });
+
+    conn.on('error', (err: any) => {
+        console.error('Connection error with peer:', err);
     });
   }
 
@@ -385,6 +442,28 @@ class GameService {
       if (data.type === 'STATE_UPDATE') {
           this.gameState = data.payload;
           this.notify();
+      } else if (data.type === 'GAME_CANCELLED') {
+          // El host canceló el juego
+          if (this.gameState) {
+              this.gameState.phase = OnlineGamePhase.GAME_OVER;
+              this.gameState.message = data.payload.reason;
+              this.gameState.winner = null;
+              this.notify();
+          }
+      }
+  }
+
+  // Detectar si el host se desconectó (para clientes)
+  private setupHostDisconnectDetection() {
+      if (this.hostConnection) {
+          this.hostConnection.on('close', () => {
+              if (this.gameState && this.gameState.phase !== OnlineGamePhase.GAME_OVER) {
+                  this.gameState.phase = OnlineGamePhase.GAME_OVER;
+                  this.gameState.message = 'El anfitrión ha abandonado la partida. El juego ha terminado.';
+                  this.gameState.winner = null;
+                  this.notify();
+              }
+          });
       }
   }
 
@@ -400,11 +479,14 @@ class GameService {
   // Action: Add Bot (Host only)
   addBot(gameId: string, hostId: string) {
       if (!this.isHost || !this.gameState) return;
-      
-      const aiCount = this.gameState.players.filter(p => p.isAI).length;
+
+      // Obtener nombres ya usados por jugadores y bots
+      const usedNames = this.gameState.players.map(p => p.name);
+      const biblicalName = getRandomBiblicalName(usedNames);
+
       this.gameState.players.push({
           id: `ai-${Date.now()}`,
-          name: `IA ${aiCount + 1}`,
+          name: biblicalName,
           hand: [],
           isAI: true
       });
