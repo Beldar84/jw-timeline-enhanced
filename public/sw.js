@@ -1,7 +1,7 @@
 // JW Timeline Service Worker
 // Enables offline functionality by caching essential resources
 
-const CACHE_NAME = 'jw-timeline-v1';
+const CACHE_NAME = 'jw-timeline-v2';
 
 // Resources to cache immediately on install
 const STATIC_RESOURCES = [
@@ -23,7 +23,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll(STATIC_RESOURCES);
     })
   );
-  // Activate immediately
+  // Activate immediately - esto permite que el nuevo SW tome control
   self.skipWaiting();
 });
 
@@ -134,6 +134,13 @@ self.addEventListener('fetch', (event) => {
         return caches.match(event.request);
       })
   );
+});
+
+// Listen for messages to force update
+self.addEventListener('message', (event) => {
+  if (event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Message event - handle cache operations from the app
