@@ -93,16 +93,18 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({ card, isFaceDown, onClick,
     >
       <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover" />
 
-      {/* Name Banner */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent p-2 md:p-3 pt-6 md:pt-10 text-center">
-        <h3 className="font-bold text-sm md:text-xl text-white leading-tight drop-shadow-lg">{card.name}</h3>
-        {/* Bible Reference (small) */}
-        {card.bibleRef && (
-          <p className="text-yellow-300/80 text-xs md:text-sm mt-0.5 truncate">
-            {card.bibleRef}
-          </p>
-        )}
-      </div>
+      {/* Name Banner - show for timeline cards (showYear) or study mode */}
+      {(showYear || isStudyMode) && (
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent p-2 md:p-3 pt-6 md:pt-10 text-center">
+          <h3 className="font-bold text-sm md:text-xl text-white leading-tight drop-shadow-lg">{card.name}</h3>
+          {/* Bible Reference (small) */}
+          {card.bibleRef && (
+            <p className="text-yellow-300/80 text-xs md:text-sm mt-0.5 truncate">
+              {card.bibleRef}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Year Banner */}
       {shouldShowYear && (
