@@ -23,9 +23,10 @@ interface GameBoardProps {
   hidingCardId?: number | null;
   isAnimating: boolean;
   onPlaceCardOnline?: (card: CardType, timelineIndex: number) => void;
+  onExitGame?: () => void;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline, onAttemptPlaceCard, deckSize, topOfDeck, discardPile, message, revealedAICard, gameMode, localPlayer, hidingCardId, isAnimating, onPlaceCardOnline }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline, onAttemptPlaceCard, deckSize, topOfDeck, discardPile, message, revealedAICard, gameMode, localPlayer, hidingCardId, isAnimating, onPlaceCardOnline, onExitGame }) => {
   const [selectedTimelineIndex, setSelectedTimelineIndex] = useState<number | null>(null);
   const [selectedSlotElement, setSelectedSlotElement] = useState<HTMLElement | null>(null);
   const [selectedCard, setSelectedCard] = useState<{ card: CardType, element: HTMLElement } | null>(null);
@@ -92,6 +93,20 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
     setZoomedCard(card);
   };
 
+  const handleExitClick = () => {
+    soundService.playClick();
+    if (onExitGame) {
+      const confirmExit = window.confirm(
+        gameMode === 'online'
+          ? "¿Estás seguro de que quieres salir? Los demás jugadores serán notificados."
+          : "¿Estás seguro de que quieres salir de la partida?"
+      );
+      if (confirmExit) {
+        onExitGame();
+      }
+    }
+  };
+
   const isMyTurnOnline = gameMode === 'online' && localPlayer ? currentPlayer.id === localPlayer.id : false;
   const dynamicMessage = gameMode === 'online'
     ? (isMyTurnOnline ? "Es tu turno." : `Esperando a ${currentPlayer.name}...`)
@@ -107,7 +122,16 @@ const GameBoard: React.FC<GameBoardProps> = ({ players, currentPlayer, timeline,
   const containerDimensions = "w-[100px] h-[146px] landscape:w-[90px] landscape:h-[132px] md:w-[260px] md:h-[380px]";
 
   return (
-    <div className="space-y-1 md:space-y-2 flex flex-col h-full w-full overflow-y-auto overflow-x-hidden pb-8 md:pb-4">
+    <div className="space-y-1 md:space-y-2 flex flex-col h-full w-full overflow-y-auto overflow-x-hidden pb-8 md:pb-4 relative">
+      {/* Exit Button */}
+      {onExitGame && (
+        <button
+          onClick={handleExitClick}
+          className="absolute top-2 right-2 md:top-4 md:right-4 z-20 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs md:text-sm transition-all shadow-lg"
+        >
+          ✕ Salir
+        </button>
+      )}
       {gameMode === 'online' && localPlayer && (
         <div className="bg-black/30 p-2 rounded-lg flex-shrink-0 landscape:py-1 landscape:px-2">
           <h3 className="text-center text-yellow-200 font-semibold mb-2 text-sm md:text-base landscape:hidden">Oponentes</h3>
