@@ -40,7 +40,7 @@ const OnlineLobby: React.FC<OnlineLobbyProps> = ({ gameState, localPlayerId, onS
   const canStart = gameState.players.length >= 2;
 
   return (
-    <div className="flex flex-col items-center justify-center bg-gray-800/50 p-4 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm w-full max-w-2xl text-center max-h-[90vh] overflow-y-auto">
+    <div className="flex flex-col items-center bg-gray-800/50 p-4 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm w-full max-w-2xl text-center max-h-[85vh] overflow-y-auto">
       <h2 className="text-xl md:text-3xl font-bold text-yellow-300 mb-3 md:mb-4">Sala de Espera Online</h2>
       <p className="text-yellow-100 mb-4 md:mb-6 text-xs md:text-base">Comparte el ID de la partida para que otros se unan. El juego comenzará cuando el anfitrión lo inicie.</p>
       
@@ -78,7 +78,7 @@ const OnlineLobby: React.FC<OnlineLobbyProps> = ({ gameState, localPlayerId, onS
       </div>
 
       {isHost && (
-        <div className="flex flex-col items-center w-full max-w-md space-y-3 md:space-y-4 pb-2">
+        <div className="flex flex-col items-center w-full max-w-md space-y-3 md:space-y-4 pb-6">
             <button
               onClick={handleAddBotClick}
               disabled={gameState.players.length >= 6}
@@ -97,7 +97,7 @@ const OnlineLobby: React.FC<OnlineLobbyProps> = ({ gameState, localPlayerId, onS
         </div>
       )}
       {!isHost && (
-          <p className="text-yellow-100 text-sm md:text-base pb-2">Esperando a que el anfitrión inicie la partida...</p>
+          <p className="text-yellow-100 text-sm md:text-base pb-6">Esperando a que el anfitrión inicie la partida...</p>
       )}
     </div>
   );
