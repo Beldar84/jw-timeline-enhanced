@@ -1,13 +1,23 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { soundService } from '../services/soundService';
+import { profileService } from '../services/profileService';
 
 interface GameSetupProps {
   onStartGame: (playerNames: string[]) => void;
+  onBack: () => void;
 }
 
-const GameSetup: React.FC<GameSetupProps> = ({ onStartGame }) => {
+const GameSetup: React.FC<GameSetupProps> = ({ onStartGame, onBack }) => {
   const [players, setPlayers] = useState(['Jugador 1', 'Jugador 2']);
+
+  // Cargar el nombre del perfil para el jugador 1
+  useEffect(() => {
+    const savedName = profileService.getName();
+    if (savedName && savedName !== 'Jugador') {
+      setPlayers(prev => [savedName, ...prev.slice(1)]);
+    }
+  }, []);
 
   const handleAddPlayer = () => {
     soundService.playClick();
@@ -69,13 +79,24 @@ const GameSetup: React.FC<GameSetupProps> = ({ onStartGame }) => {
           Añadir Jugador
         </button>
       </div>
-      <button
-        onClick={handleStart}
-        disabled={players.filter(p => p.trim() !== '').length < 2}
-        className="w-full max-w-md px-6 py-3 md:px-8 md:py-4 bg-green-600 text-lg md:text-xl font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition transform hover:scale-105"
-      >
-        Empezar Partida
-      </button>
+      <div className="flex gap-3 w-full max-w-md">
+        <button
+          onClick={() => {
+            soundService.playClick();
+            onBack();
+          }}
+          className="flex-1 px-4 py-3 md:px-6 md:py-4 bg-gray-600 text-lg font-bold rounded-lg hover:bg-gray-700 transition"
+        >
+          Volver
+        </button>
+        <button
+          onClick={handleStart}
+          disabled={players.filter(p => p.trim() !== '').length < 2}
+          className="flex-[2] px-6 py-3 md:px-8 md:py-4 bg-green-600 text-lg md:text-xl font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition transform hover:scale-105"
+        >
+          Empezar Partida
+        </button>
+      </div>
     </div>
   );
 };

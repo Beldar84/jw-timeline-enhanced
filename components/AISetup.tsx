@@ -16,9 +16,10 @@ function getRandomBiblicalName(): string {
 
 interface AISetupProps {
   onStartGame: (playerNames: string[], difficulty: AIDifficulty, isStudyMode: boolean) => void;
+  onBack: () => void;
 }
 
-const AISetup: React.FC<AISetupProps> = ({ onStartGame }) => {
+const AISetup: React.FC<AISetupProps> = ({ onStartGame, onBack }) => {
   const [playerName, setPlayerName] = useState('');
   const [difficulty, setDifficulty] = useState<AIDifficulty>('normal');
   const [isStudyMode, setIsStudyMode] = useState(false);
@@ -154,14 +155,25 @@ const AISetup: React.FC<AISetupProps> = ({ onStartGame }) => {
         )}
       </div>
 
-      {/* Start Button */}
-      <button
-        onClick={handleStart}
-        disabled={!playerName.trim()}
-        className="w-full px-6 py-3 md:px-8 md:py-4 bg-green-600 text-lg md:text-xl font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition transform hover:scale-105"
-      >
-        {isStudyMode ? '📚 Empezar a Estudiar' : '🎮 Empezar Partida'}
-      </button>
+      {/* Buttons */}
+      <div className="flex gap-3 w-full">
+        <button
+          onClick={() => {
+            soundService.playClick();
+            onBack();
+          }}
+          className="flex-1 px-4 py-3 md:px-6 md:py-4 bg-gray-600 text-lg font-bold rounded-lg hover:bg-gray-700 transition"
+        >
+          Volver
+        </button>
+        <button
+          onClick={handleStart}
+          disabled={!playerName.trim()}
+          className="flex-[2] px-6 py-3 md:px-8 md:py-4 bg-green-600 text-lg md:text-xl font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition transform hover:scale-105"
+        >
+          {isStudyMode ? '📚 Empezar' : '🎮 Empezar'}
+        </button>
+      </div>
 
       {/* Summary */}
       <div className="mt-4 text-center text-sm text-gray-400">

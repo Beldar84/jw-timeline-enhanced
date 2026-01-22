@@ -11,7 +11,10 @@ interface AIHandProps {
 
 const AIHand: React.FC<AIHandProps> = ({ player, showTitle = true, isOpponent = false }) => {
   const title = `Mano de ${player.name} (${player.hand.length} cartas)`;
-  const cardSizeClass = isOpponent ? 'landscape:!w-[70px] landscape:!h-[102px]' : '';
+  // Para oponentes online, cartas más pequeñas
+  const cardSizeClass = isOpponent
+    ? '!w-[60px] !h-[88px] md:!w-[80px] md:!h-[117px] landscape:!w-[50px] landscape:!h-[73px]'
+    : '';
 
   // Si es oponente en modo online, mostrar grupo compacto de cartas con número
   if (isOpponent) {

@@ -136,8 +136,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   const handPlayer = gameMode === 'local' || gameMode === 'ai' ? currentPlayer : localPlayer;
 
-  // Dimensiones reducidas para móvil para evitar desbordamiento
-  const containerDimensions = "w-[100px] h-[146px] landscape:w-[90px] landscape:h-[132px] md:w-[260px] md:h-[380px]";
+  // Dimensiones del mazo y descarte (más pequeñas que las cartas principales)
+  // Móvil: w-[100px] h-[146px]
+  // Desktop: w-[130px] h-[190px]
+  // Desktop grande: w-[150px] h-[220px]
+  const containerDimensions = "w-[100px] h-[146px] landscape:w-[90px] landscape:h-[132px] md:w-[130px] md:h-[190px] lg:w-[150px] lg:h-[220px]";
 
   return (
     <div className="space-y-1 md:space-y-2 flex flex-col h-full w-full overflow-y-auto overflow-x-hidden pb-8 md:pb-4 relative">
@@ -204,7 +207,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         </div>
       </div>
 
-      <div className="overflow-x-auto p-2 md:p-6 bg-black/30 rounded-lg shrink-0 flex-grow flex flex-col justify-center min-h-[200px] md:min-h-[350px]">
+      <div className="overflow-x-auto p-2 md:p-4 lg:p-6 bg-black/30 rounded-lg shrink-0 flex-grow flex flex-col justify-center min-h-[240px] md:min-h-[290px] lg:min-h-[350px]">
           <Timeline
             cards={timeline}
             onSelectSlot={handleSelectSlot}

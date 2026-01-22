@@ -62,12 +62,13 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({ card, isFaceDown, onClick,
   }
 
   // Dimensiones de la carta - se adaptan al contenedor si tiene clase custom
-  // Móvil: w-[150px] h-[219px], Landscape: w-[120px] h-[176px]
-  // Desktop: w-[307px] h-[450px] (más grande para mejor visualización en PC)
+  // Móvil: w-[150px] h-[220px], Landscape: w-[120px] h-[176px]
+  // Desktop (md): w-[180px] h-[264px] - tamaño medio para PC
+  // Desktop grande (lg): w-[220px] h-[322px] - tamaño grande para monitores
   const hasCustomSize = className.includes('w-') || className.includes('h-');
   const cardBaseStyle = hasCustomSize
     ? "relative w-full h-full flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600"
-    : "relative w-[150px] h-[219px] landscape:w-[120px] landscape:h-[176px] md:w-[307px] md:h-[450px] flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600";
+    : "relative w-[150px] h-[220px] landscape:w-[120px] landscape:h-[176px] md:w-[180px] md:h-[264px] lg:w-[220px] lg:h-[322px] flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600";
   const selectableStyle = onClick ? "cursor-pointer hover:scale-105 hover:shadow-2xl hover:border-yellow-400" : "";
 
   if (isPlaceholder || isFaceDown) {

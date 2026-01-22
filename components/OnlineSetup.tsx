@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { soundService } from '../services/soundService';
+import { profileService } from '../services/profileService';
 
 interface OnlineSetupProps {
   onJoinLobby: (playerName: string, gameId?: string) => Promise<void>;
@@ -8,8 +9,10 @@ interface OnlineSetupProps {
 }
 
 const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onBack }) => {
-  const [playerName, setPlayerName] = useState('');
-  const [gameId, setGameId] = useState('');
+  // Cargar el nombre del perfil guardado
+  const savedProfile = profileService.getProfile();
+  const [playerName, setPlayerName] = useState(savedProfile.name || '');
+  const [gameId, setGameId] = useState('JW-');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,7 +25,9 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onBack }) => {
     if (trimmedPlayerName) {
       setIsLoading(true);
       try {
-          await onJoinLobby(trimmedPlayerName, trimmedGameId || undefined);
+          // Si solo tiene "JW-" o está vacío, crear sala nueva
+          const gameIdToUse = (trimmedGameId && trimmedGameId !== 'JW-') ? trimmedGameId : undefined;
+          await onJoinLobby(trimmedPlayerName, gameIdToUse);
       } catch (err: any) {
           console.error(err);
           // Show the specific error message if available, otherwise generic
@@ -38,9 +43,11 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onBack }) => {
     onBack();
   };
 
-  const buttonText = isLoading 
-    ? 'Conectando...' 
-    : (gameId.trim() ? 'Unirse a la Sala' : 'Crear Sala');
+  // Considerar que "JW-" vacío es lo mismo que crear sala nueva
+  const isJoiningGame = gameId.trim() && gameId.trim() !== 'JW-';
+  const buttonText = isLoading
+    ? 'Conectando...'
+    : (isJoiningGame ? 'Unirse a la Sala' : 'Crear Sala');
 
   return (
     <div className="flex flex-col items-center justify-center bg-gray-800/50 p-4 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm max-h-[90vh] overflow-y-auto w-full max-w-md">
@@ -78,7 +85,7 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onBack }) => {
                 placeholder="Ej: JW-1234"
                 disabled={isLoading}
             />
-             <p className="text-xs text-gray-400 mt-1">Si dejas esto en blanco, se creará un código nuevo.</p>
+             <p className="text-xs text-gray-400 mt-1">Si dejas solo "JW-" se creará un código nuevo.</p>
         </div>
 
       </div>
