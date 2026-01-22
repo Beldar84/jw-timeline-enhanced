@@ -577,8 +577,8 @@ const AppEnhanced: React.FC = () => {
           />
         );
       case GamePhase.SETUP:
-        if (gameMode === 'local') return <GameSetup onStartGame={handleStartLocalGame} />;
-        if (gameMode === 'ai') return <AISetup onStartGame={handleStartAIGame} />;
+        if (gameMode === 'local') return <GameSetup onStartGame={handleStartLocalGame} onBack={() => { setShowDeckSelector(true); setGamePhase(GamePhase.MENU); }} />;
+        if (gameMode === 'ai') return <AISetup onStartGame={handleStartAIGame} onBack={() => { setShowDeckSelector(true); setGamePhase(GamePhase.MENU); }} />;
         if (gameMode === 'online') return <OnlineSetup onJoinLobby={handleJoinLobby} onBack={handleRestart} />;
         return null;
       case GamePhase.LOBBY:
@@ -634,7 +634,28 @@ const AppEnhanced: React.FC = () => {
         return <TurnTransition playerName={currentPlayer.name} onContinue={() => setGamePhase(GamePhase.PLAYING)} />;
       case GamePhase.GAME_OVER:
         const finalWinner = gameMode === 'online' ? onlineGameState?.winner : winner;
-        return finalWinner ? <GameOver winner={finalWinner} onRestart={handleRestart} /> : <div>Cargando...</div>;
+        const gameOverMessage = gameMode === 'online' ? onlineGameState?.message : null;
+        // Si hay ganador, mostrar pantalla de victoria
+        if (finalWinner) {
+          return <GameOver winner={finalWinner} onRestart={handleRestart} />;
+        }
+        // Si no hay ganador pero hay mensaje (desconexión), mostrar pantalla de partida cancelada
+        if (gameOverMessage) {
+          return (
+            <div className="flex flex-col items-center justify-center bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm max-w-md text-center">
+              <div className="text-6xl mb-4">😔</div>
+              <h2 className="text-2xl md:text-3xl font-bold text-red-400 mb-4">Partida Terminada</h2>
+              <p className="text-lg text-white mb-6">{gameOverMessage}</p>
+              <button
+                onClick={handleRestart}
+                className="px-6 py-3 bg-blue-600 text-lg font-bold rounded-lg hover:bg-blue-700 transition transform hover:scale-105"
+              >
+                Volver al Menú
+              </button>
+            </div>
+          );
+        }
+        return <div className="text-white">Cargando resultado...</div>;
       default:
         return <div>Error: Unknown game phase.</div>;
     }
