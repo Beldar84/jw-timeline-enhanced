@@ -11,7 +11,7 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
       html, body, #root {
-        height: 100%;
+        min-height: 100%;
         margin: 0;
         padding: 0;
       }
@@ -23,7 +23,15 @@
         background-attachment: fixed;
         background-color: #1a1a1a;
         color: #f0e6d2;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+      /* En móvil, permitir scroll vertical */
+      @media (max-width: 767px) {
+        body {
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        }
       }
       ::-webkit-scrollbar {
         height: 8px;

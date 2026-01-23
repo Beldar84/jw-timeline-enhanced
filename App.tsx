@@ -25,7 +25,10 @@ import ProfilePanel from './components/ProfilePanel';
 import LeaderboardPanel from './components/LeaderboardPanel';
 import AuthPanel from './components/AuthPanel';
 import FriendsPanel from './components/FriendsPanel';
+import GameInvitationsPanel from './components/GameInvitationsPanel';
+import TurnBasedGamesPanel from './components/TurnBasedGamesPanel';
 import { gameService } from './services/gameService';
+import { firebaseService } from './services/firebaseService';
 import { soundService } from './services/soundService';
 import AnimationLayerEnhanced, { AnimationInfo } from './components/AnimationLayerEnhanced';
 
@@ -120,6 +123,7 @@ const AppEnhanced: React.FC = () => {
   const [showSoundSettings, setShowSoundSettings] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [showFriends, setShowFriends] = useState(false);
+  const [showTurnBasedGames, setShowTurnBasedGames] = useState(false);
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [stats, setStats] = useState<PlayerStats>(statsService.loadStats());
 
@@ -580,6 +584,7 @@ const AppEnhanced: React.FC = () => {
             onShowSoundSettings={() => setShowSoundSettings(true)}
             onShowAuth={() => setShowAuth(true)}
             onShowFriends={() => setShowFriends(true)}
+            onShowTurnBasedGames={() => setShowTurnBasedGames(true)}
           />
         );
       case GamePhase.SETUP:
@@ -671,7 +676,7 @@ const AppEnhanced: React.FC = () => {
   const showLogo = [GamePhase.MENU, GamePhase.SETUP, GamePhase.LOBBY].includes(gamePhase) && !showDeckSelector;
 
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center p-2 md:p-4 text-white font-sans overflow-auto">
+    <div className="w-screen min-h-screen flex flex-col items-center justify-start md:justify-center p-2 md:p-4 pt-4 pb-8 text-white font-sans overflow-y-auto overflow-x-hidden">
       {showPlayerStatus && currentPlayer && (
         <PlayerStatus
           players={players}
@@ -726,6 +731,51 @@ const AppEnhanced: React.FC = () => {
       {showFriends && (
         <FriendsPanel
           onClose={() => setShowFriends(false)}
+          onInviteFriend={async (friendId, friendName) => {
+            // Crear partida e invitar al amigo
+            const profile = profileService.getProfile();
+            const playerName = profile?.name || 'Jugador';
+            const result = await gameService.createGame(playerName);
+
+            if (result.gameId) {
+              // Enviar invitación
+              await firebaseService.sendGameInvitation(friendId, result.gameId, 'realtime');
+              setLocalPlayerId(result.playerId);
+              gameService.subscribeToGame(result.gameId, setOnlineGameState);
+              setShowFriends(false);
+              setGameMode('online');
+              setGamePhase(GamePhase.LOBBY);
+            }
+          }}
+        />
+      )}
+      {/* Game Invitations - siempre visible en el menú */}
+      {gamePhase === GamePhase.MENU && firebaseService.isRegisteredUser() && (
+        <GameInvitationsPanel
+          onAcceptInvitation={async (gameId) => {
+            const profile = profileService.getProfile();
+            const playerName = profile?.name || 'Jugador';
+            const result = await gameService.joinGame(gameId, playerName);
+
+            if (result.success && result.playerId) {
+              setLocalPlayerId(result.playerId);
+              gameService.subscribeToGame(gameId, setOnlineGameState);
+              setGameMode('online');
+              setGamePhase(GamePhase.LOBBY);
+            }
+          }}
+          onClose={() => {}}
+        />
+      )}
+      {/* Turn-based Games Panel */}
+      {showTurnBasedGames && (
+        <TurnBasedGamesPanel
+          onSelectGame={(gameId) => {
+            // TODO: Load and display turn-based game
+            console.log('Selected turn-based game:', gameId);
+            setShowTurnBasedGames(false);
+          }}
+          onClose={() => setShowTurnBasedGames(false)}
         />
       )}
       {newAchievement && (
