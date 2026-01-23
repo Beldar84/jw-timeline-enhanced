@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { firebaseService, FriendInfo } from '../services/firebaseService';
 import { soundService } from '../services/soundService';

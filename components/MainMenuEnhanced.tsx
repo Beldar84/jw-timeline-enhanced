@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import RulesModal from './RulesModal';
 import { soundService } from '../services/soundService';
