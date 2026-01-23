@@ -91,6 +91,8 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete, onSkip }) => {
 
   const handleSkip = () => {
     soundService.playClick();
+    // Mark tutorial as skipped in localStorage (so it doesn't show again)
+    localStorage.setItem('jw_timeline_tutorial_completed', 'true');
     onSkip();
   };
 
