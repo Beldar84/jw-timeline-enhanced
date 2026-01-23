@@ -1,7 +1,7 @@
 // JW Timeline Service Worker
 // Enables offline functionality by caching essential resources
 
-const CACHE_NAME = 'jw-timeline-v8';
+const CACHE_NAME = 'jw-timeline-v9';
 
 // Resources to cache immediately on install
 const STATIC_RESOURCES = [
