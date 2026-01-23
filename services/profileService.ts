@@ -12,6 +12,10 @@ class ProfileService {
 
   constructor() {
     this.loadProfile();
+    // Auto-create profile if none exists
+    if (!this.profile) {
+      this.createProfile('Jugador');
+    }
   }
 
   private loadProfile(): void {
