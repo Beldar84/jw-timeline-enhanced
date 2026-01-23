@@ -66,6 +66,18 @@ export interface FriendInfo {
   online?: boolean;
 }
 
+export interface GameInvitation {
+  id: string;
+  fromUserId: string;
+  fromUserName: string;
+  toUserId: string;
+  gameId: string;
+  gameMode: 'realtime' | 'turnbased';
+  status: 'pending' | 'accepted' | 'declined' | 'expired';
+  createdAt: any;
+  expiresAt: any;
+}
+
 // Auth state
 let currentUser: User | null = null;
 let authStateListeners: ((user: User | null) => void)[] = [];
@@ -463,6 +475,162 @@ export const firebaseService = {
     }
   },
 
+  // ==================== GAME INVITATIONS ====================
+
+  // Send game invitation to a friend
+  async sendGameInvitation(friendId: string, gameId: string, gameMode: 'realtime' | 'turnbased' = 'realtime'): Promise<boolean> {
+    const userId = this.getCurrentUserId();
+    if (!userId) return false;
+
+    try {
+      const profile = await this.getProfile();
+      const inviteRef = doc(collection(db, 'gameInvitations'));
+
+      await setDoc(inviteRef, {
+        id: inviteRef.id,
+        fromUserId: userId,
+        fromUserName: profile?.name || 'Jugador',
+        toUserId: friendId,
+        gameId: gameId,
+        gameMode: gameMode,
+        status: 'pending', // pending, accepted, declined, expired
+        createdAt: serverTimestamp(),
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutos para tiempo real
+      });
+
+      console.log('[Firebase] Game invitation sent');
+      return true;
+    } catch (error) {
+      console.error('[Firebase] Send game invitation error:', error);
+      return false;
+    }
+  },
+
+  // Get pending game invitations for current user
+  async getGameInvitations(): Promise<GameInvitation[]> {
+    const userId = this.getCurrentUserId();
+    if (!userId) return [];
+
+    try {
+      const invitesRef = collection(db, 'gameInvitations');
+      const q = query(
+        invitesRef,
+        where('toUserId', '==', userId),
+        where('status', '==', 'pending')
+      );
+      const snapshot = await getDocs(q);
+
+      const invitations: GameInvitation[] = [];
+      const now = new Date();
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const expiresAt = data.expiresAt?.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
+
+        // Solo incluir invitaciones no expiradas
+        if (expiresAt > now) {
+          invitations.push({
+            id: data.id,
+            fromUserId: data.fromUserId,
+            fromUserName: data.fromUserName,
+            toUserId: data.toUserId,
+            gameId: data.gameId,
+            gameMode: data.gameMode,
+            status: data.status,
+            createdAt: data.createdAt,
+            expiresAt: data.expiresAt
+          });
+        }
+      });
+
+      return invitations;
+    } catch (error) {
+      console.error('[Firebase] Get game invitations error:', error);
+      return [];
+    }
+  },
+
+  // Subscribe to game invitations in real-time
+  subscribeToGameInvitations(callback: (invitations: GameInvitation[]) => void): () => void {
+    const userId = this.getCurrentUserId();
+    if (!userId) return () => {};
+
+    const invitesRef = collection(db, 'gameInvitations');
+    const q = query(
+      invitesRef,
+      where('toUserId', '==', userId),
+      where('status', '==', 'pending')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const invitations: GameInvitation[] = [];
+      const now = new Date();
+
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const expiresAt = data.expiresAt?.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
+
+        if (expiresAt > now) {
+          invitations.push({
+            id: data.id,
+            fromUserId: data.fromUserId,
+            fromUserName: data.fromUserName,
+            toUserId: data.toUserId,
+            gameId: data.gameId,
+            gameMode: data.gameMode,
+            status: data.status,
+            createdAt: data.createdAt,
+            expiresAt: data.expiresAt
+          });
+        }
+      });
+
+      callback(invitations);
+    });
+
+    return unsubscribe;
+  },
+
+  // Accept game invitation
+  async acceptGameInvitation(invitationId: string): Promise<{ success: boolean; gameId?: string }> {
+    try {
+      const inviteRef = doc(db, 'gameInvitations', invitationId);
+      const inviteSnap = await getDoc(inviteRef);
+
+      if (!inviteSnap.exists()) {
+        return { success: false };
+      }
+
+      const data = inviteSnap.data();
+
+      await updateDoc(inviteRef, {
+        status: 'accepted'
+      });
+
+      console.log('[Firebase] Game invitation accepted');
+      return { success: true, gameId: data.gameId };
+    } catch (error) {
+      console.error('[Firebase] Accept game invitation error:', error);
+      return { success: false };
+    }
+  },
+
+  // Decline game invitation
+  async declineGameInvitation(invitationId: string): Promise<boolean> {
+    try {
+      const inviteRef = doc(db, 'gameInvitations', invitationId);
+      await updateDoc(inviteRef, {
+        status: 'declined'
+      });
+
+      console.log('[Firebase] Game invitation declined');
+      return true;
+    } catch (error) {
+      console.error('[Firebase] Decline game invitation error:', error);
+      return false;
+    }
+  },
+
   // ==================== LEADERBOARD METHODS ====================
 
   async updateLeaderboard(stats: OnlineStats, name: string, avatar?: string): Promise<boolean> {
@@ -553,7 +721,209 @@ export const firebaseService = {
 
     await this.saveProfile(name, avatar);
     return await this.updateLeaderboard(localStats, name, avatar);
+  },
+
+  // ==================== TURN-BASED GAMES ====================
+
+  // Create a turn-based game
+  async createTurnBasedGame(opponentId: string): Promise<{ success: boolean; gameId?: string }> {
+    const userId = this.getCurrentUserId();
+    if (!userId) return { success: false };
+
+    try {
+      const profile = await this.getProfile();
+      const opponentRef = doc(db, 'users', opponentId);
+      const opponentSnap = await getDoc(opponentRef);
+
+      if (!opponentSnap.exists()) return { success: false };
+
+      const opponentData = opponentSnap.data();
+      const gameRef = doc(collection(db, 'turnBasedGames'));
+
+      const gameData: TurnBasedGame = {
+        id: gameRef.id,
+        players: [
+          { id: userId, name: profile?.name || 'Jugador 1' },
+          { id: opponentId, name: opponentData.name || 'Jugador 2' }
+        ],
+        currentTurnPlayerId: userId, // Creator goes first
+        timeline: [],
+        deck: [], // Will be populated when game starts
+        playerHands: {},
+        discardPile: [],
+        status: 'waiting', // waiting, active, finished
+        winnerId: null,
+        lastMoveAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+        turnTimeLimit: 24 * 60 * 60 * 1000 // 24 horas por turno
+      };
+
+      await setDoc(gameRef, gameData);
+
+      // Send notification to opponent
+      await this.sendGameInvitation(opponentId, gameRef.id, 'turnbased');
+
+      console.log('[Firebase] Turn-based game created');
+      return { success: true, gameId: gameRef.id };
+    } catch (error) {
+      console.error('[Firebase] Create turn-based game error:', error);
+      return { success: false };
+    }
+  },
+
+  // Get active turn-based games for current user
+  async getTurnBasedGames(): Promise<TurnBasedGame[]> {
+    const userId = this.getCurrentUserId();
+    if (!userId) return [];
+
+    try {
+      const gamesRef = collection(db, 'turnBasedGames');
+      const snapshot = await getDocs(gamesRef);
+
+      const games: TurnBasedGame[] = [];
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        // Check if user is a player in this game
+        if (data.players?.some((p: any) => p.id === userId) && data.status !== 'finished') {
+          games.push(data as TurnBasedGame);
+        }
+      });
+
+      return games;
+    } catch (error) {
+      console.error('[Firebase] Get turn-based games error:', error);
+      return [];
+    }
+  },
+
+  // Subscribe to a turn-based game
+  subscribeToTurnBasedGame(gameId: string, callback: (game: TurnBasedGame | null) => void): () => void {
+    const gameRef = doc(db, 'turnBasedGames', gameId);
+
+    const unsubscribe = onSnapshot(gameRef, (snapshot) => {
+      if (snapshot.exists()) {
+        callback(snapshot.data() as TurnBasedGame);
+      } else {
+        callback(null);
+      }
+    });
+
+    return unsubscribe;
+  },
+
+  // Make a move in turn-based game
+  async makeTurnBasedMove(gameId: string, cardId: number, timelineIndex: number): Promise<boolean> {
+    const userId = this.getCurrentUserId();
+    if (!userId) return false;
+
+    try {
+      const gameRef = doc(db, 'turnBasedGames', gameId);
+      const gameSnap = await getDoc(gameRef);
+
+      if (!gameSnap.exists()) return false;
+
+      const game = gameSnap.data() as TurnBasedGame;
+
+      // Verify it's this player's turn
+      if (game.currentTurnPlayerId !== userId) return false;
+
+      // TODO: Implement game logic here (validate placement, update timeline, etc.)
+      // For now, just update the turn
+
+      const otherPlayerId = game.players.find(p => p.id !== userId)?.id;
+
+      await updateDoc(gameRef, {
+        currentTurnPlayerId: otherPlayerId,
+        lastMoveAt: serverTimestamp()
+      });
+
+      console.log('[Firebase] Turn-based move made');
+      return true;
+    } catch (error) {
+      console.error('[Firebase] Make turn-based move error:', error);
+      return false;
+    }
+  },
+
+  // ==================== PUSH NOTIFICATIONS ====================
+
+  // Request notification permission and get token
+  async requestNotificationPermission(): Promise<string | null> {
+    try {
+      if (!('Notification' in window)) {
+        console.log('[Firebase] This browser does not support notifications');
+        return null;
+      }
+
+      const permission = await Notification.requestPermission();
+
+      if (permission === 'granted') {
+        console.log('[Firebase] Notification permission granted');
+        // Note: FCM token would be obtained here with Firebase Cloud Messaging
+        // For now, we'll use local notifications
+        return 'local-notifications-enabled';
+      }
+
+      return null;
+    } catch (error) {
+      console.error('[Firebase] Notification permission error:', error);
+      return null;
+    }
+  },
+
+  // Save notification token to user profile
+  async saveNotificationToken(token: string): Promise<boolean> {
+    const userId = this.getCurrentUserId();
+    if (!userId) return false;
+
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        notificationToken: token,
+        notificationsEnabled: true
+      });
+
+      console.log('[Firebase] Notification token saved');
+      return true;
+    } catch (error) {
+      console.error('[Firebase] Save notification token error:', error);
+      return false;
+    }
+  },
+
+  // Send local notification
+  showLocalNotification(title: string, body: string, data?: any): void {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const notification = new Notification(title, {
+        body,
+        icon: '/images/logo.png',
+        badge: '/images/logo.png',
+        tag: 'jw-timeline',
+        data
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+    }
   }
 };
+
+// Turn-based game type
+export interface TurnBasedGame {
+  id: string;
+  players: { id: string; name: string }[];
+  currentTurnPlayerId: string;
+  timeline: any[];
+  deck: any[];
+  playerHands: { [playerId: string]: any[] };
+  discardPile: any[];
+  status: 'waiting' | 'active' | 'finished';
+  winnerId: string | null;
+  lastMoveAt: any;
+  createdAt: any;
+  turnTimeLimit: number;
+}
 
 export default firebaseService;
