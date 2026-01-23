@@ -23,6 +23,8 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({ card, isFaceDown, onClick,
 
   if (isZoomed) {
     if (!card) return null;
+    // Solo mostrar año en zoom si showYear es true (carta del timeline) o isStudyMode
+    const showYearInZoom = showYear || isStudyMode;
     return (
       <div className="relative h-[85vh] max-w-[90vw] aspect-[500/734] rounded-lg shadow-2xl overflow-hidden border-2 border-yellow-300/50 bg-gray-900 mb-4">
         <img
@@ -52,10 +54,12 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({ card, isFaceDown, onClick,
               📖 {card.bibleRef}
             </p>
           )}
-          {/* Year in zoomed view */}
-          <p className="text-blue-300 text-base md:text-lg mt-1">
-            Año: {getYearText(card.year)}
-          </p>
+          {/* Year in zoomed view - solo si es carta del timeline o modo estudio */}
+          {showYearInZoom && (
+            <p className="text-blue-300 text-base md:text-lg mt-1">
+              Año: {getYearText(card.year)}
+            </p>
+          )}
         </div>
       </div>
     );

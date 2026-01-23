@@ -13,6 +13,7 @@ interface MainMenuEnhancedProps {
   onShowSoundSettings: () => void;
   onShowAuth: () => void;
   onShowFriends: () => void;
+  onShowTurnBasedGames?: () => void;
 }
 
 const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
@@ -24,10 +25,13 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
   onShowSoundSettings,
   onShowAuth,
   onShowFriends,
+  onShowTurnBasedGames,
 }) => {
   const [showRules, setShowRules] = useState(false);
   const [isMuted, setIsMuted] = useState(soundService.isMuted());
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [pendingTurnGames, setPendingTurnGames] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   // Get player info for display
@@ -35,9 +39,19 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
 
   // Listen to auth state
   useEffect(() => {
-    const unsubscribe = firebaseService.onAuthStateChange((user) => {
+    const unsubscribe = firebaseService.onAuthStateChange(async (user) => {
       setIsLoggedIn(user !== null && !user.isAnonymous);
       setUserEmail(user?.email || null);
+
+      // Check pending turn-based games
+      if (user && !user.isAnonymous) {
+        const games = await firebaseService.getTurnBasedGames();
+        const myTurnCount = games.filter(g => g.currentTurnPlayerId === user.uid).length;
+        setPendingTurnGames(myTurnCount);
+
+        // Check notification permission
+        setNotificationsEnabled(Notification.permission === 'granted');
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -92,6 +106,22 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
     await firebaseService.signOutUser();
   };
 
+  const handleTurnBasedGamesClick = () => {
+    soundService.playClick();
+    if (onShowTurnBasedGames) {
+      onShowTurnBasedGames();
+    }
+  };
+
+  const handleEnableNotifications = async () => {
+    soundService.playClick();
+    const token = await firebaseService.requestNotificationPermission();
+    if (token) {
+      await firebaseService.saveNotificationToken(token);
+      setNotificationsEnabled(true);
+    }
+  };
+
   const handleQuickMute = () => {
     const muted = soundService.toggleMute();
     setIsMuted(muted);
@@ -111,18 +141,31 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
                 <span className="text-green-400">✓</span>
                 <span className="text-sm text-green-300 truncate max-w-[180px]">{userEmail}</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 <button
                   onClick={handleFriendsClick}
                   className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition"
                 >
-                  👥 Amigos
+                  👥
                 </button>
+                {onShowTurnBasedGames && (
+                  <button
+                    onClick={handleTurnBasedGamesClick}
+                    className="px-2 py-1 bg-orange-600 hover:bg-orange-700 text-white text-xs rounded transition relative"
+                  >
+                    🕐
+                    {pendingTurnGames > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                        {pendingTurnGames}
+                      </span>
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={handleSignOut}
                   className="px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded transition"
                 >
-                  Salir
+                  ✕
                 </button>
               </div>
             </div>
@@ -207,6 +250,19 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
             🔊 Sonido
           </button>
         </div>
+
+        {/* Notifications - only show if logged in and not enabled */}
+        {isLoggedIn && !notificationsEnabled && 'Notification' in window && (
+          <div className="w-full max-w-sm mt-4">
+            <button
+              onClick={handleEnableNotifications}
+              className="w-full px-4 py-2 bg-gradient-to-r from-purple-600/50 to-blue-600/50 border border-purple-500/30 text-sm font-semibold rounded-lg hover:from-purple-600/70 hover:to-blue-600/70 transition flex items-center justify-center gap-2"
+            >
+              <span>🔔</span>
+              <span>Activar notificaciones</span>
+            </button>
+          </div>
+        )}
 
         {/* Rules Button */}
         <div className="w-full max-w-sm mt-4">
