@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import RulesModal from './RulesModal';
 import { soundService } from '../services/soundService';
 import { profileService } from '../services/profileService';
+import { firebaseService } from '../services/firebaseService';
 
 interface MainMenuEnhancedProps {
   onSelectMode: (mode: 'local' | 'ai' | 'online' | 'study') => void;
@@ -10,6 +12,8 @@ interface MainMenuEnhancedProps {
   onShowProfile: () => void;
   onShowLeaderboard: () => void;
   onShowSoundSettings: () => void;
+  onShowAuth: () => void;
+  onShowFriends: () => void;
 }
 
 const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
@@ -19,12 +23,25 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
   onShowProfile,
   onShowLeaderboard,
   onShowSoundSettings,
+  onShowAuth,
+  onShowFriends,
 }) => {
   const [showRules, setShowRules] = useState(false);
   const [isMuted, setIsMuted] = useState(soundService.isMuted());
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   // Get player info for display
   const profile = profileService.getProfileSummary();
+
+  // Listen to auth state
+  useEffect(() => {
+    const unsubscribe = firebaseService.onAuthStateChange((user) => {
+      setIsLoggedIn(user !== null && !user.isAnonymous);
+      setUserEmail(user?.email || null);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleModeSelect = (mode: 'local' | 'ai' | 'online' | 'study') => {
     soundService.playClick();
@@ -61,6 +78,21 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
     onShowSoundSettings();
   };
 
+  const handleAuthClick = () => {
+    soundService.playClick();
+    onShowAuth();
+  };
+
+  const handleFriendsClick = () => {
+    soundService.playClick();
+    onShowFriends();
+  };
+
+  const handleSignOut = async () => {
+    soundService.playClick();
+    await firebaseService.signOutUser();
+  };
+
   const handleQuickMute = () => {
     const muted = soundService.toggleMute();
     setIsMuted(muted);
@@ -72,6 +104,40 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
   return (
     <>
       <div className="flex flex-col items-center justify-center bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm relative">
+        {/* Auth Status Bar */}
+        <div className="w-full max-w-sm mb-3">
+          {isLoggedIn ? (
+            <div className="flex items-center justify-between p-2 bg-green-600/20 border border-green-500/30 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-green-400">✓</span>
+                <span className="text-sm text-green-300 truncate max-w-[180px]">{userEmail}</span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleFriendsClick}
+                  className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition"
+                >
+                  👥 Amigos
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  className="px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded transition"
+                >
+                  Salir
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={handleAuthClick}
+              className="w-full p-2 bg-blue-600/20 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center justify-center gap-2"
+            >
+              <span className="text-blue-400">🔐</span>
+              <span className="text-sm text-blue-300">Iniciar sesión / Registrarse</span>
+            </button>
+          )}
+        </div>
+
         {/* Player Info Bar */}
         <div
           onClick={handleShowProfile}
