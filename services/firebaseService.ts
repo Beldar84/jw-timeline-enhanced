@@ -279,25 +279,37 @@ export const firebaseService = {
 
   // ==================== FRIENDS METHODS ====================
 
-  // Search users by email
-  async searchUserByEmail(email: string): Promise<FriendInfo | null> {
+  // Search users by username (case-insensitive partial match)
+  async searchUserByUsername(username: string): Promise<FriendInfo[]> {
     try {
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', email.toLowerCase()));
-      const snapshot = await getDocs(q);
+      // Get all users and filter client-side for case-insensitive partial match
+      const snapshot = await getDocs(usersRef);
 
-      if (snapshot.empty) return null;
+      const searchTerm = username.toLowerCase().trim();
+      const results: FriendInfo[] = [];
+      const currentUserId = this.getCurrentUserId();
 
-      const userData = snapshot.docs[0].data();
-      return {
-        id: userData.id,
-        name: userData.name,
-        email: userData.email,
-        avatar: userData.avatar
-      };
+      snapshot.docs.forEach(doc => {
+        const userData = doc.data();
+        const userName = (userData.name || '').toLowerCase();
+
+        // Match if username contains the search term and is not the current user
+        if (userName.includes(searchTerm) && userData.id !== currentUserId) {
+          results.push({
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            avatar: userData.avatar
+          });
+        }
+      });
+
+      // Return up to 10 results
+      return results.slice(0, 10);
     } catch (error) {
       console.error('[Firebase] Search user error:', error);
-      return null;
+      return [];
     }
   },
 
