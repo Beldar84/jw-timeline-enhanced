@@ -23,6 +23,8 @@ import AchievementNotification from './components/AchievementNotification';
 import SoundControls from './components/SoundControls';
 import ProfilePanel from './components/ProfilePanel';
 import LeaderboardPanel from './components/LeaderboardPanel';
+import AuthPanel from './components/AuthPanel';
+import FriendsPanel from './components/FriendsPanel';
 import { gameService } from './services/gameService';
 import { soundService } from './services/soundService';
 import AnimationLayerEnhanced, { AnimationInfo } from './components/AnimationLayerEnhanced';
@@ -116,6 +118,8 @@ const AppEnhanced: React.FC = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showSoundSettings, setShowSoundSettings] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [showFriends, setShowFriends] = useState(false);
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [stats, setStats] = useState<PlayerStats>(statsService.loadStats());
 
@@ -574,6 +578,8 @@ const AppEnhanced: React.FC = () => {
             onShowProfile={() => setShowProfile(true)}
             onShowLeaderboard={() => setShowLeaderboard(true)}
             onShowSoundSettings={() => setShowSoundSettings(true)}
+            onShowAuth={() => setShowAuth(true)}
+            onShowFriends={() => setShowFriends(true)}
           />
         );
       case GamePhase.SETUP:
@@ -711,6 +717,17 @@ const AppEnhanced: React.FC = () => {
       {showProfile && <ProfilePanel onClose={() => setShowProfile(false)} />}
       {showLeaderboard && <LeaderboardPanel onClose={() => setShowLeaderboard(false)} />}
       {showSoundSettings && <SoundControls onClose={() => setShowSoundSettings(false)} />}
+      {showAuth && (
+        <AuthPanel
+          onClose={() => setShowAuth(false)}
+          onSuccess={() => setShowAuth(false)}
+        />
+      )}
+      {showFriends && (
+        <FriendsPanel
+          onClose={() => setShowFriends(false)}
+        />
+      )}
       {newAchievement && (
         <AchievementNotification
           achievement={newAchievement}
