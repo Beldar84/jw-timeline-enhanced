@@ -61,17 +61,12 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({ card, isFaceDown, onClick,
     );
   }
 
-  // Dimensiones de la carta - se adaptan al contenedor si tiene clase custom
-  // Móvil portrait: w-[150px] h-[220px]
-  // Móvil landscape: w-[120px] h-[176px]
-  // Tablet (md 768px+): w-[160px] h-[235px]
-  // Desktop (lg 1024px+): w-[180px] h-[264px]
-  // Desktop grande (xl 1280px+): w-[200px] h-[293px]
-  // Monitor grande (2xl 1536px+): w-[220px] h-[322px]
-  const hasCustomSize = className.includes('w-') || className.includes('h-');
+  // Dimensiones de la carta - usa clase CSS responsive para mejor compatibilidad
+  // Los tamaños se definen en /public/index.css con media queries
+  const hasCustomSize = className.includes('w-') || className.includes('h-') || className.includes('card-responsive');
   const cardBaseStyle = hasCustomSize
-    ? "relative w-full h-full flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600"
-    : "relative w-[150px] h-[220px] landscape:w-[120px] landscape:h-[176px] md:w-[160px] md:h-[235px] lg:w-[180px] lg:h-[264px] xl:w-[200px] xl:h-[293px] 2xl:w-[220px] 2xl:h-[322px] flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600";
+    ? "relative flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600"
+    : "relative card-responsive flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600";
   const selectableStyle = onClick ? "cursor-pointer hover:scale-105 hover:shadow-2xl hover:border-yellow-400" : "";
 
   if (isPlaceholder || isFaceDown) {

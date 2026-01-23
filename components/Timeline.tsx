@@ -72,7 +72,7 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
                 card={card}
                 showYear={true}
                 onClick={() => onCardClick(card)}
-                className="w-[150px] h-[220px] landscape:w-[120px] landscape:h-[176px] md:w-[160px] md:h-[235px] lg:w-[180px] lg:h-[264px] xl:w-[200px] xl:h-[293px] 2xl:w-[220px] 2xl:h-[322px]"
+                className="card-responsive"
             />
             <PlacementSlot 
                 id={`timeline-slot-${index + 1}`}

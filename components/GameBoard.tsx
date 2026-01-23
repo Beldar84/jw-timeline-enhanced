@@ -136,13 +136,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   const handPlayer = gameMode === 'local' || gameMode === 'ai' ? currentPlayer : localPlayer;
 
-  // Dimensiones del mazo y descarte (más pequeñas que las cartas principales)
-  // Móvil: w-[100px] h-[146px]
-  // Tablet: w-[110px] h-[161px]
-  // Desktop: w-[130px] h-[190px]
-  // Desktop grande: w-[150px] h-[220px]
-  // Monitor grande: w-[160px] h-[235px]
-  const containerDimensions = "w-[100px] h-[146px] landscape:w-[90px] landscape:h-[132px] md:w-[110px] md:h-[161px] lg:w-[130px] lg:h-[190px] xl:w-[150px] xl:h-[220px] 2xl:w-[160px] 2xl:h-[235px]";
+  // Dimensiones del mazo y descarte - usa clase CSS responsive
+  const containerDimensions = "deck-responsive";
 
   return (
     <div className="space-y-1 md:space-y-2 flex flex-col h-full w-full overflow-y-auto overflow-x-hidden pb-8 md:pb-4 relative">
