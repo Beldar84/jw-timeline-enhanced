@@ -14,8 +14,8 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
   const [friends, setFriends] = useState<FriendInfo[]>([]);
   const [requests, setRequests] = useState<FriendInfo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchEmail, setSearchEmail] = useState('');
-  const [searchResult, setSearchResult] = useState<FriendInfo | null>(null);
+  const [searchUsername, setSearchUsername] = useState('');
+  const [searchResults, setSearchResults] = useState<FriendInfo[]>([]);
   const [searching, setSearching] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -41,26 +41,27 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
   };
 
   const handleSearch = async () => {
-    if (!searchEmail.trim()) return;
+    if (!searchUsername.trim() || searchUsername.trim().length < 2) {
+      setMessage({ type: 'error', text: 'Escribe al menos 2 caracteres' });
+      return;
+    }
 
     setSearching(true);
-    setSearchResult(null);
+    setSearchResults([]);
     setMessage(null);
     soundService.playClick();
 
     try {
-      const result = await firebaseService.searchUserByEmail(searchEmail.trim().toLowerCase());
-      if (result) {
-        // Check if already a friend
-        if (friends.some(f => f.id === result.id)) {
-          setMessage({ type: 'error', text: 'Este usuario ya es tu amigo' });
-        } else if (result.id === firebaseService.getCurrentUserId()) {
-          setMessage({ type: 'error', text: 'No puedes añadirte a ti mismo' });
-        } else {
-          setSearchResult(result);
-        }
+      const results = await firebaseService.searchUserByUsername(searchUsername.trim());
+      // Filter out users who are already friends
+      const filteredResults = results.filter(r => !friends.some(f => f.id === r.id));
+
+      if (filteredResults.length > 0) {
+        setSearchResults(filteredResults);
+      } else if (results.length > 0) {
+        setMessage({ type: 'error', text: 'Todos los resultados ya son tus amigos' });
       } else {
-        setMessage({ type: 'error', text: 'No se encontró ningún usuario con ese email' });
+        setMessage({ type: 'error', text: 'No se encontró ningún usuario con ese nombre' });
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Error al buscar usuario' });
@@ -77,8 +78,8 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
       const success = await firebaseService.sendFriendRequest(friendId);
       if (success) {
         setMessage({ type: 'success', text: 'Solicitud de amistad enviada' });
-        setSearchResult(null);
-        setSearchEmail('');
+        // Remove user from search results
+        setSearchResults(prev => prev.filter(r => r.id !== friendId));
         soundService.playCorrect();
       } else {
         setMessage({ type: 'error', text: 'Error al enviar solicitud' });
@@ -310,21 +311,21 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Buscar por email
+                      Buscar por nombre de usuario
                     </label>
                     <div className="flex gap-2">
                       <input
-                        type="email"
-                        value={searchEmail}
-                        onChange={(e) => setSearchEmail(e.target.value)}
+                        type="text"
+                        value={searchUsername}
+                        onChange={(e) => setSearchUsername(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                         className="flex-1 bg-gray-700 text-white p-3 rounded-lg border-2 border-gray-600 focus:border-blue-400 focus:outline-none"
-                        placeholder="amigo@email.com"
+                        placeholder="Nombre del jugador..."
                         disabled={searching}
                       />
                       <button
                         onClick={handleSearch}
-                        disabled={searching || !searchEmail.trim()}
+                        disabled={searching || searchUsername.trim().length < 2}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 text-white font-bold rounded-lg transition"
                       >
                         {searching ? '...' : '🔍'}
@@ -342,28 +343,33 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
                     </div>
                   )}
 
-                  {searchResult && (
-                    <div className="flex items-center gap-3 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                      <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                        {searchResult.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-white">{searchResult.name}</p>
-                        <p className="text-sm text-gray-400">{searchResult.email}</p>
-                      </div>
-                      <button
-                        onClick={() => handleSendRequest(searchResult.id)}
-                        disabled={actionLoading === searchResult.id}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white font-bold rounded-lg transition"
-                      >
-                        {actionLoading === searchResult.id ? '...' : '+ Añadir'}
-                      </button>
+                  {/* Search Results */}
+                  {searchResults.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-400">{searchResults.length} resultado(s):</p>
+                      {searchResults.map((user) => (
+                        <div key={user.id} className="flex items-center gap-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                            {user.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-white truncate">{user.name}</p>
+                          </div>
+                          <button
+                            onClick={() => handleSendRequest(user.id)}
+                            disabled={actionLoading === user.id}
+                            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white text-sm font-bold rounded-lg transition"
+                          >
+                            {actionLoading === user.id ? '...' : '+ Añadir'}
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
 
                   <div className="bg-gray-700/30 p-4 rounded-lg">
                     <p className="text-sm text-gray-400">
-                      💡 <strong>Tip:</strong> Pide a tu amigo que te dé su email de registro para añadirlo.
+                      💡 <strong>Tip:</strong> Busca a tus amigos por su nombre de usuario en el juego.
                     </p>
                   </div>
                 </div>

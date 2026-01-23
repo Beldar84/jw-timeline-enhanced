@@ -68,10 +68,11 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
       
       {cards.map((card, index) => (
         <React.Fragment key={card.id}>
-            <Card 
-                card={card} 
-                showYear={true} 
+            <Card
+                card={card}
+                showYear={true}
                 onClick={() => onCardClick(card)}
+                className="w-[150px] h-[220px] landscape:w-[120px] landscape:h-[176px] md:w-[160px] md:h-[235px] lg:w-[180px] lg:h-[264px] xl:w-[200px] xl:h-[293px] 2xl:w-[220px] 2xl:h-[322px]"
             />
             <PlacementSlot 
                 id={`timeline-slot-${index + 1}`}

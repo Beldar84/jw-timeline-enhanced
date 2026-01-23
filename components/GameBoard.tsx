@@ -138,9 +138,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   // Dimensiones del mazo y descarte (más pequeñas que las cartas principales)
   // Móvil: w-[100px] h-[146px]
+  // Tablet: w-[110px] h-[161px]
   // Desktop: w-[130px] h-[190px]
   // Desktop grande: w-[150px] h-[220px]
-  const containerDimensions = "w-[100px] h-[146px] landscape:w-[90px] landscape:h-[132px] md:w-[130px] md:h-[190px] lg:w-[150px] lg:h-[220px]";
+  // Monitor grande: w-[160px] h-[235px]
+  const containerDimensions = "w-[100px] h-[146px] landscape:w-[90px] landscape:h-[132px] md:w-[110px] md:h-[161px] lg:w-[130px] lg:h-[190px] xl:w-[150px] xl:h-[220px] 2xl:w-[160px] 2xl:h-[235px]";
 
   return (
     <div className="space-y-1 md:space-y-2 flex flex-col h-full w-full overflow-y-auto overflow-x-hidden pb-8 md:pb-4 relative">
@@ -236,8 +238,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       {zoomedCard && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50" onClick={handleCloseZoom} role="dialog" aria-modal="true">
-          <div onClick={(e) => e.stopPropagation()}>
+          <div onClick={handleCloseZoom} className="cursor-pointer">
             <Card card={zoomedCard} showYear={false} isZoomed={true} />
+            <p className="text-center text-gray-400 text-sm mt-2">Toca para cerrar</p>
           </div>
         </div>
       )}
