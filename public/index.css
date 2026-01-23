@@ -1,0 +1,104 @@
+/* Card sizes for different screen widths */
+/* This ensures cards scale properly on all screen sizes */
+
+/* Base card size (used by .card-responsive class) */
+.card-responsive {
+  width: 150px;
+  height: 220px;
+}
+
+/* Landscape mobile */
+@media (orientation: landscape) and (max-width: 1023px) {
+  .card-responsive {
+    width: 120px;
+    height: 176px;
+  }
+}
+
+/* Tablet (768px+) */
+@media (min-width: 768px) {
+  .card-responsive {
+    width: 160px;
+    height: 235px;
+  }
+}
+
+/* Desktop (1024px+) */
+@media (min-width: 1024px) {
+  .card-responsive {
+    width: 180px;
+    height: 264px;
+  }
+}
+
+/* Large Desktop (1280px+) */
+@media (min-width: 1280px) {
+  .card-responsive {
+    width: 200px;
+    height: 293px;
+  }
+}
+
+/* Extra Large Desktop (1536px+) */
+@media (min-width: 1536px) {
+  .card-responsive {
+    width: 220px;
+    height: 322px;
+  }
+}
+
+/* Very Large Desktop (1920px+) */
+@media (min-width: 1920px) {
+  .card-responsive {
+    width: 240px;
+    height: 352px;
+  }
+}
+
+/* Deck/Discard pile sizes */
+.deck-responsive {
+  width: 100px;
+  height: 146px;
+}
+
+@media (orientation: landscape) and (max-width: 1023px) {
+  .deck-responsive {
+    width: 90px;
+    height: 132px;
+  }
+}
+
+@media (min-width: 768px) {
+  .deck-responsive {
+    width: 110px;
+    height: 161px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .deck-responsive {
+    width: 130px;
+    height: 190px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .deck-responsive {
+    width: 150px;
+    height: 220px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .deck-responsive {
+    width: 170px;
+    height: 249px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .deck-responsive {
+    width: 180px;
+    height: 264px;
+  }
+}

@@ -1,7 +1,7 @@
 // JW Timeline Service Worker
 // Enables offline functionality by caching essential resources
 
-const CACHE_NAME = 'jw-timeline-v2';
+const CACHE_NAME = 'jw-timeline-v4';
 
 // Resources to cache immediately on install
 const STATIC_RESOURCES = [
@@ -82,10 +82,28 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For static resources, use cache-first strategy
+  // For HTML and main page, use network-first to always get latest version
+  if (url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse.ok) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, networkResponse.clone());
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Only use cache if network fails
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // For static image resources, use cache-first strategy
   if (
-    url.pathname === '/' ||
-    url.pathname.endsWith('.html') ||
     url.pathname.endsWith('.png') ||
     url.pathname.endsWith('.jpg') ||
     url.pathname.endsWith('.svg')
@@ -93,14 +111,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         if (cachedResponse) {
-          // Return cached version, but fetch update in background
-          fetch(event.request).then((networkResponse) => {
-            if (networkResponse.ok) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, networkResponse);
-              });
-            }
-          });
           return cachedResponse;
         }
 
