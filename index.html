@@ -16,15 +16,24 @@
         padding: 0;
       }
       body {
-        background-image: url('https://i.postimg.cc/8PYK2QmK/fondomesa.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
         background-color: #1a1a1a;
         color: #f0e6d2;
         overflow-x: hidden;
         overflow-y: auto;
+      }
+      /* Fondo fijo usando pseudo-elemento para evitar problemas en móvil */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('https://i.postimg.cc/8PYK2QmK/fondomesa.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        z-index: -1;
       }
       /* En móvil, permitir scroll vertical */
       @media (max-width: 767px) {
@@ -49,7 +58,7 @@
         background: rgba(251, 191, 36, 0.8);
       }
     </style>
-    <link rel="stylesheet" href="/public/index.css">
+    <link rel="stylesheet" href="/index.css">
   </head>
   <body>
     <div id="root">
