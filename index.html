@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/images/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
     <meta name="description" content="JW Timeline - Un juego de línea temporal bíblica" />
     <meta name="theme-color" content="#1a1a1a" />
     <title>JW Timeline</title>
@@ -18,32 +18,48 @@
       body {
         background-color: #1a1a1a;
         color: #f0e6d2;
-        overflow-x: hidden;
-        overflow-y: auto;
       }
-      /* Fondo fijo - div separado para máxima compatibilidad móvil */
+      /* Fondo fijo - usando altura dinámica para móvil */
       #bg-fixed {
         position: fixed;
         top: 0;
         left: 0;
-        width: 100vw;
+        right: 0;
+        bottom: 0;
+        /* Usar dvh (dynamic viewport height) con fallback a vh */
+        width: 100%;
         height: 100vh;
+        height: 100dvh;
         background-image: url('https://i.postimg.cc/8PYK2QmK/fondomesa.png');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
         z-index: -1;
         pointer-events: none;
-        /* Evitar que el fondo se mueva con el scroll en móvil */
-        transform: translateZ(0);
-        -webkit-transform: translateZ(0);
-        will-change: transform;
+        /* GPU acceleration para evitar repaint */
+        transform: translate3d(0, 0, 0);
+        -webkit-transform: translate3d(0, 0, 0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
       }
       /* Contenedor principal con scroll */
       #root {
         position: relative;
         z-index: 1;
         min-height: 100vh;
+        min-height: 100dvh;
+      }
+      /* Prevenir el bounce scroll en iOS */
+      html {
+        overflow: hidden;
+        height: 100%;
+      }
+      body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        height: 100%;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: none;
       }
       ::-webkit-scrollbar {
         height: 8px;
