@@ -18,7 +18,7 @@ import OnlineSetup from './components/OnlineSetup';
 import OnlineLobby from './components/OnlineLobby';
 import DeckSelector from './components/DeckSelector';
 import StatsPanel from './components/StatsPanel';
-import Tutorial, { shouldShowTutorial } from './components/Tutorial';
+import Tutorial from './components/Tutorial';
 import AchievementNotification from './components/AchievementNotification';
 import SoundControls from './components/SoundControls';
 import ProfilePanel from './components/ProfilePanel';
@@ -30,6 +30,7 @@ import TurnBasedGamesPanel from './components/TurnBasedGamesPanel';
 import { gameService } from './services/gameService';
 import { firebaseService } from './services/firebaseService';
 import { soundService } from './services/soundService';
+import { gameStateService } from './services/gameStateService';
 import AnimationLayerEnhanced, { AnimationInfo } from './components/AnimationLayerEnhanced';
 
 // Register Service Worker for offline support
@@ -127,13 +128,46 @@ const AppEnhanced: React.FC = () => {
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [stats, setStats] = useState<PlayerStats>(statsService.loadStats());
 
-  // Show tutorial on first launch (only on desktop)
+  // Load saved game state on mount
   useEffect(() => {
-    const isMobile = window.matchMedia('(max-width: 767px)').matches;
-    if (shouldShowTutorial() && gamePhase === GamePhase.MENU && !isMobile) {
-      setShowTutorial(true);
+    const savedState = gameStateService.loadGameState();
+    if (savedState) {
+      // Restore the game state
+      setGamePhase(savedState.gamePhase);
+      setGameMode(savedState.gameMode);
+      setPlayers(savedState.players);
+      setCurrentPlayerIndex(savedState.currentPlayerIndex);
+      setTimeline(savedState.timeline);
+      setDeck(savedState.deck);
+      setDiscardPile(savedState.discardPile);
+      setSelectedDeckId(savedState.selectedDeckId);
+      setAiDifficulty(savedState.aiDifficulty);
+      setIsStudyMode(savedState.isStudyMode);
+      setMessage(`Es el turno de ${savedState.players[savedState.currentPlayerIndex].name}.`);
     }
-  }, [gamePhase]);
+  }, []);
+
+  // Save game state when it changes during play
+  useEffect(() => {
+    if (gamePhase === GamePhase.PLAYING && gameMode && gameMode !== 'online' && players.length > 0) {
+      gameStateService.saveGameState({
+        gamePhase,
+        gameMode,
+        players,
+        currentPlayerIndex,
+        timeline,
+        deck,
+        discardPile,
+        selectedDeckId,
+        aiDifficulty,
+        isStudyMode,
+      });
+    }
+    // Clear saved state when game ends
+    if (gamePhase === GamePhase.GAME_OVER || gamePhase === GamePhase.MENU) {
+      gameStateService.clearGameState();
+    }
+  }, [gamePhase, gameMode, players, currentPlayerIndex, timeline, deck, discardPile]);
 
   const currentPlayer = useMemo(() => {
     if (gameMode === 'online' && onlineGameState) {
