@@ -7,6 +7,7 @@ interface SoundControlsProps {
 
 const SoundControls: React.FC<SoundControlsProps> = ({ onClose }) => {
   const [settings, setSettings] = useState(soundService.getSettings());
+  const [isLoadingMusic, setIsLoadingMusic] = useState(false);
 
   useEffect(() => {
     // Update settings when they change
@@ -30,8 +31,17 @@ const SoundControls: React.FC<SoundControlsProps> = ({ onClose }) => {
     setSettings({ ...settings, isMuted: muted });
   };
 
-  const handleToggleMusic = () => {
-    soundService.toggleMusic();
+  const handleToggleMusic = async () => {
+    if (!settings.isMusicEnabled) {
+      setIsLoadingMusic(true);
+      try {
+        await soundService.startMusic();
+      } finally {
+        setIsLoadingMusic(false);
+      }
+    } else {
+      soundService.stopMusic();
+    }
     setSettings(soundService.getSettings());
   };
 
@@ -132,14 +142,14 @@ const SoundControls: React.FC<SoundControlsProps> = ({ onClose }) => {
               </div>
               <button
                 onClick={handleToggleMusic}
-                disabled={settings.isMuted}
+                disabled={settings.isMuted || isLoadingMusic}
                 className={`px-4 py-2 rounded-lg font-semibold transition ${
                   settings.isMusicEnabled && !settings.isMuted
                     ? 'bg-green-600 hover:bg-green-700 text-white'
                     : 'bg-gray-600 hover:bg-gray-500 text-gray-300'
                 } disabled:opacity-50`}
               >
-                {settings.isMusicEnabled ? '⏸ Pausar' : '▶ Activar'}
+                {isLoadingMusic ? '⏳ Cargando...' : settings.isMusicEnabled ? '⏸ Pausar' : '▶ Activar'}
               </button>
             </div>
             <div className="flex items-center gap-3">
