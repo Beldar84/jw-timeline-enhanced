@@ -1,6 +1,8 @@
 
 import { GameState, Player, Card, OnlineGamePhase } from '../types';
 import { CARD_DATA } from '../data/cards';
+import { shuffleArray } from '../utils/shuffle';
+import { canPlaceCard, getValidTimelineMoves } from '../utils/timelineRules';
 
 // Declare PeerJS global type since we are loading it via CDN
 declare const Peer: any;
@@ -34,19 +36,11 @@ function getRandomBiblicalName(usedNames: string[]): string {
   return availableNames[Math.floor(Math.random() * availableNames.length)];
 }
 
-const shuffleArray = <T,>(array: T[]): T[] => {
-  return [...array].sort(() => Math.random() - 0.5);
-};
-
 const generateShortId = () => {
   // Genera un número aleatorio de 4 dígitos (1000-9999)
   const number = Math.floor(Math.random() * 9000) + 1000;
   return `JW-${number}`;
 };
-
-// Tu API Key de Metered (jwtimeline)
-const METERED_API_KEY = '0733bc6c94842b6c27cad4dd606e83f9dfd8';
-const METERED_API_URL = 'https://jwtimeline.metered.live/api/v1/turn/credentials';
 
 // Cache para las credenciales TURN (evita llamadas repetidas a la API)
 let cachedIceServers: any[] | null = null;
@@ -61,7 +55,7 @@ async function getIceServers(): Promise<any[]> {
   }
 
   try {
-    const response = await fetch(`${METERED_API_URL}?apiKey=${METERED_API_KEY}`);
+    const response = await fetch('/api/turn-credentials');
     if (response.ok) {
       cachedIceServers = await response.json();
       cacheTimestamp = Date.now();
@@ -542,21 +536,12 @@ class GameService {
       const currentPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
       // Validate turn
       if (currentPlayer.id !== playerId) return;
+      if (!Number.isInteger(timelineIndex) || timelineIndex < 0 || timelineIndex > this.gameState.timeline.length) return;
 
       const cardToPlace = currentPlayer.hand.find(c => c.id === cardId);
       if (!cardToPlace) return;
 
-      let isCorrect = false;
-      const prevCard = this.gameState.timeline[timelineIndex - 1];
-      const nextCard = this.gameState.timeline[timelineIndex];
-
-      if (!prevCard && nextCard) {
-        isCorrect = cardToPlace.year < nextCard.year;
-      } else if (prevCard && !nextCard) {
-        isCorrect = cardToPlace.year > prevCard.year;
-      } else if (prevCard && nextCard) {
-        isCorrect = cardToPlace.year > prevCard.year && cardToPlace.year < nextCard.year;
-      }
+      const isCorrect = canPlaceCard(cardToPlace, this.gameState.timeline, timelineIndex);
 
       // Remove from hand
       currentPlayer.hand = currentPlayer.hand.filter(c => c.id !== cardId);
@@ -575,6 +560,12 @@ class GameService {
           if (this.gameState.deck.length > 0) {
               const newCard = this.gameState.deck.pop();
               if (newCard) currentPlayer.hand.push(newCard);
+          } else if (currentPlayer.hand.length === 0) {
+              this.gameState.winner = currentPlayer;
+              this.gameState.phase = OnlineGamePhase.GAME_OVER;
+              this.gameState.message = `¡${currentPlayer.name} ha ganado!`;
+              this.broadcastState();
+              return;
           }
       }
 
@@ -596,21 +587,8 @@ class GameService {
           const aiPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
           if (!aiPlayer.isAI) return;
 
-          // AI Logic
           let move: { card: Card, timelineIndex: number } | null = null;
-          const correctMoves: { card: Card, timelineIndex: number }[] = [];
-          
-          for (const card of aiPlayer.hand) {
-            for (let i = 0; i <= this.gameState.timeline.length; i++) {
-                const prevCard = this.gameState.timeline[i - 1];
-                const nextCard = this.gameState.timeline[i];
-                let isCorrect = false;
-                if (!prevCard && nextCard) isCorrect = card.year < nextCard.year;
-                else if (prevCard && !nextCard) isCorrect = card.year > prevCard.year;
-                else if (prevCard && nextCard) isCorrect = card.year > prevCard.year && card.year < nextCard.year;
-                if (isCorrect) correctMoves.push({ card, timelineIndex: i });
-            }
-          }
+          const correctMoves = getValidTimelineMoves(aiPlayer.hand, this.gameState.timeline);
 
           if (correctMoves.length > 0 && Math.random() > 0.3) {
               move = correctMoves[Math.floor(Math.random() * correctMoves.length)];

@@ -4,6 +4,10 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, serverTimestamp, Timestamp, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 // @ts-ignore
 import { getAuth, signInAnonymously, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, browserLocalPersistence, setPersistence } from 'firebase/auth';
+import { Card } from '../types';
+import { CARD_DATA } from '../data/cards';
+import { shuffleArray } from '../utils/shuffle';
+import { canPlaceCard } from '../utils/timelineRules';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -592,7 +596,7 @@ export const firebaseService = {
   },
 
   // Accept game invitation
-  async acceptGameInvitation(invitationId: string): Promise<{ success: boolean; gameId?: string }> {
+  async acceptGameInvitation(invitationId: string): Promise<{ success: boolean; gameId?: string; gameMode?: 'realtime' | 'turnbased' }> {
     try {
       const inviteRef = doc(db, 'gameInvitations', invitationId);
       const inviteSnap = await getDoc(inviteRef);
@@ -608,7 +612,7 @@ export const firebaseService = {
       });
 
       console.log('[Firebase] Game invitation accepted');
-      return { success: true, gameId: data.gameId };
+      return { success: true, gameId: data.gameId, gameMode: data.gameMode };
     } catch (error) {
       console.error('[Firebase] Accept game invitation error:', error);
       return { success: false };
@@ -739,6 +743,21 @@ export const firebaseService = {
 
       const opponentData = opponentSnap.data();
       const gameRef = doc(collection(db, 'turnBasedGames'));
+      const shuffledDeck = shuffleArray(CARD_DATA);
+      const initialTimelineCard = shuffledDeck.pop();
+      if (!initialTimelineCard) return { success: false };
+
+      const playerHands: { [playerId: string]: Card[] } = {
+        [userId]: [],
+        [opponentId]: [],
+      };
+
+      for (let i = 0; i < 4; i++) {
+        const userCard = shuffledDeck.pop();
+        const opponentCard = shuffledDeck.pop();
+        if (userCard) playerHands[userId].push(userCard);
+        if (opponentCard) playerHands[opponentId].push(opponentCard);
+      }
 
       const gameData: TurnBasedGame = {
         id: gameRef.id,
@@ -747,11 +766,11 @@ export const firebaseService = {
           { id: opponentId, name: opponentData.name || 'Jugador 2' }
         ],
         currentTurnPlayerId: userId, // Creator goes first
-        timeline: [],
-        deck: [], // Will be populated when game starts
-        playerHands: {},
+        timeline: [initialTimelineCard],
+        deck: shuffledDeck,
+        playerHands,
         discardPile: [],
-        status: 'waiting', // waiting, active, finished
+        status: 'active',
         winnerId: null,
         lastMoveAt: serverTimestamp(),
         createdAt: serverTimestamp(),
@@ -824,16 +843,50 @@ export const firebaseService = {
 
       const game = gameSnap.data() as TurnBasedGame;
 
-      // Verify it's this player's turn
-      if (game.currentTurnPlayerId !== userId) return false;
+      if (game.status !== 'active' || game.currentTurnPlayerId !== userId) return false;
+      if (!Number.isInteger(timelineIndex) || timelineIndex < 0 || timelineIndex > game.timeline.length) return false;
 
-      // TODO: Implement game logic here (validate placement, update timeline, etc.)
-      // For now, just update the turn
+      const currentHand = [...(game.playerHands[userId] || [])];
+      const cardToPlace = currentHand.find(card => card.id === cardId);
+      if (!cardToPlace) return false;
 
-      const otherPlayerId = game.players.find(p => p.id !== userId)?.id;
+      const isCorrect = canPlaceCard(cardToPlace, game.timeline, timelineIndex);
+      const nextHand = currentHand.filter(card => card.id !== cardId);
+      const nextTimeline = [...game.timeline];
+      const nextDeck = [...game.deck];
+      const nextDiscardPile = [...game.discardPile];
+      let winnerId: string | null = null;
+      let nextStatus: TurnBasedGame['status'] = 'active';
+
+      if (isCorrect) {
+        nextTimeline.splice(timelineIndex, 0, cardToPlace);
+      } else {
+        nextDiscardPile.unshift(cardToPlace);
+        const drawnCard = nextDeck.pop();
+        if (drawnCard) {
+          nextHand.push(drawnCard);
+        }
+      }
+
+      if (nextHand.length === 0) {
+        winnerId = userId;
+        nextStatus = 'finished';
+      }
+
+      const otherPlayerId = game.players.find(p => p.id !== userId)?.id || userId;
+      const nextPlayerHands = {
+        ...game.playerHands,
+        [userId]: nextHand,
+      };
 
       await updateDoc(gameRef, {
-        currentTurnPlayerId: otherPlayerId,
+        currentTurnPlayerId: nextStatus === 'finished' ? userId : otherPlayerId,
+        timeline: nextTimeline,
+        deck: nextDeck,
+        playerHands: nextPlayerHands,
+        discardPile: nextDiscardPile,
+        status: nextStatus,
+        winnerId,
         lastMoveAt: serverTimestamp()
       });
 
@@ -915,11 +968,11 @@ export interface TurnBasedGame {
   id: string;
   players: { id: string; name: string }[];
   currentTurnPlayerId: string;
-  timeline: any[];
-  deck: any[];
-  playerHands: { [playerId: string]: any[] };
-  discardPile: any[];
-  status: 'waiting' | 'active' | 'finished';
+  timeline: Card[];
+  deck: Card[];
+  playerHands: { [playerId: string]: Card[] };
+  discardPile: Card[];
+  status: 'active' | 'finished';
   winnerId: string | null;
   lastMoveAt: any;
   createdAt: any;

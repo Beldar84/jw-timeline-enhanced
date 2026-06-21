@@ -50,7 +50,7 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
         setPendingTurnGames(myTurnCount);
 
         // Check notification permission
-        setNotificationsEnabled(Notification.permission === 'granted');
+        setNotificationsEnabled('Notification' in window && Notification.permission === 'granted');
       }
     });
     return () => unsubscribe();

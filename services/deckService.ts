@@ -1,5 +1,6 @@
 import { Card } from '../types';
 import { CARD_DATA } from '../data/cards';
+import { shuffleArray } from '../utils/shuffle';
 
 export interface Deck {
   id: string;
@@ -163,7 +164,7 @@ class DeckService {
   shuffleDeck(deckId: string): Card[] {
     const deck = this.getDeckById(deckId);
     if (!deck) return [];
-    return [...deck.cards].sort(() => Math.random() - 0.5);
+    return shuffleArray(deck.cards);
   }
 
   // Get color classes for Tailwind

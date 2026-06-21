@@ -28,9 +28,10 @@ import FriendsPanel from './components/FriendsPanel';
 import GameInvitationsPanel from './components/GameInvitationsPanel';
 import TurnBasedGamesPanel from './components/TurnBasedGamesPanel';
 import { gameService } from './services/gameService';
-import { firebaseService } from './services/firebaseService';
+import { firebaseService, TurnBasedGame } from './services/firebaseService';
 import { soundService } from './services/soundService';
 import { gameStateService } from './services/gameStateService';
+import { canPlaceCard, getValidTimelineMoves } from './utils/timelineRules';
 import AnimationLayerEnhanced, { AnimationInfo } from './components/AnimationLayerEnhanced';
 
 // Register Service Worker for offline support
@@ -114,6 +115,8 @@ const AppEnhanced: React.FC = () => {
   const [onlineGameState, setOnlineGameState] = useState<GameState | null>(null);
   const [localPlayerId, setLocalPlayerId] = useState<string | null>(null);
   const localPlayer = useMemo(() => onlineGameState?.players.find(p => p.id === localPlayerId) || null, [onlineGameState, localPlayerId]);
+  const [selectedTurnBasedGameId, setSelectedTurnBasedGameId] = useState<string | null>(null);
+  const [turnBasedGame, setTurnBasedGame] = useState<TurnBasedGame | null>(null);
 
   // Enhanced features state
   const [showDeckSelector, setShowDeckSelector] = useState(false);
@@ -191,9 +194,30 @@ const AppEnhanced: React.FC = () => {
     }
   }, [currentPlayerIndex, players, gameMode]);
 
-  const handlePlacementResult = (player: Player, card: CardType, isCorrect: boolean, timelineIndex: number) => {
-    // Record placement in stats (only if not study mode)
+  const finishLocalGame = (winningPlayer: Player) => {
+    setWinner(winningPlayer);
+    setGamePhase(GamePhase.GAME_OVER);
+    soundService.playWin();
+
+    const playerWon = winningPlayer.id === players[0]?.id;
+    const updatedStats = statsService.endSession(playerWon);
+    setStats(updatedStats);
+
     if (!isStudyMode) {
+      leaderboardService.updateLeaderboard();
+
+      const newlyUnlocked = updatedStats.achievements.find(
+        a => a.unlockedAt && (!stats.achievements.find(sa => sa.id === a.id)?.unlockedAt)
+      );
+      if (newlyUnlocked) {
+        setNewAchievement(newlyUnlocked);
+      }
+    }
+  };
+
+  const handlePlacementResult = (player: Player, card: CardType, isCorrect: boolean, timelineIndex: number) => {
+    // Local stats belong to the primary player profile, not to AI or other local players.
+    if (!isStudyMode && player.id === players[0]?.id) {
       statsService.recordPlacement(isCorrect);
     }
 
@@ -207,25 +231,7 @@ const AppEnhanced: React.FC = () => {
         setPlayers(players.map(p => p.id === player.id ? { ...p, hand: newHand } : p));
 
         if (newHand.length === 0) {
-            setWinner(player);
-            setGamePhase(GamePhase.GAME_OVER);
-            soundService.playWin();
-
-            // End session and check for achievements
-            const playerWon = player.id === players[0].id; // Assume first player is human
-            const updatedStats = statsService.endSession(playerWon);
-            setStats(updatedStats);
-
-            // Update leaderboard
-            leaderboardService.updateLeaderboard();
-
-            // Check for newly unlocked achievements
-            const newlyUnlocked = updatedStats.achievements.find(
-              a => a.unlockedAt && (!stats.achievements.find(sa => sa.id === a.id)?.unlockedAt)
-            );
-            if (newlyUnlocked) {
-              setNewAchievement(newlyUnlocked);
-            }
+            finishLocalGame(player);
         } else {
             handleNextTurn();
         }
@@ -237,7 +243,11 @@ const AppEnhanced: React.FC = () => {
         // In study mode, don't draw a new card (no penalty)
         if (isStudyMode) {
           setPlayers(players.map(p => p.id === player.id ? { ...p, hand: newHand } : p));
-          handleNextTurn();
+          if (newHand.length === 0) {
+            finishLocalGame(player);
+          } else {
+            handleNextTurn();
+          }
           return;
         }
 
@@ -273,7 +283,11 @@ const AppEnhanced: React.FC = () => {
             }
         } else {
             setPlayers(players.map(p => p.id === player.id ? { ...p, hand: newHand } : p));
-            handleNextTurn();
+            if (newHand.length === 0) {
+              finishLocalGame(player);
+            } else {
+              handleNextTurn();
+            }
         }
     }
   };
@@ -286,14 +300,9 @@ const AppEnhanced: React.FC = () => {
     discardEl: HTMLElement
   ) => {
     if (animation) return;
+    if (!Number.isInteger(timelineIndex) || timelineIndex < 0 || timelineIndex > timeline.length) return;
 
-    let isCorrect = false;
-    const prevCard = timeline[timelineIndex - 1];
-    const nextCard = timeline[timelineIndex];
-
-    if (!prevCard && nextCard) isCorrect = card.year < nextCard.year;
-    else if (prevCard && !nextCard) isCorrect = card.year > prevCard.year;
-    else if (prevCard && nextCard) isCorrect = card.year > prevCard.year && card.year < nextCard.year;
+    const isCorrect = canPlaceCard(card, timeline, timelineIndex);
 
     setFeedback(isCorrect ? 'correct' : 'incorrect');
     setTimeout(() => setFeedback(null), 1500);
@@ -325,23 +334,7 @@ const AppEnhanced: React.FC = () => {
     if (!currentPlayer || !currentPlayer.isAI || currentPlayer.hand.length === 0) return null;
 
     const aiPlayer = currentPlayer;
-    const correctMoves: { card: CardType, timelineIndex: number }[] = [];
-
-    for (const card of aiPlayer.hand) {
-        for (let i = 0; i <= timeline.length; i++) {
-            const prevCard = timeline[i - 1];
-            const nextCard = timeline[i];
-            let isCorrectPlacement = false;
-
-            if (!prevCard && nextCard) isCorrectPlacement = card.year < nextCard.year;
-            else if (prevCard && !nextCard) isCorrectPlacement = card.year > prevCard.year;
-            else if (prevCard && nextCard) isCorrectPlacement = card.year > prevCard.year && card.year < nextCard.year;
-
-            if (isCorrectPlacement) {
-                correctMoves.push({ card, timelineIndex: i });
-            }
-        }
-    }
+    const correctMoves = getValidTimelineMoves(aiPlayer.hand, timeline);
 
     // Get error rate from difficulty setting
     const difficultyConfig = AI_DIFFICULTIES.find(d => d.id === aiDifficulty);
@@ -403,12 +396,7 @@ const AppEnhanced: React.FC = () => {
       cardRect.height
     );
 
-    let isCorrect = false;
-    const prevCard = timeline[timelineIndex - 1];
-    const nextCard = timeline[timelineIndex];
-    if (!prevCard && nextCard) isCorrect = card.year < nextCard.year;
-    else if (prevCard && !nextCard) isCorrect = card.year > prevCard.year;
-    else if (prevCard && nextCard) isCorrect = card.year > prevCard.year && card.year < nextCard.year;
+    const isCorrect = canPlaceCard(card, timeline, timelineIndex);
 
     setFeedback(isCorrect ? 'correct' : 'incorrect');
     setTimeout(() => setFeedback(null), 1500);
@@ -532,6 +520,8 @@ const AppEnhanced: React.FC = () => {
     // Clear local state
     setOnlineGameState(null);
     setLocalPlayerId(null);
+    setSelectedTurnBasedGameId(null);
+    setTurnBasedGame(null);
     setGameMode(null);
     setPlayers([]);
     setTimeline([]);
@@ -593,7 +583,89 @@ const AppEnhanced: React.FC = () => {
     if(onlineGameState?.phase === OnlineGamePhase.GAME_OVER) setGamePhase(GamePhase.GAME_OVER);
   }, [onlineGameState?.phase])
 
+  useEffect(() => {
+    if (!selectedTurnBasedGameId) {
+      setTurnBasedGame(null);
+      return;
+    }
+
+    return firebaseService.subscribeToTurnBasedGame(selectedTurnBasedGameId, setTurnBasedGame);
+  }, [selectedTurnBasedGameId]);
+
+  const handleTurnBasedMove = (card: CardType, timelineIndex: number) => {
+    if (!turnBasedGame) return;
+    firebaseService.makeTurnBasedMove(turnBasedGame.id, card.id, timelineIndex);
+  };
+
+  const handleExitTurnBasedGame = () => {
+    setSelectedTurnBasedGameId(null);
+    setTurnBasedGame(null);
+    setGameMode(null);
+    setGamePhase(GamePhase.MENU);
+  };
+
+  const renderTurnBasedGame = () => {
+    if (!turnBasedGame) {
+      return <div className="text-white">Sincronizando partida por turnos...</div>;
+    }
+
+    const currentUserId = firebaseService.getCurrentUserId();
+    const turnPlayers: Player[] = turnBasedGame.players.map(player => ({
+      id: player.id,
+      name: player.name,
+      isAI: false,
+      hand: turnBasedGame.playerHands[player.id] || [],
+    }));
+    const currentTurnIndex = Math.max(0, turnPlayers.findIndex(player => player.id === turnBasedGame.currentTurnPlayerId));
+    const localTurnPlayer = turnPlayers.find(player => player.id === currentUserId) || null;
+    const currentTurnPlayer = turnPlayers[currentTurnIndex];
+
+    if (turnBasedGame.status === 'finished') {
+      const winningPlayer = turnPlayers.find(player => player.id === turnBasedGame.winnerId);
+      return winningPlayer ? (
+        <GameOver winner={winningPlayer} onRestart={handleExitTurnBasedGame} />
+      ) : (
+        <div className="flex flex-col items-center justify-center bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm max-w-md text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-yellow-300 mb-4">Partida terminada</h2>
+          <button
+            onClick={handleExitTurnBasedGame}
+            className="px-6 py-3 bg-blue-600 text-lg font-bold rounded-lg hover:bg-blue-700 transition"
+          >
+            Volver al Menú
+          </button>
+        </div>
+      );
+    }
+
+    if (!currentTurnPlayer) {
+      return <div className="text-white">No se pudo cargar el turno actual.</div>;
+    }
+
+    return (
+      <GameBoard
+        players={turnPlayers}
+        currentPlayer={currentTurnPlayer}
+        timeline={turnBasedGame.timeline}
+        deckSize={turnBasedGame.deck.length}
+        topOfDeck={turnBasedGame.deck[turnBasedGame.deck.length - 1] || null}
+        discardPile={turnBasedGame.discardPile}
+        message={currentTurnPlayer.id === currentUserId ? 'Es tu turno.' : `Esperando a ${currentTurnPlayer.name}...`}
+        onAttemptPlaceCard={() => {}}
+        onPlaceCardOnline={handleTurnBasedMove}
+        gameMode="online"
+        localPlayer={localTurnPlayer}
+        isAnimating={false}
+        revealedAICard={null}
+        onExitGame={handleExitTurnBasedGame}
+      />
+    );
+  };
+
   const renderContent = () => {
+    if (selectedTurnBasedGameId) {
+      return renderTurnBasedGame();
+    }
+
     if (showDeckSelector) {
       return (
         <DeckSelector
@@ -707,7 +779,7 @@ const AppEnhanced: React.FC = () => {
   };
 
   const showPlayerStatus = gamePhase === GamePhase.PLAYING && (gameMode === 'local' || gameMode === 'ai');
-  const showLogo = [GamePhase.MENU, GamePhase.SETUP, GamePhase.LOBBY].includes(gamePhase) && !showDeckSelector;
+  const showLogo = [GamePhase.MENU, GamePhase.SETUP, GamePhase.LOBBY].includes(gamePhase) && !showDeckSelector && !selectedTurnBasedGameId;
 
   return (
     <div className="w-screen min-h-screen flex flex-col items-center justify-start md:justify-center p-2 md:p-4 pt-4 pb-8 text-white font-sans overflow-y-auto overflow-x-hidden">
@@ -784,9 +856,16 @@ const AppEnhanced: React.FC = () => {
         />
       )}
       {/* Game Invitations - siempre visible en el menú */}
-      {gamePhase === GamePhase.MENU && firebaseService.isRegisteredUser() && (
+      {gamePhase === GamePhase.MENU && !selectedTurnBasedGameId && firebaseService.isRegisteredUser() && (
         <GameInvitationsPanel
-          onAcceptInvitation={async (gameId) => {
+          onAcceptInvitation={async (gameId, invitationMode) => {
+            if (invitationMode === 'turnbased') {
+              setSelectedTurnBasedGameId(gameId);
+              setGameMode('online');
+              setGamePhase(GamePhase.MENU);
+              return;
+            }
+
             const profile = profileService.getProfile();
             const playerName = profile?.name || 'Jugador';
             const result = await gameService.joinGame(gameId, playerName);
@@ -805,8 +884,8 @@ const AppEnhanced: React.FC = () => {
       {showTurnBasedGames && (
         <TurnBasedGamesPanel
           onSelectGame={(gameId) => {
-            // TODO: Load and display turn-based game
-            console.log('Selected turn-based game:', gameId);
+            setSelectedTurnBasedGameId(gameId);
+            setGameMode('online');
             setShowTurnBasedGames(false);
           }}
           onClose={() => setShowTurnBasedGames(false)}

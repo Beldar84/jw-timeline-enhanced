@@ -3,7 +3,7 @@ import { firebaseService, GameInvitation } from '../services/firebaseService';
 import { soundService } from '../services/soundService';
 
 interface GameInvitationsPanelProps {
-  onAcceptInvitation: (gameId: string) => void;
+  onAcceptInvitation: (gameId: string, gameMode: 'realtime' | 'turnbased') => void;
   onClose: () => void;
 }
 
@@ -35,7 +35,7 @@ const GameInvitationsPanel: React.FC<GameInvitationsPanelProps> = ({ onAcceptInv
       const result = await firebaseService.acceptGameInvitation(invitation.id);
       if (result.success && result.gameId) {
         soundService.playCorrect();
-        onAcceptInvitation(result.gameId);
+        onAcceptInvitation(result.gameId, result.gameMode || invitation.gameMode);
       } else {
         soundService.playIncorrect();
       }
