@@ -92,7 +92,7 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onStartTurnBased
               <div>
                 <h3 className="text-xl font-bold text-white">Tiempo Real</h3>
                 <p className="text-sm text-purple-200">Juega en vivo con otro jugador</p>
-                <p className="text-xs text-gray-300 mt-1">Conexión P2P directa</p>
+                <p className="text-xs text-gray-300 mt-1">Sala sincronizada con Firebase</p>
               </div>
             </div>
           </button>
@@ -151,7 +151,7 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onStartTurnBased
   return (
     <div className="flex flex-col items-center justify-center bg-gray-800/50 p-4 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm max-h-[90vh] overflow-y-auto w-full max-w-md">
       <h2 className="text-xl md:text-3xl font-bold text-yellow-300 mb-2 text-center">⚡ Tiempo Real</h2>
-      <p className="text-gray-400 text-sm mb-4">Conexión P2P directa</p>
+      <p className="text-gray-400 text-sm mb-4">Sala sincronizada con Firebase</p>
 
       {error && (
         <div className="bg-red-500/80 text-white p-2 md:p-3 rounded mb-3 md:mb-4 text-xs md:text-sm w-full text-center">

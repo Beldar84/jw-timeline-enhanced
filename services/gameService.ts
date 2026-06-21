@@ -1,22 +1,17 @@
-
+import { doc, getDoc, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { GameState, Player, Card, OnlineGamePhase } from '../types';
 import { CARD_DATA } from '../data/cards';
 import { shuffleArray } from '../utils/shuffle';
 import { canPlaceCard, getValidTimelineMoves } from '../utils/timelineRules';
+import { firebaseService, firestoreDb } from './firebaseService';
 
-// Declare PeerJS global type since we are loading it via CDN
-declare const Peer: any;
+type RealtimeGameDocument = GameState & {
+  participantAuthIds: string[];
+  createdBy: string;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+};
 
-type NetworkAction =
-  | { type: 'JOIN'; payload: { name: string; id: string } }
-  | { type: 'STATE_UPDATE'; payload: GameState }
-  | { type: 'PLACE_CARD'; payload: { playerId: string; cardId: number; timelineIndex: number } }
-  | { type: 'ADD_BOT'; payload: null }
-  | { type: 'START_GAME'; payload: null }
-  | { type: 'PLAYER_LEFT'; payload: { playerName: string } }
-  | { type: 'GAME_CANCELLED'; payload: { reason: string } };
-
-// Nombres bíblicos para los bots de IA
 const BIBLICAL_NAMES = [
   'David', 'Abigail', 'Ruth', 'Pablo', 'Sara', 'Abraham', 'Moisés', 'María',
   'José', 'Rebeca', 'Isaac', 'Raquel', 'Jacob', 'Lea', 'Samuel', 'Ana',
@@ -25,583 +20,408 @@ const BIBLICAL_NAMES = [
   'Silas', 'Tito', 'Filemón', 'Dorcas', 'Cornelio', 'Esteban', 'Felipe', 'Andrés'
 ];
 
-// Función para obtener un nombre bíblico aleatorio no usado
 function getRandomBiblicalName(usedNames: string[]): string {
   const availableNames = BIBLICAL_NAMES.filter(name => !usedNames.includes(name));
   if (availableNames.length === 0) {
-    // Si todos los nombres están usados, añadir un número
     const randomName = BIBLICAL_NAMES[Math.floor(Math.random() * BIBLICAL_NAMES.length)];
     return `${randomName} ${Math.floor(Math.random() * 100)}`;
   }
   return availableNames[Math.floor(Math.random() * availableNames.length)];
 }
 
-const generateShortId = () => {
-  // Genera un número aleatorio de 4 dígitos (1000-9999)
+function generateShortId(): string {
   const number = Math.floor(Math.random() * 9000) + 1000;
   return `JW-${number}`;
-};
-
-// Cache para las credenciales TURN (evita llamadas repetidas a la API)
-let cachedIceServers: any[] | null = null;
-let cacheTimestamp = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
-
-// Función para obtener credenciales TURN dinámicas de Metered
-async function getIceServers(): Promise<any[]> {
-  // Usar cache si está disponible y no ha expirado
-  if (cachedIceServers && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
-    return cachedIceServers;
-  }
-
-  try {
-    const response = await fetch('/api/turn-credentials');
-    if (response.ok) {
-      cachedIceServers = await response.json();
-      cacheTimestamp = Date.now();
-      console.log('[GameService] Credenciales TURN obtenidas de Metered');
-      return cachedIceServers!;
-    }
-  } catch (error) {
-    console.warn('[GameService] Error obteniendo credenciales TURN, usando fallback:', error);
-  }
-
-  // Fallback: servidores STUN de Google (funcionan para conexiones simples)
-  return [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' },
-  ];
 }
 
-// Función para crear la configuración de Peer con credenciales dinámicas
-async function createPeerConfig() {
-  const iceServers = await getIceServers();
-
+function toGameState(data: RealtimeGameDocument): GameState {
   return {
-    debug: 2,
-    secure: true,
-    host: '0.peerjs.com',
-    port: 443,
-    path: '/',
-    config: {
-      iceServers: iceServers,
-      iceTransportPolicy: 'all',
-      iceCandidatePoolSize: 10,
-      bundlePolicy: 'max-bundle',
-      rtcpMuxPolicy: 'require'
-    },
+    id: data.id,
+    phase: data.phase,
+    players: data.players || [],
+    hostId: data.hostId,
+    timeline: data.timeline || [],
+    deck: data.deck || [],
+    discardPile: data.discardPile || [],
+    currentPlayerIndex: data.currentPlayerIndex || 0,
+    winner: data.winner || null,
+    message: data.message || null,
   };
 }
 
 class GameService {
-  private peer: any = null;
-  private connections: any[] = []; // For Host: list of client connections
-  private hostConnection: any = null; // For Client: connection to host
-  
   private gameState: GameState | null = null;
+  private participantAuthIds: string[] = [];
+  private createdBy: string | null = null;
   private listeners = new Set<(state: GameState) => void>();
+  private unsubscribeFromGame: (() => void) | null = null;
+  private subscribedGameId: string | null = null;
   private localPlayerId: string | null = null;
-  private isHost: boolean = false;
+  private isHost = false;
 
   constructor() {
-    // Cleanup on window close
     window.addEventListener('beforeunload', () => {
-        this.disconnect();
+      this.stopListening();
     });
+  }
+
+  private async ensureSignedIn(): Promise<string | null> {
+    let userId = firebaseService.getCurrentUserId();
+    if (!userId) {
+      userId = await firebaseService.signInAnonymous();
+    }
+    return userId;
+  }
+
+  private gameRef(gameId: string) {
+    return doc(firestoreDb, 'realtimeGames', gameId);
   }
 
   private notify() {
-    if (this.gameState) {
-      this.listeners.forEach(cb => cb(JSON.parse(JSON.stringify(this.gameState))));
-    }
+    if (!this.gameState) return;
+    const snapshot = JSON.parse(JSON.stringify(this.gameState)) as GameState;
+    this.listeners.forEach(callback => callback(snapshot));
+  }
+
+  private async persistState(): Promise<void> {
+    if (!this.gameState || !this.createdBy) return;
+
+    const gameDoc: RealtimeGameDocument = {
+      ...this.gameState,
+      participantAuthIds: this.participantAuthIds,
+      createdBy: this.createdBy,
+      updatedAt: serverTimestamp(),
+    };
+
+    await updateDoc(this.gameRef(this.gameState.id), gameDoc);
   }
 
   private broadcastState() {
-    if (!this.isHost || !this.gameState) return;
-    
-    // Notify local listeners
     this.notify();
-
-    // Send to all connected peers
-    this.connections.forEach(conn => {
-        if (conn.open) {
-            try {
-                conn.send({ type: 'STATE_UPDATE', payload: this.gameState });
-            } catch (e) {
-                console.error("Error sending state to peer:", e);
-            }
-        }
+    this.persistState().catch(error => {
+      console.error('[GameService] Error sincronizando partida:', error);
     });
   }
 
-  // --- Initialization ---
+  private stopListening() {
+    if (this.unsubscribeFromGame) {
+      this.unsubscribeFromGame();
+      this.unsubscribeFromGame = null;
+      this.subscribedGameId = null;
+    }
+  }
 
-  // Initialize PeerJS and return the Peer ID (Game Code)
-  async createGame(hostName: string): Promise<{ gameId: string, playerId: string }> {
+  private loadDocument(data: RealtimeGameDocument) {
+    this.gameState = toGameState(data);
+    this.participantAuthIds = data.participantAuthIds || [];
+    this.createdBy = data.createdBy || null;
+  }
+
+  async createGame(hostName: string): Promise<{ gameId: string; playerId: string }> {
     this.disconnect();
+
+    const userId = await this.ensureSignedIn();
+    if (!userId) {
+      throw new Error('No se pudo iniciar sesión para crear la sala.');
+    }
+
     this.isHost = true;
+    this.localPlayerId = userId;
 
-    // Obtener configuración con credenciales TURN dinámicas
-    const peerConfig = await createPeerConfig();
+    for (let attempts = 0; attempts < 8; attempts++) {
+      const gameId = generateShortId();
+      const gameRef = this.gameRef(gameId);
+      const existing = await getDoc(gameRef);
+      if (existing.exists()) continue;
 
-    return new Promise((resolve, reject) => {
-        const tryCreate = (attempts: number) => {
-            if (attempts > 5) {
-                reject(new Error("No se pudo generar un ID único. Inténtalo de nuevo."));
-                return;
-            }
+      const gameState: GameState = {
+        id: gameId,
+        phase: OnlineGamePhase.LOBBY,
+        players: [{
+          id: userId,
+          name: hostName,
+          hand: [],
+          isAI: false,
+        }],
+        hostId: userId,
+        timeline: [],
+        deck: [],
+        discardPile: [],
+        currentPlayerIndex: 0,
+        winner: null,
+        message: 'Esperando a jugadores...',
+      };
 
-            const shortId = generateShortId();
+      const gameDoc: RealtimeGameDocument = {
+        ...gameState,
+        participantAuthIds: [userId],
+        createdBy: userId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
 
-            try {
-                // Attempt to register with a custom short ID
-                const peer = new Peer(shortId, peerConfig);
-                
-                peer.on('open', (id: string) => {
-                    this.peer = peer;
-                    const hostId = crypto.randomUUID();
-                    this.localPlayerId = hostId;
-                    
-                    this.gameState = {
-                        id: id,
-                        phase: OnlineGamePhase.LOBBY,
-                        players: [{
-                            id: hostId,
-                            name: hostName,
-                            hand: [],
-                            isAI: false
-                        }],
-                        hostId: hostId,
-                        timeline: [],
-                        deck: [],
-                        discardPile: [],
-                        currentPlayerIndex: 0,
-                        winner: null,
-                        message: 'Esperando a jugadores...'
-                    };
-                    
-                    this.notify();
+      await setDoc(gameRef, gameDoc);
+      this.loadDocument(gameDoc);
+      this.notify();
 
-                    peer.on('connection', (conn: any) => {
-                        this.handleIncomingConnection(conn);
-                    });
-                    
-                    // General error handler for the active peer
-                    peer.on('error', (err: any) => {
-                        console.error('Peer error (host):', err);
-                    });
+      return { gameId, playerId: userId };
+    }
 
-                    resolve({ gameId: id, playerId: hostId });
-                });
-
-                peer.on('error', (err: any) => {
-                    // If ID is taken, retry with a new one
-                    if (err.type === 'unavailable-id') {
-                        peer.destroy();
-                        tryCreate(attempts + 1);
-                    } else {
-                        console.error('Peer Init Error:', err);
-                        reject(err);
-                    }
-                });
-
-            } catch (e) {
-                reject(e);
-            }
-        };
-
-        tryCreate(0);
-    });
+    throw new Error('No se pudo generar un código de sala. Inténtalo de nuevo.');
   }
 
-  async joinGame(gameId: string, playerName: string): Promise<{ success: boolean, playerId: string, error?: string }> {
+  async joinGame(gameId: string, playerName: string): Promise<{ success: boolean; playerId: string; error?: string }> {
     this.disconnect();
-    this.isHost = false;
 
-    // Obtener configuración con credenciales TURN dinámicas
-    const peerConfig = await createPeerConfig();
+    const userId = await this.ensureSignedIn();
+    if (!userId) {
+      return { success: false, playerId: '', error: 'No se pudo iniciar sesión para unirse a la sala.' };
+    }
 
-    return new Promise((resolve) => {
-        let resolved = false;
+    try {
+      const gameRef = this.gameRef(gameId);
+      const snapshot = await getDoc(gameRef);
+      if (!snapshot.exists()) {
+        return { success: false, playerId: '', error: 'Sala no encontrada. Verifica el código de partida.' };
+      }
 
-        // Timeout increased for TURN server negotiation (can take longer across networks)
-        const timeout = setTimeout(() => {
-            if (!resolved) {
-                resolved = true;
-                this.disconnect();
-                resolve({ success: false, playerId: '', error: 'Tiempo de espera agotado. Verifica el ID o tu conexión.' });
-            }
-        }, 30000); // 30 seconds timeout para conexiones entre redes
+      const gameDoc = snapshot.data() as RealtimeGameDocument;
+      if (gameDoc.phase !== OnlineGamePhase.LOBBY) {
+        return { success: false, playerId: '', error: 'La partida ya ha empezado.' };
+      }
 
-        try {
-            // Client doesn't need a specific ID, let PeerJS generate one
-            this.peer = new Peer(peerConfig);
-            
-            this.peer.on('open', () => {
-                const localId = crypto.randomUUID();
-                this.localPlayerId = localId;
+      const players = [...(gameDoc.players || [])];
+      const existingPlayerIndex = players.findIndex(player => player.id === userId);
 
-                // Connect to host
-                const conn = this.peer.connect(gameId, { 
-                    reliable: true,
-                    serialization: 'json'
-                });
-                
-                const handleOpen = () => {
-                    if (resolved) return;
-
-                    this.hostConnection = conn;
-
-                    // Configurar detección de desconexión del host
-                    this.setupHostDisconnectDetection();
-
-                    // Send Join Request immediately
-                    conn.send({
-                        type: 'JOIN',
-                        payload: { name: playerName, id: localId }
-                    });
-
-                    resolved = true;
-                    clearTimeout(timeout);
-                    resolve({ success: true, playerId: localId });
-                };
-
-                conn.on('open', handleOpen);
-                // Check if already open (sometimes happens fast)
-                if (conn.open) handleOpen();
-
-                conn.on('data', (data: NetworkAction) => {
-                    this.handleClientMessage(data);
-                });
-
-                conn.on('close', () => {
-                    console.log('Connection closed by host');
-                });
-                
-                conn.on('error', (err: any) => {
-                    console.error('Connection error:', err);
-                    if (!resolved) {
-                        resolved = true;
-                        clearTimeout(timeout);
-                        resolve({ success: false, playerId: '', error: 'No se pudo conectar con la sala.' });
-                    }
-                });
-            });
-
-            this.peer.on('error', (err: any) => {
-                console.error('Peer connection error:', err);
-                if (!resolved) {
-                    resolved = true;
-                    clearTimeout(timeout);
-
-                    let errorMessage = 'Error de conexión desconocido.';
-
-                    switch (err.type) {
-                        case 'peer-unavailable':
-                            errorMessage = 'Sala no encontrada. Verifica el código de partida.';
-                            break;
-                        case 'network':
-                            errorMessage = 'Error de red. Verifica tu conexión a internet y que no haya un firewall bloqueando.';
-                            break;
-                        case 'server-error':
-                            errorMessage = 'El servidor de conexión no está disponible. Intenta de nuevo en unos minutos.';
-                            break;
-                        case 'socket-error':
-                            errorMessage = 'Error de conexión con el servidor. Verifica tu conexión a internet.';
-                            break;
-                        case 'socket-closed':
-                            errorMessage = 'La conexión se cerró inesperadamente. Intenta de nuevo.';
-                            break;
-                        case 'unavailable-id':
-                            errorMessage = 'El ID de sala ya está en uso. Intenta crear otra partida.';
-                            break;
-                        case 'invalid-id':
-                            errorMessage = 'El código de partida no es válido.';
-                            break;
-                        case 'browser-incompatible':
-                            errorMessage = 'Tu navegador no soporta conexiones P2P. Usa Chrome, Firefox o Edge.';
-                            break;
-                        case 'disconnected':
-                            errorMessage = 'Te has desconectado del servidor. Intenta reconectar.';
-                            break;
-                        case 'ssl-unavailable':
-                            errorMessage = 'Se requiere una conexión segura (HTTPS).';
-                            break;
-                        default:
-                            errorMessage = `Error de conexión: ${err.type || err.message || 'Desconocido'}. Intenta de nuevo.`;
-                    }
-
-                    resolve({ success: false, playerId: '', error: errorMessage });
-                }
-            });
-
-        } catch (e) {
-            console.error(e);
-            if (!resolved) {
-                resolved = true;
-                clearTimeout(timeout);
-                resolve({ success: false, playerId: '', error: 'Error interno del cliente.' });
-            }
+      if (existingPlayerIndex >= 0) {
+        players[existingPlayerIndex] = {
+          ...players[existingPlayerIndex],
+          name: playerName,
+        };
+      } else {
+        if (players.length >= 6) {
+          return { success: false, playerId: '', error: 'La sala está llena.' };
         }
-    });
+
+        players.push({
+          id: userId,
+          name: playerName,
+          hand: [],
+          isAI: false,
+        });
+      }
+
+      const participantAuthIds = Array.from(new Set([...(gameDoc.participantAuthIds || []), userId]));
+      const nextDoc: RealtimeGameDocument = {
+        ...gameDoc,
+        players,
+        participantAuthIds,
+        message: 'Esperando a jugadores...',
+        updatedAt: serverTimestamp(),
+      };
+
+      await updateDoc(gameRef, {
+        players,
+        participantAuthIds,
+        message: nextDoc.message,
+        updatedAt: serverTimestamp(),
+      });
+
+      this.isHost = gameDoc.hostId === userId;
+      this.localPlayerId = userId;
+      this.loadDocument(nextDoc);
+      this.notify();
+
+      return { success: true, playerId: userId };
+    } catch (error: any) {
+      console.error('[GameService] Error al unirse:', error);
+      return {
+        success: false,
+        playerId: '',
+        error: error?.code === 'permission-denied'
+          ? 'Firebase no permite acceder a esta sala. Despliega las reglas actualizadas de Firestore.'
+          : 'No se pudo conectar con la sala.',
+      };
+    }
   }
 
   disconnect() {
-    if (this.peer) {
-        this.peer.destroy();
-        this.peer = null;
-    }
-    this.connections = [];
-    this.hostConnection = null;
+    this.stopListening();
     this.gameState = null;
+    this.participantAuthIds = [];
+    this.createdBy = null;
     this.localPlayerId = null;
     this.isHost = false;
   }
 
-  // --- Message Handling ---
-
-  private handleIncomingConnection(conn: any) {
-    this.connections.push(conn);
-
-    // Guardar el ID del jugador asociado a esta conexión
-    let connectedPlayerId: string | null = null;
-
-    conn.on('data', (data: NetworkAction) => {
-        // Host logic
-        if (data.type === 'JOIN') {
-            if (this.gameState && this.gameState.players.length < 6) {
-                // Check if player already exists
-                const exists = this.gameState.players.find(p => p.id === data.payload.id);
-                if (!exists) {
-                    const newPlayer: Player = {
-                        id: data.payload.id,
-                        name: data.payload.name,
-                        hand: [],
-                        isAI: false,
-                    };
-                    this.gameState.players.push(newPlayer);
-                }
-
-                // Asociar esta conexión con el ID del jugador
-                connectedPlayerId = data.payload.id;
-
-                // CRITICAL: Send state immediately to this specific connection
-                try {
-                    conn.send({ type: 'STATE_UPDATE', payload: this.gameState });
-                } catch (e) {
-                    console.error("Failed to send initial state:", e);
-                }
-
-                // Then notify everyone else
-                this.broadcastState();
-            }
-        } else if (data.type === 'PLACE_CARD') {
-            this.processPlaceCard(data.payload.playerId, data.payload.cardId, data.payload.timelineIndex);
-        }
-    });
-
-    conn.on('close', () => {
-        this.connections = this.connections.filter(c => c.peer !== conn.peer);
-
-        // Si hay un juego en curso y un jugador se desconecta
-        if (this.gameState && connectedPlayerId) {
-            const disconnectedPlayer = this.gameState.players.find(p => p.id === connectedPlayerId);
-
-            if (disconnectedPlayer && !disconnectedPlayer.isAI) {
-                // Si estamos en partida (no en lobby), cancelar el juego
-                if (this.gameState.phase === OnlineGamePhase.PLAYING) {
-                    this.gameState.phase = OnlineGamePhase.GAME_OVER;
-                    this.gameState.message = `${disconnectedPlayer.name} ha abandonado la partida. El juego ha terminado.`;
-                    this.gameState.winner = null;
-
-                    // Notificar a todos
-                    this.broadcastState();
-                } else if (this.gameState.phase === OnlineGamePhase.LOBBY) {
-                    // En lobby, simplemente eliminar al jugador
-                    this.gameState.players = this.gameState.players.filter(p => p.id !== connectedPlayerId);
-                    this.gameState.message = `${disconnectedPlayer.name} ha salido de la sala.`;
-                    this.broadcastState();
-                }
-            }
-        }
-    });
-
-    conn.on('error', (err: any) => {
-        console.error('Connection error with peer:', err);
-    });
-  }
-
-  private handleClientMessage(data: NetworkAction) {
-      if (data.type === 'STATE_UPDATE') {
-          this.gameState = data.payload;
-          this.notify();
-      } else if (data.type === 'GAME_CANCELLED') {
-          // El host canceló el juego
-          if (this.gameState) {
-              this.gameState.phase = OnlineGamePhase.GAME_OVER;
-              this.gameState.message = data.payload.reason;
-              this.gameState.winner = null;
-              this.notify();
-          }
-      }
-  }
-
-  // Detectar si el host se desconectó (para clientes)
-  private setupHostDisconnectDetection() {
-      if (this.hostConnection) {
-          this.hostConnection.on('close', () => {
-              if (this.gameState && this.gameState.phase !== OnlineGamePhase.GAME_OVER) {
-                  this.gameState.phase = OnlineGamePhase.GAME_OVER;
-                  this.gameState.message = 'El anfitrión ha abandonado la partida. El juego ha terminado.';
-                  this.gameState.winner = null;
-                  this.notify();
-              }
-          });
-      }
-  }
-
-  // --- Game Logic (Host Only) ---
-
-  // Wrapper for external calls
   subscribeToGame(gameId: string, callback: (state: GameState) => void) {
-      this.listeners.add(callback);
-      if (this.gameState) callback(this.gameState);
-      return () => this.listeners.delete(callback);
-  }
+    this.listeners.add(callback);
+    if (this.gameState) callback(JSON.parse(JSON.stringify(this.gameState)));
 
-  // Action: Add Bot (Host only)
-  addBot(gameId: string, hostId: string) {
-      if (!this.isHost || !this.gameState) return;
+    if (this.subscribedGameId !== gameId) {
+      this.stopListening();
+      this.subscribedGameId = gameId;
+      this.unsubscribeFromGame = onSnapshot(this.gameRef(gameId), (snapshot) => {
+        if (!snapshot.exists()) return;
 
-      // Obtener nombres ya usados por jugadores y bots
-      const usedNames = this.gameState.players.map(p => p.name);
-      const biblicalName = getRandomBiblicalName(usedNames);
-
-      this.gameState.players.push({
-          id: `ai-${Date.now()}`,
-          name: biblicalName,
-          hand: [],
-          isAI: true
+        this.loadDocument(snapshot.data() as RealtimeGameDocument);
+        this.notify();
+      }, (error) => {
+        console.error('[GameService] Error escuchando sala:', error);
       });
-      this.broadcastState();
+    }
+
+    return () => {
+      this.listeners.delete(callback);
+    };
   }
 
-  // Action: Start Game (Host only)
+  addBot(gameId: string, hostId: string) {
+    if (!this.isHost || !this.gameState || this.gameState.id !== gameId || this.gameState.hostId !== hostId) return;
+    if (this.gameState.players.length >= 6) return;
+
+    const usedNames = this.gameState.players.map(player => player.name);
+    const biblicalName = getRandomBiblicalName(usedNames);
+
+    this.gameState.players.push({
+      id: `ai-${Date.now()}`,
+      name: biblicalName,
+      hand: [],
+      isAI: true,
+    });
+
+    this.broadcastState();
+  }
+
   startGame(gameId: string, playerId: string) {
-      if (!this.isHost || !this.gameState) return;
+    if (!this.isHost || !this.gameState || this.gameState.id !== gameId || this.gameState.hostId !== playerId) return;
+    if (this.gameState.players.length < 2 || this.gameState.phase !== OnlineGamePhase.LOBBY) return;
 
-      const shuffledDeck = shuffleArray(CARD_DATA);
-      const initialTimelineCard = shuffledDeck.pop();
-      if (!initialTimelineCard) return;
+    const shuffledDeck = shuffleArray(CARD_DATA);
+    const initialTimelineCard = shuffledDeck.pop();
+    if (!initialTimelineCard) return;
 
-      // Deal cards
-      for (let i = 0; i < 4; i++) {
-        for (const player of this.gameState.players) {
-            const card = shuffledDeck.pop();
-            if (card) player.hand.push(card);
-        }
+    const players = this.gameState.players.map(player => ({
+      ...player,
+      hand: [] as Card[],
+    }));
+
+    for (let i = 0; i < 4; i++) {
+      for (const player of players) {
+        const card = shuffledDeck.pop();
+        if (card) player.hand.push(card);
       }
+    }
 
-      this.gameState.deck = shuffledDeck;
-      this.gameState.timeline = [initialTimelineCard];
-      this.gameState.phase = OnlineGamePhase.PLAYING;
-      this.gameState.currentPlayerIndex = 0;
-      this.gameState.message = `Es el turno de ${this.gameState.players[0].name}.`;
+    this.gameState = {
+      ...this.gameState,
+      players,
+      deck: shuffledDeck,
+      timeline: [initialTimelineCard],
+      discardPile: [],
+      phase: OnlineGamePhase.PLAYING,
+      currentPlayerIndex: 0,
+      winner: null,
+      message: `Es el turno de ${players[0].name}.`,
+    };
 
-      this.broadcastState();
+    this.broadcastState();
 
-      if (this.gameState.players[0].isAI) {
-          this.playAITurn();
-      }
+    if (this.gameState.players[0].isAI) {
+      this.playAITurn();
+    }
   }
 
-  // Action: Place Card (Host triggers directly, Client sends request)
   placeCard(gameId: string, playerId: string, cardId: number, timelineIndex: number) {
-      if (this.isHost) {
-          this.processPlaceCard(playerId, cardId, timelineIndex);
-      } else if (this.hostConnection) {
-          this.hostConnection.send({
-              type: 'PLACE_CARD',
-              payload: { playerId, cardId, timelineIndex }
-          });
-      }
+    if (!this.gameState || this.gameState.id !== gameId || this.localPlayerId !== playerId) return;
+    this.processPlaceCard(playerId, cardId, timelineIndex);
   }
-
-  // --- Core Game Logic (Authoritative, Host Only) ---
 
   private processPlaceCard(playerId: string, cardId: number, timelineIndex: number) {
-      if (!this.gameState || this.gameState.phase !== OnlineGamePhase.PLAYING) return;
+    if (!this.gameState || this.gameState.phase !== OnlineGamePhase.PLAYING) return;
 
-      const currentPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
-      // Validate turn
-      if (currentPlayer.id !== playerId) return;
-      if (!Number.isInteger(timelineIndex) || timelineIndex < 0 || timelineIndex > this.gameState.timeline.length) return;
+    const currentPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
+    if (!currentPlayer || currentPlayer.id !== playerId) return;
+    if (!Number.isInteger(timelineIndex) || timelineIndex < 0 || timelineIndex > this.gameState.timeline.length) return;
 
-      const cardToPlace = currentPlayer.hand.find(c => c.id === cardId);
-      if (!cardToPlace) return;
+    const cardToPlace = currentPlayer.hand.find(card => card.id === cardId);
+    if (!cardToPlace) return;
 
-      const isCorrect = canPlaceCard(cardToPlace, this.gameState.timeline, timelineIndex);
+    const players = this.gameState.players.map(player => ({
+      ...player,
+      hand: [...player.hand],
+    }));
+    const activePlayer = players[this.gameState.currentPlayerIndex];
+    const timeline = [...this.gameState.timeline];
+    const deck = [...this.gameState.deck];
+    const discardPile = [...this.gameState.discardPile];
 
-      // Remove from hand
-      currentPlayer.hand = currentPlayer.hand.filter(c => c.id !== cardId);
+    activePlayer.hand = activePlayer.hand.filter(card => card.id !== cardId);
 
-      if (isCorrect) {
-          this.gameState.timeline.splice(timelineIndex, 0, cardToPlace);
-          if (currentPlayer.hand.length === 0) {
-              this.gameState.winner = currentPlayer;
-              this.gameState.phase = OnlineGamePhase.GAME_OVER;
-              this.gameState.message = `¡${currentPlayer.name} ha ganado!`;
-              this.broadcastState();
-              return;
-          }
-      } else {
-          this.gameState.discardPile.unshift(cardToPlace);
-          if (this.gameState.deck.length > 0) {
-              const newCard = this.gameState.deck.pop();
-              if (newCard) currentPlayer.hand.push(newCard);
-          } else if (currentPlayer.hand.length === 0) {
-              this.gameState.winner = currentPlayer;
-              this.gameState.phase = OnlineGamePhase.GAME_OVER;
-              this.gameState.message = `¡${currentPlayer.name} ha ganado!`;
-              this.broadcastState();
-              return;
-          }
-      }
+    const isCorrect = canPlaceCard(cardToPlace, timeline, timelineIndex);
+    if (isCorrect) {
+      timeline.splice(timelineIndex, 0, cardToPlace);
+    } else {
+      discardPile.unshift(cardToPlace);
+      const drawnCard = deck.pop();
+      if (drawnCard) activePlayer.hand.push(drawnCard);
+    }
 
-      // Next Turn
-      this.gameState.currentPlayerIndex = (this.gameState.currentPlayerIndex + 1) % this.gameState.players.length;
-      this.gameState.message = `Es el turno de ${this.gameState.players[this.gameState.currentPlayerIndex].name}.`;
-
+    if (activePlayer.hand.length === 0) {
+      this.gameState = {
+        ...this.gameState,
+        players,
+        timeline,
+        deck,
+        discardPile,
+        winner: activePlayer,
+        phase: OnlineGamePhase.GAME_OVER,
+        message: `¡${activePlayer.name} ha ganado!`,
+      };
       this.broadcastState();
+      return;
+    }
 
-      // Check AI
-      if (this.gameState.players[this.gameState.currentPlayerIndex].isAI) {
-          this.playAITurn();
-      }
+    const nextPlayerIndex = (this.gameState.currentPlayerIndex + 1) % players.length;
+    this.gameState = {
+      ...this.gameState,
+      players,
+      timeline,
+      deck,
+      discardPile,
+      currentPlayerIndex: nextPlayerIndex,
+      message: `Es el turno de ${players[nextPlayerIndex].name}.`,
+    };
+
+    this.broadcastState();
+
+    if (players[nextPlayerIndex].isAI) {
+      this.playAITurn();
+    }
   }
 
   private playAITurn() {
-      setTimeout(() => {
-          if (!this.gameState || this.gameState.phase !== OnlineGamePhase.PLAYING) return;
-          const aiPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
-          if (!aiPlayer.isAI) return;
+    window.setTimeout(() => {
+      if (!this.gameState || this.gameState.phase !== OnlineGamePhase.PLAYING) return;
 
-          let move: { card: Card, timelineIndex: number } | null = null;
-          const correctMoves = getValidTimelineMoves(aiPlayer.hand, this.gameState.timeline);
+      const aiPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
+      if (!aiPlayer?.isAI) return;
 
-          if (correctMoves.length > 0 && Math.random() > 0.3) {
-              move = correctMoves[Math.floor(Math.random() * correctMoves.length)];
-          } else if (aiPlayer.hand.length > 0) {
-              const randomCard = aiPlayer.hand[Math.floor(Math.random() * aiPlayer.hand.length)];
-              const idx = Math.floor(Math.random() * (this.gameState.timeline.length + 1));
-              move = { card: randomCard, timelineIndex: idx };
-          }
+      let move: { card: Card; timelineIndex: number } | null = null;
+      const correctMoves = getValidTimelineMoves(aiPlayer.hand, this.gameState.timeline);
 
-          if (move) {
-              this.processPlaceCard(aiPlayer.id, move.card.id, move.timelineIndex);
-          }
-      }, 2000);
+      if (correctMoves.length > 0 && Math.random() > 0.3) {
+        move = correctMoves[Math.floor(Math.random() * correctMoves.length)];
+      } else if (aiPlayer.hand.length > 0) {
+        const randomCard = aiPlayer.hand[Math.floor(Math.random() * aiPlayer.hand.length)];
+        const timelineIndex = Math.floor(Math.random() * (this.gameState.timeline.length + 1));
+        move = { card: randomCard, timelineIndex };
+      }
+
+      if (move) {
+        this.processPlaceCard(aiPlayer.id, move.card.id, move.timelineIndex);
+      }
+    }, 2000);
   }
 }
 

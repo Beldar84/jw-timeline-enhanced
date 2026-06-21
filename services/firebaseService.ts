@@ -26,6 +26,8 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
+export const firestoreDb = db;
+
 const MIN_SEARCH_LENGTH = 2;
 const MAX_SEARCH_PREFIX_LENGTH = 24;
 
