@@ -11,6 +11,16 @@ interface OnlineSetupProps {
   onBack: () => void;
 }
 
+const normalizeGameCodeSuffix = (value: string): string => {
+  return value
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, '')
+    .replace(/^JW-?/, '')
+    .replace(/[^0-9]/g, '')
+    .slice(0, 4);
+};
+
 const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onStartTurnBased, onBack }) => {
   // Cargar el nombre del perfil guardado
   const savedProfile = profileService.getProfile();
@@ -37,8 +47,8 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onStartTurnBased
     if (trimmedPlayerName) {
       setIsLoading(true);
       try {
-        // Si el sufijo está vacío, crear sala nueva; si tiene valor, unirse a JW-{sufijo}
-        const gameIdToUse = trimmedGameIdSuffix ? `JW-${trimmedGameIdSuffix}` : undefined;
+        const normalizedSuffix = normalizeGameCodeSuffix(trimmedGameIdSuffix);
+        const gameIdToUse = normalizedSuffix ? `JW-${normalizedSuffix}` : undefined;
         await onJoinLobby(trimmedPlayerName, gameIdToUse);
       } catch (err: any) {
         console.error(err);
@@ -59,7 +69,7 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onStartTurnBased
   };
 
   // Si el sufijo tiene contenido, es unirse a una sala
-  const isJoiningGame = gameIdSuffix.trim().length > 0;
+  const isJoiningGame = normalizeGameCodeSuffix(gameIdSuffix).length > 0;
   const buttonText = isLoading
     ? 'Conectando...'
     : (isJoiningGame ? 'Unirse a la Sala' : 'Crear Sala');
@@ -173,7 +183,7 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onStartTurnBased
               id="game-id"
               type="text"
               value={gameIdSuffix}
-              onChange={(e) => setGameIdSuffix(e.target.value.toUpperCase())}
+              onChange={(e) => setGameIdSuffix(normalizeGameCodeSuffix(e.target.value))}
               className="flex-1 bg-gray-700 text-white p-2.5 md:p-3 rounded-r-lg border-2 border-l-0 border-gray-600 focus:border-yellow-400 focus:outline-none transition text-sm md:text-base"
               placeholder="1234"
               disabled={isLoading}
