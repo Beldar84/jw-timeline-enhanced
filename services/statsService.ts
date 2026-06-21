@@ -75,6 +75,7 @@ const DEFAULT_STATS: PlayerStats = {
 
 class StatsService {
   private currentSession: GameSession | null = null;
+  private lastCompletedSession: GameSession | null = null;
 
   // Load stats from localStorage
   loadStats(): PlayerStats {
@@ -144,6 +145,11 @@ class StatsService {
 
     // Don't count study mode games in stats
     if (this.currentSession.isStudyMode) {
+      this.lastCompletedSession = {
+        ...this.currentSession,
+        endTime: Date.now(),
+        result: playerWon ? 'win' : 'loss',
+      };
       this.currentSession = null;
       return this.loadStats();
     }
@@ -196,8 +202,13 @@ class StatsService {
     this.checkAchievements(stats, this.currentSession);
 
     this.saveStats(stats);
+    this.lastCompletedSession = { ...this.currentSession };
     this.currentSession = null;
     return stats;
+  }
+
+  getLastCompletedSession(): GameSession | null {
+    return this.lastCompletedSession ? { ...this.lastCompletedSession } : null;
   }
 
   // Check and unlock achievements

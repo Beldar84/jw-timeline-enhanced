@@ -194,17 +194,55 @@ const AppEnhanced: React.FC = () => {
     }
   }, [currentPlayerIndex, players, gameMode]);
 
-  const finishLocalGame = (winningPlayer: Player) => {
+  const finishLocalGame = (winningPlayer: Player, finalTimelineLength: number = timeline.length) => {
     setWinner(winningPlayer);
     setGamePhase(GamePhase.GAME_OVER);
     soundService.playWin();
 
     const playerWon = winningPlayer.id === players[0]?.id;
     const updatedStats = statsService.endSession(playerWon);
+    const completedSession = statsService.getLastCompletedSession();
     setStats(updatedStats);
 
     if (!isStudyMode) {
       leaderboardService.updateLeaderboard();
+
+      if (firebaseService.isSignedIn()) {
+        const profile = profileService.getProfile();
+        const playerName = profile?.name || players[0]?.name || 'Jugador';
+        const onlineStats = {
+          totalWins: updatedStats.gamesWon,
+          totalGames: updatedStats.gamesPlayed,
+          totalPlacements: updatedStats.totalCardsPlaced,
+          correctPlacements: updatedStats.correctPlacements,
+          bestStreak: updatedStats.longestWinStreak,
+          currentStreak: updatedStats.currentWinStreak,
+        };
+        const durationSeconds = completedSession?.startTime && completedSession?.endTime
+          ? Math.round((completedSession.endTime - completedSession.startTime) / 1000)
+          : null;
+
+        void Promise.all([
+          firebaseService.syncStats(onlineStats, playerName),
+          firebaseService.recordGameHistory({
+            playerIds: [],
+            players: players.map(player => ({ id: player.id, name: player.name })),
+            mode: gameMode === 'ai' ? 'ai' : 'local',
+            result: playerWon ? 'win' : 'loss',
+            winnerId: winningPlayer.id,
+            winnerName: winningPlayer.name,
+            deckId: selectedDeckId,
+            durationSeconds,
+            cardsPlaced: completedSession?.cardsPlaced || 0,
+            correctPlacements: completedSession?.correctPlacements || 0,
+            incorrectPlacements: completedSession?.incorrectPlacements || 0,
+            timelineLength: finalTimelineLength,
+            moveCount: completedSession?.cardsPlaced || 0,
+          })
+        ]).catch(error => {
+          console.error('[Firebase] Sync completed game error:', error);
+        });
+      }
 
       const newlyUnlocked = updatedStats.achievements.find(
         a => a.unlockedAt && (!stats.achievements.find(sa => sa.id === a.id)?.unlockedAt)
@@ -231,7 +269,7 @@ const AppEnhanced: React.FC = () => {
         setPlayers(players.map(p => p.id === player.id ? { ...p, hand: newHand } : p));
 
         if (newHand.length === 0) {
-            finishLocalGame(player);
+            finishLocalGame(player, newTimeline.length);
         } else {
             handleNextTurn();
         }

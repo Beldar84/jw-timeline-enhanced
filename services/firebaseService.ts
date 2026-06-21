@@ -26,6 +26,45 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
+const MIN_SEARCH_LENGTH = 2;
+const MAX_SEARCH_PREFIX_LENGTH = 24;
+
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function buildSearchPrefixes(name: string, email?: string | null): string[] {
+  const prefixes = new Set<string>();
+  const addTokenPrefixes = (value: string) => {
+    const normalized = normalizeSearchText(value);
+    if (!normalized) return;
+
+    const maxLength = Math.min(normalized.length, MAX_SEARCH_PREFIX_LENGTH);
+    for (let length = MIN_SEARCH_LENGTH; length <= maxLength; length++) {
+      prefixes.add(normalized.slice(0, length));
+    }
+  };
+
+  addTokenPrefixes(name);
+  normalizeSearchText(name)
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .forEach(addTokenPrefixes);
+
+  if (email) {
+    const normalizedEmail = normalizeSearchText(email);
+    addTokenPrefixes(normalizedEmail);
+    addTokenPrefixes(normalizedEmail.split('@')[0] || '');
+  }
+
+  return Array.from(prefixes);
+}
+
 // Set persistence to local (survives browser restarts - about 1 month)
 setPersistence(auth, browserLocalPersistence).catch(console.error);
 
@@ -33,6 +72,8 @@ setPersistence(auth, browserLocalPersistence).catch(console.error);
 export interface OnlineUserProfile {
   id: string;
   name: string;
+  nameLower?: string;
+  searchPrefixes?: string[];
   email?: string;
   avatar?: string;
   friends: string[];
@@ -62,6 +103,15 @@ export interface OnlineStats {
   currentStreak: number;
 }
 
+export interface OnlineUserStats extends OnlineStats {
+  id: string;
+  name: string;
+  avatar?: string;
+  accuracy: number;
+  winRate: number;
+  updatedAt: Timestamp;
+}
+
 export interface FriendInfo {
   id: string;
   name: string;
@@ -81,6 +131,35 @@ export interface GameInvitation {
   createdAt: any;
   expiresAt: any;
 }
+
+export interface GameHistoryPlayer {
+  id: string;
+  name: string;
+}
+
+export interface GameHistoryEntry {
+  id: string;
+  userId: string;
+  playerIds: string[];
+  players: GameHistoryPlayer[];
+  mode: 'local' | 'ai' | 'realtime' | 'turnbased';
+  result: 'win' | 'loss';
+  winnerId: string | null;
+  winnerName?: string | null;
+  deckId?: string | null;
+  durationSeconds?: number | null;
+  cardsPlaced?: number;
+  correctPlacements?: number;
+  incorrectPlacements?: number;
+  timelineLength?: number;
+  moveCount?: number;
+  createdAt: any;
+  finishedAt: any;
+}
+
+export type GameHistoryInput = Omit<GameHistoryEntry, 'id' | 'userId' | 'createdAt' | 'finishedAt'> & {
+  finishedAt?: any;
+};
 
 // Auth state
 let currentUser: User | null = null;
@@ -231,6 +310,8 @@ export const firebaseService = {
       await setDoc(userRef, {
         id: userId,
         name,
+        nameLower: normalizeSearchText(name),
+        searchPrefixes: buildSearchPrefixes(name, email),
         email: email || null,
         avatar: null,
         friends: [],
@@ -256,15 +337,18 @@ export const firebaseService = {
     try {
       const userRef = doc(db, 'users', userId);
       const existing = await getDoc(userRef);
+      const email = this.getCurrentUserEmail();
 
       if (existing.exists()) {
         await setDoc(userRef, {
           name,
+          nameLower: normalizeSearchText(name),
+          searchPrefixes: buildSearchPrefixes(name, email),
           avatar: avatar || null,
           updatedAt: serverTimestamp()
         }, { merge: true });
       } else {
-        await this.createUserProfile(userId, name, this.getCurrentUserEmail() || undefined);
+        await this.createUserProfile(userId, name, email || undefined);
       }
 
       console.log('[Firebase] Profile saved');
@@ -284,7 +368,14 @@ export const firebaseService = {
       const snapshot = await getDoc(userRef);
 
       if (snapshot.exists()) {
-        return snapshot.data() as OnlineUserProfile;
+        const profile = snapshot.data() as OnlineUserProfile;
+        if (!Array.isArray(profile.searchPrefixes)) {
+          await setDoc(userRef, {
+            nameLower: normalizeSearchText(profile.name || 'Jugador'),
+            searchPrefixes: buildSearchPrefixes(profile.name || 'Jugador', profile.email)
+          }, { merge: true });
+        }
+        return profile;
       }
       return null;
     } catch (error) {
@@ -295,23 +386,27 @@ export const firebaseService = {
 
   // ==================== FRIENDS METHODS ====================
 
-  // Search users by username (case-insensitive partial match)
+  // Search users by username or email prefix using Firestore indexes.
   async searchUserByUsername(username: string): Promise<FriendInfo[]> {
     try {
-      const usersRef = collection(db, 'users');
-      // Get all users and filter client-side for case-insensitive partial match
-      const snapshot = await getDocs(usersRef);
+      const searchTerm = normalizeSearchText(username);
+      if (searchTerm.length < MIN_SEARCH_LENGTH) return [];
 
-      const searchTerm = username.toLowerCase().trim();
+      const usersRef = collection(db, 'users');
+      const usersQuery = query(
+        usersRef,
+        where('searchPrefixes', 'array-contains', searchTerm.slice(0, MAX_SEARCH_PREFIX_LENGTH)),
+        limit(10)
+      );
+      const snapshot = await getDocs(usersQuery);
+
       const results: FriendInfo[] = [];
       const currentUserId = this.getCurrentUserId();
 
       snapshot.docs.forEach(doc => {
         const userData = doc.data();
-        const userName = (userData.name || '').toLowerCase();
 
-        // Match if username contains the search term and is not the current user
-        if (userName.includes(searchTerm) && userData.id !== currentUserId) {
+        if (userData.id !== currentUserId) {
           results.push({
             id: userData.id,
             name: userData.name,
@@ -321,8 +416,7 @@ export const firebaseService = {
         }
       });
 
-      // Return up to 10 results
-      return results.slice(0, 10);
+      return results;
     } catch (error) {
       console.error('[Firebase] Search user error:', error);
       return [];
@@ -357,13 +451,13 @@ export const firebaseService = {
       const userRef = doc(db, 'users', userId);
       const friendRef = doc(db, 'users', friendId);
 
+      await updateDoc(friendRef, {
+        friends: arrayUnion(userId)
+      });
+
       await updateDoc(userRef, {
         friends: arrayUnion(friendId),
         friendRequests: arrayRemove(friendId)
-      });
-
-      await updateDoc(friendRef, {
-        friends: arrayUnion(userId)
       });
 
       console.log('[Firebase] Friend request accepted');
@@ -637,6 +731,36 @@ export const firebaseService = {
 
   // ==================== LEADERBOARD METHODS ====================
 
+  async updateUserStats(stats: OnlineStats, name: string, avatar?: string): Promise<boolean> {
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      console.error('[Firebase] No user signed in');
+      return false;
+    }
+
+    try {
+      const winRate = stats.totalGames > 0 ? (stats.totalWins / stats.totalGames) * 100 : 0;
+      const accuracy = stats.totalPlacements > 0 ? (stats.correctPlacements / stats.totalPlacements) * 100 : 0;
+
+      const statsRef = doc(db, 'userStats', userId);
+      await setDoc(statsRef, {
+        id: userId,
+        name,
+        avatar: avatar || null,
+        ...stats,
+        accuracy: Math.round(accuracy * 10) / 10,
+        winRate: Math.round(winRate * 10) / 10,
+        updatedAt: serverTimestamp()
+      });
+
+      console.log('[Firebase] User stats updated');
+      return true;
+    } catch (error) {
+      console.error('[Firebase] Update user stats error:', error);
+      return false;
+    }
+  },
+
   async updateLeaderboard(stats: OnlineStats, name: string, avatar?: string): Promise<boolean> {
     const userId = this.getCurrentUserId();
     if (!userId) {
@@ -724,7 +848,82 @@ export const firebaseService = {
     }
 
     await this.saveProfile(name, avatar);
-    return await this.updateLeaderboard(localStats, name, avatar);
+    const [statsSynced, leaderboardSynced] = await Promise.all([
+      this.updateUserStats(localStats, name, avatar),
+      this.updateLeaderboard(localStats, name, avatar)
+    ]);
+    return statsSynced && leaderboardSynced;
+  },
+
+  // ==================== GAME HISTORY ====================
+
+  async recordGameHistory(entry: GameHistoryInput): Promise<boolean> {
+    const userId = this.getCurrentUserId();
+    if (!userId) return false;
+
+    try {
+      const historyRef = doc(collection(db, 'gameHistory'));
+      await setDoc(historyRef, {
+        ...entry,
+        id: historyRef.id,
+        userId,
+        playerIds: Array.from(new Set([userId, ...entry.playerIds])),
+        finishedAt: entry.finishedAt || serverTimestamp(),
+        createdAt: serverTimestamp()
+      });
+
+      console.log('[Firebase] Game history recorded');
+      return true;
+    } catch (error) {
+      console.error('[Firebase] Record game history error:', error);
+      return false;
+    }
+  },
+
+  async recordGameHistoryForPlayers(entry: Omit<GameHistoryInput, 'result'>): Promise<boolean> {
+    const currentUserId = this.getCurrentUserId();
+    if (!currentUserId || !entry.playerIds.includes(currentUserId)) return false;
+
+    try {
+      await Promise.all(entry.playerIds.map(async (playerId) => {
+        const historyRef = doc(collection(db, 'gameHistory'));
+        await setDoc(historyRef, {
+          ...entry,
+          id: historyRef.id,
+          userId: playerId,
+          result: entry.winnerId === playerId ? 'win' : 'loss',
+          finishedAt: entry.finishedAt || serverTimestamp(),
+          createdAt: serverTimestamp()
+        });
+      }));
+
+      console.log('[Firebase] Game history recorded for players');
+      return true;
+    } catch (error) {
+      console.error('[Firebase] Record players history error:', error);
+      return false;
+    }
+  },
+
+  async getGameHistory(maxResults: number = 20): Promise<GameHistoryEntry[]> {
+    const userId = this.getCurrentUserId();
+    if (!userId) return [];
+
+    try {
+      const historyRef = collection(db, 'gameHistory');
+      const historyQuery = query(
+        historyRef,
+        where('userId', '==', userId),
+        orderBy('finishedAt', 'desc'),
+        limit(maxResults)
+      );
+      const snapshot = await getDocs(historyQuery);
+
+      return snapshot.docs.map(doc => doc.data() as GameHistoryEntry);
+    } catch (error) {
+      console.error('[Firebase] Get game history error:', error);
+      return [];
+    }
   },
 
   // ==================== TURN-BASED GAMES ====================
@@ -761,6 +960,7 @@ export const firebaseService = {
 
       const gameData: TurnBasedGame = {
         id: gameRef.id,
+        playerIds: [userId, opponentId],
         players: [
           { id: userId, name: profile?.name || 'Jugador 1' },
           { id: opponentId, name: opponentData.name || 'Jugador 2' }
@@ -774,7 +974,8 @@ export const firebaseService = {
         winnerId: null,
         lastMoveAt: serverTimestamp(),
         createdAt: serverTimestamp(),
-        turnTimeLimit: 24 * 60 * 60 * 1000 // 24 horas por turno
+        turnTimeLimit: 24 * 60 * 60 * 1000, // 24 horas por turno
+        moveCount: 0
       };
 
       await setDoc(gameRef, gameData);
@@ -797,18 +998,14 @@ export const firebaseService = {
 
     try {
       const gamesRef = collection(db, 'turnBasedGames');
-      const snapshot = await getDocs(gamesRef);
+      const gamesQuery = query(
+        gamesRef,
+        where('playerIds', 'array-contains', userId),
+        where('status', '==', 'active')
+      );
+      const snapshot = await getDocs(gamesQuery);
 
-      const games: TurnBasedGame[] = [];
-      snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        // Check if user is a player in this game
-        if (data.players?.some((p: any) => p.id === userId) && data.status !== 'finished') {
-          games.push(data as TurnBasedGame);
-        }
-      });
-
-      return games;
+      return snapshot.docs.map(doc => doc.data() as TurnBasedGame);
     } catch (error) {
       console.error('[Firebase] Get turn-based games error:', error);
       return [];
@@ -878,6 +1075,7 @@ export const firebaseService = {
         ...game.playerHands,
         [userId]: nextHand,
       };
+      const nextMoveCount = (game.moveCount || 0) + 1;
 
       await updateDoc(gameRef, {
         currentTurnPlayerId: nextStatus === 'finished' ? userId : otherPlayerId,
@@ -887,8 +1085,26 @@ export const firebaseService = {
         discardPile: nextDiscardPile,
         status: nextStatus,
         winnerId,
-        lastMoveAt: serverTimestamp()
+        lastMoveAt: serverTimestamp(),
+        moveCount: nextMoveCount
       });
+
+      if (nextStatus === 'finished') {
+        await this.recordGameHistoryForPlayers({
+          playerIds: game.playerIds || game.players.map(player => player.id),
+          players: game.players,
+          mode: 'turnbased',
+          winnerId,
+          winnerName: game.players.find(player => player.id === winnerId)?.name || null,
+          deckId: 'complete',
+          durationSeconds: null,
+          cardsPlaced: nextMoveCount,
+          correctPlacements: Math.max(0, nextTimeline.length - 1),
+          incorrectPlacements: nextDiscardPile.length,
+          timelineLength: nextTimeline.length,
+          moveCount: nextMoveCount
+        });
+      }
 
       console.log('[Firebase] Turn-based move made');
       return true;
@@ -966,6 +1182,7 @@ export const firebaseService = {
 // Turn-based game type
 export interface TurnBasedGame {
   id: string;
+  playerIds: string[];
   players: { id: string; name: string }[];
   currentTurnPlayerId: string;
   timeline: Card[];
@@ -977,6 +1194,7 @@ export interface TurnBasedGame {
   lastMoveAt: any;
   createdAt: any;
   turnTimeLimit: number;
+  moveCount: number;
 }
 
 export default firebaseService;

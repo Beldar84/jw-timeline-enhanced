@@ -1,0 +1,88 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function onlyChanges(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    function addsSelfToList(field) {
+      return signedIn()
+        && onlyChanges([field])
+        && request.resource.data[field].hasAll(resource.data[field])
+        && request.resource.data[field].size() == resource.data[field].size() + 1
+        && request.auth.uid in request.resource.data[field];
+    }
+
+    function removesSelfFromList(field) {
+      return signedIn()
+        && onlyChanges([field])
+        && resource.data[field].hasAll(request.resource.data[field])
+        && resource.data[field].size() == request.resource.data[field].size() + 1
+        && !(request.auth.uid in request.resource.data[field]);
+    }
+
+    function addsSelfAsAcceptedFriend(userId) {
+      return addsSelfToList('friends')
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.friendRequests.hasAny([userId]);
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow create: if owns(userId) && request.resource.data.id == userId;
+      allow update: if owns(userId)
+        || addsSelfToList('friendRequests')
+        || addsSelfAsAcceptedFriend(userId)
+        || removesSelfFromList('friends');
+      allow delete: if owns(userId);
+    }
+
+    match /leaderboard/{userId} {
+      allow read: if true;
+      allow create, update, delete: if owns(userId);
+    }
+
+    match /userStats/{userId} {
+      allow read, create, update, delete: if owns(userId);
+    }
+
+    match /gameInvitations/{invitationId} {
+      allow read: if signedIn()
+        && (resource.data.toUserId == request.auth.uid || resource.data.fromUserId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.fromUserId == request.auth.uid
+        && request.resource.data.toUserId is string;
+      allow update: if signedIn()
+        && (resource.data.toUserId == request.auth.uid || resource.data.fromUserId == request.auth.uid);
+      allow delete: if false;
+    }
+
+    match /turnBasedGames/{gameId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.playerIds;
+      allow create: if signedIn() && request.auth.uid in request.resource.data.playerIds;
+      allow update: if signedIn() && request.auth.uid in resource.data.playerIds;
+      allow delete: if false;
+    }
+
+    match /gameHistory/{historyId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn()
+        && (
+          request.resource.data.userId == request.auth.uid
+          || (
+            request.resource.data.mode == 'turnbased'
+            && request.auth.uid in request.resource.data.playerIds
+          )
+        );
+      allow update, delete: if false;
+    }
+  }
+}

@@ -2,21 +2,48 @@ import React, { useState, useEffect } from 'react';
 import { statsService, PlayerStats, DeckStats } from '../services/statsService';
 import { deckService } from '../services/deckService';
 import { soundService } from '../services/soundService';
+import { firebaseService, GameHistoryEntry } from '../services/firebaseService';
 
 interface StatsPanelProps {
   onClose: () => void;
 }
 
+type StatsTab = 'overview' | 'achievements' | 'decks' | 'history';
+
 const StatsPanel: React.FC<StatsPanelProps> = ({ onClose }) => {
   const [stats, setStats] = useState<PlayerStats>(statsService.loadStats());
-  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'decks'>('overview');
+  const [activeTab, setActiveTab] = useState<StatsTab>('overview');
+  const [history, setHistory] = useState<GameHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const accuracy = statsService.getAccuracy(stats);
   const winRate = statsService.getWinRate(stats);
   const achievementProgress = statsService.getAchievementProgress(stats);
 
-  const handleTabChange = (tab: 'overview' | 'achievements' | 'decks') => {
+  useEffect(() => {
+    if (activeTab !== 'history') return;
+    if (!firebaseService.isSignedIn()) {
+      setHistory([]);
+      return;
+    }
+
+    let isMounted = true;
+    setHistoryLoading(true);
+    firebaseService.getGameHistory(30)
+      .then(entries => {
+        if (isMounted) setHistory(entries);
+      })
+      .finally(() => {
+        if (isMounted) setHistoryLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab]);
+
+  const handleTabChange = (tab: StatsTab) => {
     soundService.playClick();
     setActiveTab(tab);
   };
@@ -45,6 +72,20 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ onClose }) => {
       <div className="text-sm text-gray-400">{label}</div>
     </div>
   );
+
+  const formatHistoryDate = (dateValue: any): string => {
+    const date = dateValue?.toDate ? dateValue.toDate() : dateValue ? new Date(dateValue) : null;
+    return date && !Number.isNaN(date.getTime())
+      ? date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })
+      : '--';
+  };
+
+  const getModeLabel = (mode: GameHistoryEntry['mode']): string => {
+    if (mode === 'ai') return 'Contra IA';
+    if (mode === 'local') return 'Local';
+    if (mode === 'turnbased') return 'Por turnos';
+    return 'Online';
+  };
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
@@ -95,6 +136,16 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ onClose }) => {
             }`}
           >
             Mazos
+          </button>
+          <button
+            onClick={() => handleTabChange('history')}
+            className={`flex-1 py-3 px-4 font-bold transition ${
+              activeTab === 'history'
+                ? 'bg-gray-700 text-yellow-200 border-b-2 border-yellow-200'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Historial
           </button>
         </div>
 
@@ -283,6 +334,78 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ onClose }) => {
                         </div>
                         <div className="bg-gray-800/50 p-2 rounded">
                           <div className="text-lg font-bold text-purple-400">{deckAccuracy.toFixed(0)}%</div>
+                          <div className="text-xs text-gray-400">Precisión</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {activeTab === 'history' && (
+            <div className="space-y-4">
+              {!firebaseService.isSignedIn() ? (
+                <div className="text-center py-12 text-gray-400">
+                  <div className="text-6xl mb-4">☁️</div>
+                  <p>Inicia sesión para guardar y consultar tu historial en la nube.</p>
+                </div>
+              ) : historyLoading ? (
+                <div className="text-center py-12 text-gray-400">Cargando historial...</div>
+              ) : history.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <div className="text-6xl mb-4">🕰️</div>
+                  <p>Aún no hay partidas guardadas en tu historial.</p>
+                </div>
+              ) : (
+                history.map(entry => {
+                  const accuracy = entry.cardsPlaced
+                    ? ((entry.correctPlacements || 0) / entry.cardsPlaced) * 100
+                    : 0;
+
+                  return (
+                    <div key={entry.id} className="bg-gray-700/40 border border-gray-600 rounded-lg p-4">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`px-2 py-1 rounded text-xs font-bold ${
+                              entry.result === 'win'
+                                ? 'bg-green-600/30 text-green-300'
+                                : 'bg-red-600/30 text-red-300'
+                            }`}>
+                              {entry.result === 'win' ? 'Victoria' : 'Derrota'}
+                            </span>
+                            <span className="text-sm text-gray-300">{getModeLabel(entry.mode)}</span>
+                          </div>
+                          <h3 className="text-lg font-bold text-white">
+                            Ganador: {entry.winnerName || 'Sin ganador'}
+                          </h3>
+                          <p className="text-sm text-gray-400">
+                            {entry.players.map(player => player.name).join(' vs ')}
+                          </p>
+                        </div>
+                        <div className="text-sm text-gray-400 md:text-right">
+                          <div>{formatHistoryDate(entry.finishedAt)}</div>
+                          <div>{entry.durationSeconds ? statsService.formatTime(entry.durationSeconds) : '--'}</div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mt-4">
+                        <div className="bg-gray-800/50 p-2 rounded">
+                          <div className="text-lg font-bold text-yellow-300">{entry.cardsPlaced || 0}</div>
+                          <div className="text-xs text-gray-400">Movimientos</div>
+                        </div>
+                        <div className="bg-gray-800/50 p-2 rounded">
+                          <div className="text-lg font-bold text-green-400">{entry.correctPlacements || 0}</div>
+                          <div className="text-xs text-gray-400">Correctas</div>
+                        </div>
+                        <div className="bg-gray-800/50 p-2 rounded">
+                          <div className="text-lg font-bold text-red-400">{entry.incorrectPlacements || 0}</div>
+                          <div className="text-xs text-gray-400">Incorrectas</div>
+                        </div>
+                        <div className="bg-gray-800/50 p-2 rounded">
+                          <div className="text-lg font-bold text-blue-400">{accuracy.toFixed(0)}%</div>
                           <div className="text-xs text-gray-400">Precisión</div>
                         </div>
                       </div>
