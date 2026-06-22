@@ -6,9 +6,10 @@ import { soundService } from '../services/soundService';
 interface GameOverProps {
   winner: Player;
   onRestart: () => void;
+  message?: string | null;
 }
 
-const GameOver: React.FC<GameOverProps> = ({ winner, onRestart }) => {
+const GameOver: React.FC<GameOverProps> = ({ winner, onRestart, message }) => {
   const handleRestartClick = () => {
     soundService.playClick();
     onRestart();
@@ -20,7 +21,9 @@ const GameOver: React.FC<GameOverProps> = ({ winner, onRestart }) => {
       <p className="text-xl md:text-3xl text-white mb-6">
         ¡Felicidades, <span className="font-bold text-yellow-400">{winner.name}</span>!
       </p>
-      <p className="text-lg md:text-xl text-yellow-100 mb-8">¡Has colocado correctamente todas tus cartas y has ganado el juego!</p>
+      <p className="text-lg md:text-xl text-yellow-100 mb-8">
+        {message || '¡Has colocado correctamente todas tus cartas y has ganado el juego!'}
+      </p>
       <button
         onClick={handleRestartClick}
         className="px-8 py-3 md:px-10 md:py-4 bg-green-600 text-lg md:text-xl font-bold rounded-lg hover:bg-green-700 transition transform hover:scale-105"

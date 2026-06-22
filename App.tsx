@@ -792,7 +792,7 @@ const AppEnhanced: React.FC = () => {
         const gameOverMessage = gameMode === 'online' ? onlineGameState?.message : null;
         // Si hay ganador, mostrar pantalla de victoria
         if (finalWinner) {
-          return <GameOver winner={finalWinner} onRestart={handleRestart} />;
+          return <GameOver winner={finalWinner} onRestart={handleRestart} message={gameOverMessage} />;
         }
         // Si no hay ganador pero hay mensaje (desconexión), mostrar pantalla de partida cancelada
         if (gameOverMessage) {

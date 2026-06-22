@@ -60,9 +60,13 @@ class GameService {
   private isHost = false;
 
   constructor() {
-    window.addEventListener('beforeunload', () => {
+    const handlePageExit = () => {
+      void this.handleLocalDeparture();
       this.stopListening();
-    });
+    };
+
+    window.addEventListener('pagehide', handlePageExit);
+    window.addEventListener('beforeunload', handlePageExit);
   }
 
   private async ensureSignedIn(): Promise<string | null> {
@@ -115,6 +119,70 @@ class GameService {
     this.gameState = toGameState(data);
     this.participantAuthIds = data.participantAuthIds || [];
     this.createdBy = data.createdBy || null;
+  }
+
+  private async handleLocalDeparture(): Promise<void> {
+    if (!this.gameState || !this.localPlayerId) return;
+
+    const gameState = JSON.parse(JSON.stringify(this.gameState)) as GameState;
+    const localPlayerId = this.localPlayerId;
+    const leavingPlayer = gameState.players.find(player => player.id === localPlayerId);
+    if (!leavingPlayer || leavingPlayer.isAI || gameState.phase === OnlineGamePhase.GAME_OVER) return;
+
+    try {
+      if (gameState.phase === OnlineGamePhase.PLAYING) {
+        const remainingHumanPlayers = gameState.players.filter(player => !player.isAI && player.id !== localPlayerId);
+
+        if (remainingHumanPlayers.length === 1) {
+          const winner = remainingHumanPlayers[0];
+          await updateDoc(this.gameRef(gameState.id), {
+            phase: OnlineGamePhase.GAME_OVER,
+            winner,
+            message: `${leavingPlayer.name} ha abandonado la partida. ${winner.name} gana por abandono.`,
+            updatedAt: serverTimestamp(),
+          });
+          return;
+        }
+
+        if (remainingHumanPlayers.length > 1) {
+          const remainingPlayers = gameState.players.filter(player => player.id !== localPlayerId);
+          const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
+          const nextPlayerIndex = currentTurnPlayer?.id === localPlayerId
+            ? gameState.currentPlayerIndex % remainingPlayers.length
+            : Math.max(0, remainingPlayers.findIndex(player => player.id === currentTurnPlayer?.id));
+          await updateDoc(this.gameRef(gameState.id), {
+            players: remainingPlayers,
+            participantAuthIds: this.participantAuthIds.filter(id => id !== localPlayerId),
+            currentPlayerIndex: Math.max(0, nextPlayerIndex),
+            message: `${leavingPlayer.name} ha abandonado la partida.`,
+            updatedAt: serverTimestamp(),
+          });
+        }
+        return;
+      }
+
+      if (gameState.phase === OnlineGamePhase.LOBBY) {
+        if (gameState.hostId === localPlayerId) {
+          await updateDoc(this.gameRef(gameState.id), {
+            phase: OnlineGamePhase.GAME_OVER,
+            winner: null,
+            message: 'El anfitrión ha cerrado la sala.',
+            updatedAt: serverTimestamp(),
+          });
+          return;
+        }
+
+        const remainingPlayers = gameState.players.filter(player => player.id !== localPlayerId);
+        await updateDoc(this.gameRef(gameState.id), {
+          players: remainingPlayers,
+          participantAuthIds: this.participantAuthIds.filter(id => id !== localPlayerId),
+          message: `${leavingPlayer.name} ha salido de la sala.`,
+          updatedAt: serverTimestamp(),
+        });
+      }
+    } catch (error) {
+      console.error('[GameService] Error registrando abandono:', error);
+    }
   }
 
   async createGame(hostName: string): Promise<{ gameId: string; playerId: string }> {
@@ -246,6 +314,7 @@ class GameService {
   }
 
   disconnect() {
+    void this.handleLocalDeparture();
     this.stopListening();
     this.gameState = null;
     this.participantAuthIds = [];
