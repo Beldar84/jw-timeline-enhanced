@@ -10,6 +10,7 @@ type RealtimeGameDocument = GameState & {
   createdBy: string;
   createdAt?: unknown;
   updatedAt?: unknown;
+  lastSeenAt?: Record<string, unknown>;
 };
 
 const BIBLICAL_NAMES = [
@@ -59,6 +60,20 @@ class GameService {
   private localPlayerId: string | null = null;
   private isHost = false;
   private aiTurnTimer: number | null = null;
+
+  // Presencia: cada jugador emite un latido cada HEARTBEAT_INTERVAL_MS; si otro
+  // jugador no actualiza su marca en PRESENCE_TIMEOUT_MS, se le da por desconectado.
+  // Las escrituras de beforeunload/pagehide no son fiables (sobre todo en móvil),
+  // así que este es el mecanismo real de detección de abandonos.
+  private static readonly HEARTBEAT_INTERVAL_MS = 10_000;
+  private static readonly PRESENCE_TIMEOUT_MS = 45_000;
+  private heartbeatTimer: number | null = null;
+  private presenceCheckTimer: number | null = null;
+  private presenceSeen = new Map<string, { value: number; localSeenAt: number }>();
+  private handleVisibilityChange = () => {
+    // Al volver del segundo plano en móvil, emitir latido inmediato
+    if (document.visibilityState === 'visible') this.sendHeartbeat();
+  };
 
   constructor() {
     const handlePageExit = () => {
@@ -115,6 +130,86 @@ class GameService {
       this.subscribedGameId = null;
     }
     this.cancelPendingAITurn();
+    this.stopPresence();
+  }
+
+  // ==================== PRESENCIA / DETECCIÓN DE ABANDONOS ====================
+
+  private sendHeartbeat() {
+    if (!this.localPlayerId || !this.subscribedGameId) return;
+    const phase = this.gameState?.phase;
+    if (phase !== OnlineGamePhase.LOBBY && phase !== OnlineGamePhase.PLAYING) return;
+
+    updateDoc(this.gameRef(this.subscribedGameId), {
+      [`lastSeenAt.${this.localPlayerId}`]: serverTimestamp(),
+    }).catch(() => {
+      // Sin conexión momentánea: se reintenta en el siguiente latido
+    });
+  }
+
+  private startPresence() {
+    this.stopPresence();
+    if (!this.localPlayerId) return;
+
+    // Periodo de gracia inicial para todos los jugadores actuales
+    const now = Date.now();
+    this.gameState?.players.forEach(player => {
+      if (!player.isAI && player.id !== this.localPlayerId) {
+        this.presenceSeen.set(player.id, { value: 0, localSeenAt: now });
+      }
+    });
+
+    this.sendHeartbeat();
+    this.heartbeatTimer = window.setInterval(() => this.sendHeartbeat(), GameService.HEARTBEAT_INTERVAL_MS);
+    this.presenceCheckTimer = window.setInterval(() => this.checkPresence(), GameService.HEARTBEAT_INTERVAL_MS);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+  }
+
+  private stopPresence() {
+    if (this.heartbeatTimer !== null) {
+      window.clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+    if (this.presenceCheckTimer !== null) {
+      window.clearInterval(this.presenceCheckTimer);
+      this.presenceCheckTimer = null;
+    }
+    this.presenceSeen.clear();
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+  }
+
+  private checkPresence() {
+    const state = this.gameState;
+    if (!state || !this.localPlayerId) return;
+    if (state.phase !== OnlineGamePhase.LOBBY && state.phase !== OnlineGamePhase.PLAYING) return;
+
+    const now = Date.now();
+    const staleIds = state.players
+      .filter(player => !player.isAI && player.id !== this.localPlayerId)
+      .filter(player => {
+        const entry = this.presenceSeen.get(player.id);
+        if (!entry) {
+          // Jugador nuevo sin registro todavía: darle periodo de gracia
+          this.presenceSeen.set(player.id, { value: 0, localSeenAt: now });
+          return false;
+        }
+        return now - entry.localSeenAt > GameService.PRESENCE_TIMEOUT_MS;
+      })
+      .map(player => player.id);
+
+    if (staleIds.length === 0) return;
+
+    // Árbitro determinista: solo actúa el primer humano "vivo" del orden de
+    // jugadores, para que dos clientes no procesen el mismo abandono a la vez.
+    const alivePlayers = state.players.filter(
+      player => !player.isAI && !staleIds.includes(player.id)
+    );
+    if (alivePlayers.length === 0 || alivePlayers[0].id !== this.localPlayerId) return;
+
+    const departedId = staleIds[0];
+    this.presenceSeen.delete(departedId);
+    console.log('[GameService] Jugador sin latido, registrando abandono:', departedId);
+    void this.applyDeparture(departedId);
   }
 
   private cancelPendingAITurn() {
@@ -141,19 +236,43 @@ class GameService {
     this.gameState = toGameState(data);
     this.participantAuthIds = data.participantAuthIds || [];
     this.createdBy = data.createdBy || null;
+    this.trackPresenceFromDocument(data);
+  }
+
+  // Registra localmente cuándo cambió por última vez el latido de cada jugador.
+  // Se compara con el reloj local (no con el del servidor) para evitar problemas
+  // de desfase horario entre dispositivos.
+  private trackPresenceFromDocument(data: RealtimeGameDocument) {
+    const lastSeenAt = (data.lastSeenAt || {}) as Record<string, any>;
+    const now = Date.now();
+
+    for (const player of data.players || []) {
+      if (player.isAI || player.id === this.localPlayerId) continue;
+      const raw = lastSeenAt[player.id];
+      const millis = typeof raw?.toMillis === 'function' ? raw.toMillis() : 0;
+      const entry = this.presenceSeen.get(player.id);
+      if (!entry || entry.value !== millis) {
+        this.presenceSeen.set(player.id, { value: millis, localSeenAt: now });
+      }
+    }
   }
 
   private async handleLocalDeparture(): Promise<void> {
     if (!this.gameState || !this.localPlayerId) return;
+    await this.applyDeparture(this.localPlayerId);
+  }
+
+  // Registra el abandono de un jugador (propio o detectado por falta de latido)
+  private async applyDeparture(leavingPlayerId: string): Promise<void> {
+    if (!this.gameState) return;
 
     const gameState = JSON.parse(JSON.stringify(this.gameState)) as GameState;
-    const localPlayerId = this.localPlayerId;
-    const leavingPlayer = gameState.players.find(player => player.id === localPlayerId);
+    const leavingPlayer = gameState.players.find(player => player.id === leavingPlayerId);
     if (!leavingPlayer || leavingPlayer.isAI || gameState.phase === OnlineGamePhase.GAME_OVER) return;
 
     try {
       if (gameState.phase === OnlineGamePhase.PLAYING) {
-        const remainingHumanPlayers = gameState.players.filter(player => !player.isAI && player.id !== localPlayerId);
+        const remainingHumanPlayers = gameState.players.filter(player => !player.isAI && player.id !== leavingPlayerId);
 
         if (remainingHumanPlayers.length === 1) {
           const winner = remainingHumanPlayers[0];
@@ -167,14 +286,14 @@ class GameService {
         }
 
         if (remainingHumanPlayers.length > 1) {
-          const remainingPlayers = gameState.players.filter(player => player.id !== localPlayerId);
+          const remainingPlayers = gameState.players.filter(player => player.id !== leavingPlayerId);
           const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
-          const nextPlayerIndex = currentTurnPlayer?.id === localPlayerId
+          const nextPlayerIndex = currentTurnPlayer?.id === leavingPlayerId
             ? gameState.currentPlayerIndex % remainingPlayers.length
             : Math.max(0, remainingPlayers.findIndex(player => player.id === currentTurnPlayer?.id));
           await updateDoc(this.gameRef(gameState.id), {
             players: remainingPlayers,
-            participantAuthIds: this.participantAuthIds.filter(id => id !== localPlayerId),
+            participantAuthIds: this.participantAuthIds.filter(id => id !== leavingPlayerId),
             currentPlayerIndex: Math.max(0, nextPlayerIndex),
             message: `${leavingPlayer.name} ha abandonado la partida.`,
             updatedAt: serverTimestamp(),
@@ -184,7 +303,7 @@ class GameService {
       }
 
       if (gameState.phase === OnlineGamePhase.LOBBY) {
-        if (gameState.hostId === localPlayerId) {
+        if (gameState.hostId === leavingPlayerId) {
           await updateDoc(this.gameRef(gameState.id), {
             phase: OnlineGamePhase.GAME_OVER,
             winner: null,
@@ -194,10 +313,10 @@ class GameService {
           return;
         }
 
-        const remainingPlayers = gameState.players.filter(player => player.id !== localPlayerId);
+        const remainingPlayers = gameState.players.filter(player => player.id !== leavingPlayerId);
         await updateDoc(this.gameRef(gameState.id), {
           players: remainingPlayers,
-          participantAuthIds: this.participantAuthIds.filter(id => id !== localPlayerId),
+          participantAuthIds: this.participantAuthIds.filter(id => id !== leavingPlayerId),
           message: `${leavingPlayer.name} ha salido de la sala.`,
           updatedAt: serverTimestamp(),
         });
@@ -372,6 +491,8 @@ class GameService {
       }, (error) => {
         console.error('[GameService] Error escuchando sala:', error);
       });
+
+      this.startPresence();
     }
 
     return () => {

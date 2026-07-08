@@ -211,6 +211,66 @@ class StatsService {
     return this.lastCompletedSession ? { ...this.lastCompletedSession } : null;
   }
 
+  // Registra el resultado de una partida terminada fuera de una sesión local,
+  // p. ej. partidas por turnos que duran días. No afecta a métricas de duración.
+  recordCompletedGame(
+    playerWon: boolean,
+    options: { deckId?: string; cardsPlaced?: number; correctPlacements?: number; incorrectPlacements?: number } = {}
+  ): PlayerStats {
+    const stats = this.loadStats();
+    const deckId = options.deckId || 'complete';
+    const cardsPlaced = options.cardsPlaced || 0;
+    const correct = options.correctPlacements || 0;
+    const incorrect = options.incorrectPlacements || 0;
+    const hasPlacementData = options.correctPlacements !== undefined || options.incorrectPlacements !== undefined;
+
+    stats.gamesPlayed++;
+    if (playerWon) {
+      stats.gamesWon++;
+      stats.currentWinStreak++;
+      if (stats.currentWinStreak > stats.longestWinStreak) {
+        stats.longestWinStreak = stats.currentWinStreak;
+      }
+    } else {
+      stats.gamesLost++;
+      stats.currentWinStreak = 0;
+    }
+
+    stats.totalCardsPlaced += cardsPlaced;
+    stats.correctPlacements += correct;
+    stats.incorrectPlacements += incorrect;
+    if (stats.gamesPlayed > 0) {
+      stats.averageGameDuration = stats.totalPlayTime / stats.gamesPlayed;
+    }
+
+    if (!stats.deckStats[deckId]) {
+      stats.deckStats[deckId] = {
+        gamesPlayed: 0,
+        gamesWon: 0,
+        cardsPlaced: 0,
+        correctPlacements: 0,
+      };
+    }
+    stats.deckStats[deckId].gamesPlayed++;
+    if (playerWon) stats.deckStats[deckId].gamesWon++;
+    stats.deckStats[deckId].cardsPlaced += cardsPlaced;
+    stats.deckStats[deckId].correctPlacements += correct;
+
+    const pseudoSession: GameSession = {
+      startTime: 0,
+      deckId,
+      result: playerWon ? 'win' : 'loss',
+      cardsPlaced,
+      correctPlacements: correct,
+      // Sin datos reales de jugadas no debe desbloquearse "Juego Perfecto"
+      incorrectPlacements: hasPlacementData ? incorrect : 1,
+    };
+    this.checkAchievements(stats, pseudoSession);
+
+    this.saveStats(stats);
+    return stats;
+  }
+
   // Check and unlock achievements
   private checkAchievements(stats: PlayerStats, session: GameSession): void {
     const now = Date.now();

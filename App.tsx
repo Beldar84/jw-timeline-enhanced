@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { GamePhase, Card as CardType, Player, GameState, OnlineGamePhase, AIDifficulty, AI_DIFFICULTIES } from './types';
 import { deckService } from './services/deckService';
 import { statsService, PlayerStats, Achievement } from './services/statsService';
@@ -401,13 +401,16 @@ const AppEnhanced: React.FC = () => {
   };
 
   useEffect(() => {
-    if (gamePhase === GamePhase.PLAYING && currentPlayer?.isAI && !winner && !animation && !aiMove && !revealedAICard) {
+    // Solo en modo local/IA: en partidas online los turnos de la IA los gestiona
+    // gameService en el cliente anfitrión. Sin este guard, el overlay "Turno de
+    // la IA" se disparaba también online y se quedaba pegado en pantalla.
+    if (gameMode !== 'online' && gamePhase === GamePhase.PLAYING && currentPlayer?.isAI && !winner && !animation && !aiMove && !revealedAICard) {
       handleAITurn();
     }
-  }, [gamePhase, currentPlayer, winner, animation, aiMove, revealedAICard]);
+  }, [gamePhase, gameMode, currentPlayer, winner, animation, aiMove, revealedAICard]);
 
   useEffect(() => {
-    if (!aiMove || animation) return;
+    if (!aiMove || animation || gameMode === 'online') return;
 
     const { card, timelineIndex } = aiMove;
     const aiHandEl = document.getElementById('ai-hand-container');
@@ -606,6 +609,9 @@ const AppEnhanced: React.FC = () => {
 
   const handlePlaceCardOnline = (card: CardType, timelineIndex: number) => {
     if (onlineGameState && localPlayerId) {
+      // Registrar la jugada en las estadísticas locales (sabemos si es correcta
+      // comparando contra el timeline actual, igual que hará el gameService)
+      statsService.recordPlacement(canPlaceCard(card, onlineGameState.timeline, timelineIndex));
       gameService.placeCard(onlineGameState.id, localPlayerId, card.id, timelineIndex);
     }
   }
@@ -615,6 +621,82 @@ const AppEnhanced: React.FC = () => {
     if(onlineGameState?.phase === OnlineGamePhase.GAME_OVER) setGamePhase(GamePhase.GAME_OVER);
   }, [onlineGameState?.phase])
 
+  // ==================== ESTADÍSTICAS DE PARTIDAS ONLINE ====================
+  // Antes las partidas online no registraban nada: statsService solo funciona
+  // con sesiones y nadie las iniciaba/cerraba en modo online.
+  const onlineStatsGameIdRef = useRef<string | null>(null);
+  const onlineRecordedGameIdRef = useRef<string | null>(null);
+
+  // Iniciar sesión de estadísticas cuando empieza la partida online
+  useEffect(() => {
+    if (gameMode !== 'online' || !onlineGameState) return;
+    if (onlineGameState.phase === OnlineGamePhase.PLAYING && onlineStatsGameIdRef.current !== onlineGameState.id) {
+      onlineStatsGameIdRef.current = onlineGameState.id;
+      statsService.startSession('complete');
+    }
+  }, [gameMode, onlineGameState?.phase, onlineGameState?.id]);
+
+  // Cerrar sesión de estadísticas y sincronizar con Firebase al terminar
+  useEffect(() => {
+    if (gameMode !== 'online' || !onlineGameState || !localPlayerId) return;
+    if (onlineGameState.phase !== OnlineGamePhase.GAME_OVER) return;
+    if (onlineRecordedGameIdRef.current === onlineGameState.id) return;
+    onlineRecordedGameIdRef.current = onlineGameState.id;
+
+    const onlineWinner = onlineGameState.winner;
+    if (!onlineWinner) return; // Sala cancelada sin ganador: no cuenta
+
+    const playerWon = onlineWinner.id === localPlayerId;
+    const updatedStats = statsService.endSession(playerWon);
+    const completedSession = statsService.getLastCompletedSession();
+    setStats(updatedStats);
+
+    // Solo sincronizar online las cuentas registradas (no invitados anónimos)
+    if (firebaseService.isRegisteredUser()) {
+      const profile = profileService.getProfile();
+      const playerName = profile?.name || localPlayer?.name || 'Jugador';
+      const onlineStats = {
+        totalWins: updatedStats.gamesWon,
+        totalGames: updatedStats.gamesPlayed,
+        totalPlacements: updatedStats.totalCardsPlaced,
+        correctPlacements: updatedStats.correctPlacements,
+        bestStreak: updatedStats.longestWinStreak,
+        currentStreak: updatedStats.currentWinStreak,
+      };
+      const durationSeconds = completedSession?.startTime && completedSession?.endTime
+        ? Math.round((completedSession.endTime - completedSession.startTime) / 1000)
+        : null;
+
+      void Promise.all([
+        firebaseService.syncStats(onlineStats, playerName),
+        firebaseService.recordGameHistory({
+          playerIds: onlineGameState.players.filter(p => !p.isAI).map(p => p.id),
+          players: onlineGameState.players.map(p => ({ id: p.id, name: p.name })),
+          mode: 'realtime',
+          result: playerWon ? 'win' : 'loss',
+          winnerId: onlineWinner.id,
+          winnerName: onlineWinner.name,
+          deckId: 'complete',
+          durationSeconds,
+          cardsPlaced: completedSession?.cardsPlaced || 0,
+          correctPlacements: completedSession?.correctPlacements || 0,
+          incorrectPlacements: completedSession?.incorrectPlacements || 0,
+          timelineLength: onlineGameState.timeline.length,
+          moveCount: completedSession?.cardsPlaced || 0,
+        }),
+      ]).catch(error => {
+        console.error('[Firebase] Sync online game error:', error);
+      });
+    }
+
+    const newlyUnlocked = updatedStats.achievements.find(
+      a => a.unlockedAt && (!stats.achievements.find(sa => sa.id === a.id)?.unlockedAt)
+    );
+    if (newlyUnlocked) {
+      setNewAchievement(newlyUnlocked);
+    }
+  }, [gameMode, onlineGameState?.phase, onlineGameState?.id, localPlayerId]);
+
   useEffect(() => {
     if (!selectedTurnBasedGameId) {
       setTurnBasedGame(null);
@@ -623,6 +705,27 @@ const AppEnhanced: React.FC = () => {
 
     return firebaseService.subscribeToTurnBasedGame(selectedTurnBasedGameId, setTurnBasedGame);
   }, [selectedTurnBasedGameId]);
+
+  // Registrar estadísticas al ver una partida por turnos terminada
+  useEffect(() => {
+    if (!turnBasedGame || turnBasedGame.status !== 'finished') return;
+    void firebaseService.recordTurnBasedGameStats(turnBasedGame).then(recorded => {
+      if (recorded) setStats(statsService.loadStats());
+    });
+  }, [turnBasedGame?.status, turnBasedGame?.id]);
+
+  // Al iniciar sesión, contabilizar partidas por turnos que terminaron
+  // mientras el usuario estaba desconectado
+  useEffect(() => {
+    const unsubscribe = firebaseService.onAuthStateChange((user) => {
+      if (user && !user.isAnonymous) {
+        void firebaseService.syncPendingTurnBasedStats().then(count => {
+          if (count > 0) setStats(statsService.loadStats());
+        });
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleTurnBasedMove = (card: CardType, timelineIndex: number) => {
     if (!turnBasedGame) return;

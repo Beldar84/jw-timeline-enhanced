@@ -8,6 +8,7 @@ import { Card } from '../types';
 import { CARD_DATA } from '../data/cards';
 import { shuffleArray } from '../utils/shuffle';
 import { canPlaceCard } from '../utils/timelineRules';
+import { statsService } from './statsService';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -172,6 +173,10 @@ export type GameHistoryInput = Omit<GameHistoryEntry, 'id' | 'userId' | 'created
 // Auth state
 let currentUser: User | null = null;
 let authStateListeners: ((user: User | null) => void)[] = [];
+
+// Partidas por turnos cuyas estadísticas ya procesó ESTE cliente en esta sesión
+// (evita doble conteo cuando el mismo evento llega por varias vías)
+const processedTurnBasedStats = new Set<string>();
 
 // Initialize auth listener
 onAuthStateChanged(auth, (user) => {
@@ -1011,7 +1016,12 @@ export const firebaseService = {
         lastMoveAt: serverTimestamp(),
         createdAt: serverTimestamp(),
         turnTimeLimit: 24 * 60 * 60 * 1000, // 24 horas por turno
-        moveCount: 0
+        moveCount: 0,
+        moveStats: {
+          [userId]: { placed: 0, correct: 0, incorrect: 0 },
+          [opponentId]: { placed: 0, correct: 0, incorrect: 0 },
+        },
+        statsRecordedBy: []
       };
 
       await setDoc(gameRef, gameData);
@@ -1113,6 +1123,18 @@ export const firebaseService = {
       };
       const nextMoveCount = (game.moveCount || 0) + 1;
 
+      // Contabilizar la jugada del jugador actual (para precisión en estadísticas)
+      const currentMoveStats = game.moveStats || {};
+      const myMoveStats = currentMoveStats[userId] || { placed: 0, correct: 0, incorrect: 0 };
+      const nextMoveStats = {
+        ...currentMoveStats,
+        [userId]: {
+          placed: myMoveStats.placed + 1,
+          correct: myMoveStats.correct + (isCorrect ? 1 : 0),
+          incorrect: myMoveStats.incorrect + (isCorrect ? 0 : 1),
+        },
+      };
+
       await updateDoc(gameRef, {
         currentTurnPlayerId: nextStatus === 'finished' ? userId : otherPlayerId,
         timeline: nextTimeline,
@@ -1122,7 +1144,8 @@ export const firebaseService = {
         status: nextStatus,
         winnerId,
         lastMoveAt: serverTimestamp(),
-        moveCount: nextMoveCount
+        moveCount: nextMoveCount,
+        moveStats: nextMoveStats
       });
 
       if (nextStatus === 'finished') {
@@ -1140,6 +1163,15 @@ export const firebaseService = {
           timelineLength: nextTimeline.length,
           moveCount: nextMoveCount
         });
+
+        // Registrar las estadísticas del jugador que cierra la partida.
+        // El rival las registrará al ver la partida terminada (o al abrir la app).
+        void this.recordTurnBasedGameStats({
+          ...game,
+          status: 'finished',
+          winnerId,
+          moveStats: nextMoveStats,
+        });
       }
 
       console.log('[Firebase] Turn-based move made');
@@ -1147,6 +1179,95 @@ export const firebaseService = {
     } catch (error) {
       console.error('[Firebase] Make turn-based move error:', error);
       return false;
+    }
+  },
+
+  // Contabiliza una partida por turnos terminada en las estadísticas del usuario
+  // actual (locales + online). La marca statsRecordedBy en el documento garantiza
+  // que cada jugador la cuente exactamente una vez, aunque cambie de dispositivo.
+  async recordTurnBasedGameStats(game: TurnBasedGame): Promise<boolean> {
+    const userId = this.getCurrentUserId();
+    if (!userId || !this.isRegisteredUser()) return false;
+    if (game.status !== 'finished') return false;
+    if (!(game.playerIds || []).includes(userId)) return false;
+    if ((game.statsRecordedBy || []).includes(userId)) return false;
+    if (processedTurnBasedStats.has(game.id)) return false;
+    processedTurnBasedStats.add(game.id);
+
+    try {
+      // Marcar primero en el documento para bloquear otros clientes/pestañas
+      await updateDoc(doc(db, 'turnBasedGames', game.id), {
+        statsRecordedBy: arrayUnion(userId)
+      });
+
+      const playerWon = game.winnerId === userId;
+      const myMoves = game.moveStats?.[userId];
+      const updatedStats = statsService.recordCompletedGame(
+        playerWon,
+        myMoves
+          ? {
+              deckId: 'complete',
+              cardsPlaced: myMoves.placed,
+              correctPlacements: myMoves.correct,
+              incorrectPlacements: myMoves.incorrect,
+            }
+          : { deckId: 'complete' }
+      );
+
+      const profile = await this.getProfile();
+      const name = profile?.name || 'Jugador';
+      await this.syncStats(
+        {
+          totalWins: updatedStats.gamesWon,
+          totalGames: updatedStats.gamesPlayed,
+          totalPlacements: updatedStats.totalCardsPlaced,
+          correctPlacements: updatedStats.correctPlacements,
+          bestStreak: updatedStats.longestWinStreak,
+          currentStreak: updatedStats.currentWinStreak,
+        },
+        name,
+        profile?.avatar
+      );
+
+      console.log('[Firebase] Turn-based game stats recorded:', game.id);
+      return true;
+    } catch (error) {
+      processedTurnBasedStats.delete(game.id);
+      console.error('[Firebase] Record turn-based stats error:', error);
+      return false;
+    }
+  },
+
+  // Recupera partidas por turnos terminadas que este usuario aún no ha
+  // contabilizado (p. ej. terminaron mientras estaba desconectado) y las registra.
+  async syncPendingTurnBasedStats(): Promise<number> {
+    const userId = this.getCurrentUserId();
+    if (!userId || !this.isRegisteredUser()) return 0;
+
+    try {
+      const gamesRef = collection(db, 'turnBasedGames');
+      const gamesQuery = query(
+        gamesRef,
+        where('playerIds', 'array-contains', userId),
+        where('status', '==', 'finished')
+      );
+      const snapshot = await getDocs(gamesQuery);
+
+      let recorded = 0;
+      for (const docSnap of snapshot.docs) {
+        const game = docSnap.data() as TurnBasedGame;
+        if ((game.statsRecordedBy || []).includes(userId)) continue;
+        const ok = await this.recordTurnBasedGameStats(game);
+        if (ok) recorded++;
+      }
+
+      if (recorded > 0) {
+        console.log('[Firebase] Pending turn-based stats synced:', recorded);
+      }
+      return recorded;
+    } catch (error) {
+      console.error('[Firebase] Sync pending turn-based stats error:', error);
+      return 0;
     }
   },
 
@@ -1254,6 +1375,10 @@ export interface TurnBasedGame {
   createdAt: any;
   turnTimeLimit: number;
   moveCount: number;
+  // Jugadas por jugador (para estadísticas de precisión)
+  moveStats?: { [playerId: string]: { placed: number; correct: number; incorrect: number } };
+  // Jugadores que ya contabilizaron esta partida en sus estadísticas
+  statsRecordedBy?: string[];
 }
 
 export default firebaseService;
