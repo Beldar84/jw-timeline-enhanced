@@ -282,6 +282,17 @@ export const firebaseService = {
       let errorMessage = 'Error al iniciar sesión con Google';
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         errorMessage = 'Inicio de sesión cancelado';
+      } else if (error.code === 'auth/unauthorized-domain') {
+        // El dominio desde el que se sirve la app no está autorizado en Firebase.
+        // Consola Firebase → Authentication → Settings → Authorized domains.
+        errorMessage = `Este dominio (${window.location.hostname}) no está autorizado en Firebase Authentication`;
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = 'El proveedor Google no está habilitado en Firebase Authentication';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Fallo de red al conectar con Google. Revisa tu conexión';
+      } else if (error.code) {
+        // Mostrar el código real para poder diagnosticar problemas en dispositivos
+        errorMessage = `Error al iniciar sesión con Google (${error.code})`;
       }
       return { success: false, error: errorMessage };
     }
