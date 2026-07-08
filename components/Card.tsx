@@ -26,7 +26,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({ card, isFaceDown, onClick,
     // Solo mostrar año en zoom si showYear es true (carta del timeline) o isStudyMode
     const showYearInZoom = showYear || isStudyMode;
     return (
-      <div className="relative h-[85vh] max-w-[90vw] aspect-[500/734] rounded-lg shadow-2xl overflow-hidden border-2 border-yellow-300/50 bg-gray-900 mb-4">
+      <div className="relative zoom-card-responsive max-w-[90vw] aspect-[500/734] rounded-lg shadow-2xl overflow-hidden border-2 border-yellow-300/50 bg-gray-900 mb-4">
         <img
           src={card.imageUrl}
           alt={card.name}

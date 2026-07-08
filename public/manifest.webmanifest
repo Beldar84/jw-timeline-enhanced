@@ -1,0 +1,20 @@
+{
+  "name": "JW Timeline",
+  "short_name": "JW Timeline",
+  "description": "Un juego de línea temporal bíblica",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1a1a1a",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

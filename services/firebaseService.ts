@@ -1,9 +1,9 @@
 // @ts-ignore - Firebase types will be available after npm install in Vercel
 import { initializeApp } from 'firebase/app';
 // @ts-ignore
-import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, serverTimestamp, Timestamp, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
+import { initializeFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, serverTimestamp, Timestamp, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 // @ts-ignore
-import { getAuth, signInAnonymously, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, browserLocalPersistence, setPersistence } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { Card } from '../types';
 import { CARD_DATA } from '../data/cards';
 import { shuffleArray } from '../utils/shuffle';
@@ -22,7 +22,13 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// experimentalAutoDetectLongPolling: detecta redes que bloquean WebChannel/streaming
+// (algunas operadoras móviles, wifis públicas, proxies corporativos) y cambia a
+// long-polling automáticamente. Sin esto, la sincronización en tiempo real puede
+// colgarse indefinidamente en esos dispositivos/redes.
+const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+});
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
@@ -256,8 +262,25 @@ export const firebaseService = {
       return { success: true };
     } catch (error: any) {
       console.error('[Firebase] Google sign in error:', error);
+
+      // Muchos navegadores móviles bloquean los popups: usar redirect como fallback.
+      // getRedirectResult() (al inicializar el módulo) completa el flujo al volver.
+      const popupBlockedCodes = [
+        'auth/popup-blocked',
+        'auth/operation-not-supported-in-this-environment',
+        'auth/web-storage-unsupported',
+      ];
+      if (popupBlockedCodes.includes(error.code)) {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return { success: true }; // La página navegará al flujo de Google
+        } catch (redirectError) {
+          console.error('[Firebase] Google redirect sign in error:', redirectError);
+        }
+      }
+
       let errorMessage = 'Error al iniciar sesión con Google';
-      if (error.code === 'auth/popup-closed-by-user') {
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         errorMessage = 'Inicio de sesión cancelado';
       }
       return { success: false, error: errorMessage };
@@ -1180,6 +1203,29 @@ export const firebaseService = {
     }
   }
 };
+
+// Completa el login con Google por redirect (fallback móvil cuando el popup está bloqueado)
+getRedirectResult(auth)
+  .then(async (result: any) => {
+    if (result?.user) {
+      currentUser = result.user;
+      const profile = await firebaseService.getProfile();
+      if (!profile) {
+        await firebaseService.createUserProfile(
+          result.user.uid,
+          result.user.displayName || 'Jugador',
+          result.user.email || undefined
+        );
+      }
+      console.log('[Firebase] Signed in with Google (redirect):', result.user.email);
+    }
+  })
+  .catch((error: any) => {
+    // No hay redirect pendiente en la mayoría de cargas: ignorar silenciosamente
+    if (error?.code && error.code !== 'auth/no-auth-event') {
+      console.error('[Firebase] Redirect result error:', error);
+    }
+  });
 
 // Turn-based game type
 export interface TurnBasedGame {

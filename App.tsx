@@ -170,7 +170,7 @@ const AppEnhanced: React.FC = () => {
     if (gamePhase === GamePhase.GAME_OVER || gamePhase === GamePhase.MENU) {
       gameStateService.clearGameState();
     }
-  }, [gamePhase, gameMode, players, currentPlayerIndex, timeline, deck, discardPile]);
+  }, [gamePhase, gameMode, players, currentPlayerIndex, timeline, deck, discardPile, selectedDeckId, aiDifficulty, isStudyMode]);
 
   const currentPlayer = useMemo(() => {
     if (gameMode === 'online' && onlineGameState) {

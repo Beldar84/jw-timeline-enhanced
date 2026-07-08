@@ -1,7 +1,7 @@
 // JW Timeline Service Worker
 // Enables offline functionality by caching essential resources
 
-const CACHE_NAME = 'jw-timeline-v9';
+const CACHE_NAME = 'jw-timeline-v10';
 
 // Resources to cache immediately on install
 const STATIC_RESOURCES = [
@@ -57,6 +57,13 @@ self.addEventListener('fetch', (event) => {
 
   // Skip chrome-extension and other non-http requests
   if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // CRITICAL: Skip ALL cross-origin requests (Firebase/Firestore realtime streams,
+  // Google Auth, CDNs...). Intercepting and caching streaming responses from
+  // firestore.googleapis.com breaks online multiplayer on some devices.
+  if (url.origin !== self.location.origin) {
     return;
   }
 
@@ -148,13 +155,15 @@ self.addEventListener('fetch', (event) => {
 
 // Listen for messages to force update
 self.addEventListener('message', (event) => {
-  if (event.data.type === 'SKIP_WAITING') {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
 
 // Message event - handle cache operations from the app
 self.addEventListener('message', (event) => {
+  if (!event.data) return;
+
   if (event.data.type === 'CACHE_CARDS') {
     // Pre-cache card images
     const cardUrls = event.data.urls || [];

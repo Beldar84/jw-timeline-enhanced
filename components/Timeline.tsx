@@ -20,17 +20,14 @@ interface PlacementSlotProps {
 }
 
 const PlacementSlot = forwardRef<HTMLDivElement, PlacementSlotProps>(({ id, onClick, isSelected, disabled }, ref) => {
-    // Updated dimensions to match Card.tsx
-    // Móvil: w-16, h-[220px]
-    // Landscape: h-[176px]
-    // Desktop (md): w-20, h-[264px]
-    // Desktop grande (lg): w-24, h-[322px]
-    const baseStyle = 'group w-16 h-[220px] landscape:h-[176px] md:w-20 md:h-[264px] lg:w-24 lg:h-[322px] flex-shrink-0 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-600 transition-all duration-300';
+    // Dimensions defined in /public/index.css (.slot-responsive) and kept in
+    // sync with .card-responsive so slots and cards align at every breakpoint
+    const baseStyle = 'group slot-responsive flex-shrink-0 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-600 transition-all duration-300';
     const selectedStyle = isSelected ? 'bg-yellow-400/30 border-yellow-400 scale-105' : 'bg-gray-700/50';
     const hoverStyle = !disabled ? 'hover:bg-yellow-400/20 hover:border-yellow-400 cursor-pointer' : 'cursor-not-allowed';
-    
+
     return (
-        <div 
+        <div
             id={id}
             ref={ref}
             onClick={!disabled ? onClick : undefined}
@@ -59,13 +56,13 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
   return (
     <div className="flex items-center min-w-max px-4 space-x-2 md:space-x-4">
       <PlacementSlot
-        id="timeline-slot-0" 
+        id="timeline-slot-0"
         ref={slotRefs.current[0]}
-        onClick={() => handleSelect(0)} 
+        onClick={() => handleSelect(0)}
         isSelected={selectedSlotIndex === 0}
         disabled={disabled}
       />
-      
+
       {cards.map((card, index) => (
         <React.Fragment key={card.id}>
             <Card
@@ -74,7 +71,7 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
                 onClick={() => onCardClick(card)}
                 className="card-responsive"
             />
-            <PlacementSlot 
+            <PlacementSlot
                 id={`timeline-slot-${index + 1}`}
                 ref={slotRefs.current[index + 1]}
                 onClick={() => handleSelect(index + 1)}

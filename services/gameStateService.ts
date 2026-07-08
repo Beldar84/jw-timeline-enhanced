@@ -61,8 +61,20 @@ export const gameStateService = {
         return null;
       }
 
-      // Validate the state has required fields
-      if (!state.gamePhase || !state.players || !state.timeline) {
+      // Validate the state thoroughly: a corrupt saved state would crash the app
+      // on startup (white screen) because App.tsx accesses players[currentPlayerIndex]
+      if (
+        !state.gamePhase ||
+        !Array.isArray(state.players) ||
+        state.players.length === 0 ||
+        !Array.isArray(state.timeline) ||
+        !Array.isArray(state.deck) ||
+        !Array.isArray(state.discardPile) ||
+        !Number.isInteger(state.currentPlayerIndex) ||
+        state.currentPlayerIndex < 0 ||
+        state.currentPlayerIndex >= state.players.length ||
+        state.players.some(player => !player || typeof player.name !== 'string' || !Array.isArray(player.hand))
+      ) {
         this.clearGameState();
         return null;
       }

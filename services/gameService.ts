@@ -1,4 +1,4 @@
-import { doc, getDoc, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, runTransaction, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { GameState, Player, Card, OnlineGamePhase } from '../types';
 import { CARD_DATA } from '../data/cards';
 import { shuffleArray } from '../utils/shuffle';
@@ -58,6 +58,7 @@ class GameService {
   private subscribedGameId: string | null = null;
   private localPlayerId: string | null = null;
   private isHost = false;
+  private aiTurnTimer: number | null = null;
 
   constructor() {
     const handlePageExit = () => {
@@ -97,7 +98,7 @@ class GameService {
       updatedAt: serverTimestamp(),
     };
 
-    await updateDoc(this.gameRef(this.gameState.id), gameDoc);
+    await updateDoc(this.gameRef(this.gameState.id), gameDoc as { [key: string]: any });
   }
 
   private broadcastState() {
@@ -113,6 +114,27 @@ class GameService {
       this.unsubscribeFromGame = null;
       this.subscribedGameId = null;
     }
+    this.cancelPendingAITurn();
+  }
+
+  private cancelPendingAITurn() {
+    if (this.aiTurnTimer !== null) {
+      window.clearTimeout(this.aiTurnTimer);
+      this.aiTurnTimer = null;
+    }
+  }
+
+  // Vigilante del host: si un snapshot muestra que le toca a una IA, el host se
+  // asegura de que la IA juegue. Sin esto, si el cliente que hizo el movimiento
+  // anterior se desconecta, la IA nunca juega y la partida queda colgada.
+  private maybeScheduleAITurn() {
+    if (!this.isHost || !this.gameState) return;
+    if (this.gameState.phase !== OnlineGamePhase.PLAYING) return;
+
+    const currentPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
+    if (!currentPlayer?.isAI) return;
+
+    this.playAITurn();
   }
 
   private loadDocument(data: RealtimeGameDocument) {
@@ -248,56 +270,66 @@ class GameService {
 
     try {
       const gameRef = this.gameRef(gameId);
-      const snapshot = await getDoc(gameRef);
-      if (!snapshot.exists()) {
-        return { success: false, playerId: '', error: 'Sala no encontrada. Verifica el código de partida.' };
-      }
 
-      const gameDoc = snapshot.data() as RealtimeGameDocument;
-      if (gameDoc.phase !== OnlineGamePhase.LOBBY) {
-        return { success: false, playerId: '', error: 'La partida ya ha empezado.' };
-      }
-
-      const players = [...(gameDoc.players || [])];
-      const existingPlayerIndex = players.findIndex(player => player.id === userId);
-
-      if (existingPlayerIndex >= 0) {
-        players[existingPlayerIndex] = {
-          ...players[existingPlayerIndex],
-          name: playerName,
-        };
-      } else {
-        if (players.length >= 6) {
-          return { success: false, playerId: '', error: 'La sala está llena.' };
+      // Transacción: evita que dos jugadores que se unen a la vez se sobrescriban
+      // mutuamente la lista de jugadores (lectura-modificación-escritura atómica).
+      const joinResult = await runTransaction(firestoreDb, async (transaction) => {
+        const snapshot = await transaction.get(gameRef);
+        if (!snapshot.exists()) {
+          return { error: 'Sala no encontrada. Verifica el código de partida.' };
         }
 
-        players.push({
-          id: userId,
-          name: playerName,
-          hand: [],
-          isAI: false,
+        const gameDoc = snapshot.data() as RealtimeGameDocument;
+        if (gameDoc.phase !== OnlineGamePhase.LOBBY) {
+          return { error: 'La partida ya ha empezado.' };
+        }
+
+        const players = [...(gameDoc.players || [])];
+        const existingPlayerIndex = players.findIndex(player => player.id === userId);
+
+        if (existingPlayerIndex >= 0) {
+          players[existingPlayerIndex] = {
+            ...players[existingPlayerIndex],
+            name: playerName,
+          };
+        } else {
+          if (players.length >= 6) {
+            return { error: 'La sala está llena.' };
+          }
+
+          players.push({
+            id: userId,
+            name: playerName,
+            hand: [],
+            isAI: false,
+          });
+        }
+
+        const participantAuthIds = Array.from(new Set([...(gameDoc.participantAuthIds || []), userId]));
+
+        transaction.update(gameRef, {
+          players,
+          participantAuthIds,
+          message: 'Esperando a jugadores...',
+          updatedAt: serverTimestamp(),
         });
-      }
 
-      const participantAuthIds = Array.from(new Set([...(gameDoc.participantAuthIds || []), userId]));
-      const nextDoc: RealtimeGameDocument = {
-        ...gameDoc,
-        players,
-        participantAuthIds,
-        message: 'Esperando a jugadores...',
-        updatedAt: serverTimestamp(),
-      };
-
-      await updateDoc(gameRef, {
-        players,
-        participantAuthIds,
-        message: nextDoc.message,
-        updatedAt: serverTimestamp(),
+        const nextDoc: RealtimeGameDocument = {
+          ...gameDoc,
+          players,
+          participantAuthIds,
+          message: 'Esperando a jugadores...',
+        };
+        return { gameDoc: nextDoc };
       });
 
-      this.isHost = gameDoc.hostId === userId;
+      if (joinResult.error || !joinResult.gameDoc) {
+        return { success: false, playerId: '', error: joinResult.error || 'No se pudo conectar con la sala.' };
+      }
+
+      this.isHost = joinResult.gameDoc.hostId === userId;
       this.localPlayerId = userId;
-      this.loadDocument(nextDoc);
+      this.loadDocument(joinResult.gameDoc);
       this.notify();
 
       return { success: true, playerId: userId };
@@ -316,6 +348,7 @@ class GameService {
   disconnect() {
     void this.handleLocalDeparture();
     this.stopListening();
+    this.cancelPendingAITurn();
     this.gameState = null;
     this.participantAuthIds = [];
     this.createdBy = null;
@@ -335,6 +368,7 @@ class GameService {
 
         this.loadDocument(snapshot.data() as RealtimeGameDocument);
         this.notify();
+        this.maybeScheduleAITurn();
       }, (error) => {
         console.error('[GameService] Error escuchando sala:', error);
       });
@@ -470,7 +504,12 @@ class GameService {
   }
 
   private playAITurn() {
-    window.setTimeout(() => {
+    // Un solo temporizador pendiente a la vez: evita movimientos duplicados cuando
+    // el turno de IA se programa tanto localmente como desde un snapshot remoto.
+    if (this.aiTurnTimer !== null) return;
+
+    this.aiTurnTimer = window.setTimeout(() => {
+      this.aiTurnTimer = null;
       if (!this.gameState || this.gameState.phase !== OnlineGamePhase.PLAYING) return;
 
       const aiPlayer = this.gameState.players[this.gameState.currentPlayerIndex];

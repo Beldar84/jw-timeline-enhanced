@@ -102,3 +102,59 @@
     height: 264px;
   }
 }
+
+/* Timeline placement slots - heights MUST match .card-responsive at every breakpoint
+   so slots and cards align on all devices */
+.slot-responsive {
+  width: 64px;
+  height: 220px;
+}
+
+@media (orientation: landscape) and (max-width: 1023px) {
+  .slot-responsive {
+    height: 176px;
+  }
+}
+
+@media (min-width: 768px) {
+  .slot-responsive {
+    width: 80px;
+    height: 235px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .slot-responsive {
+    width: 96px;
+    height: 264px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .slot-responsive {
+    height: 293px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .slot-responsive {
+    height: 322px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .slot-responsive {
+    height: 352px;
+  }
+}
+
+/* Zoomed card - dvh avoids overflow behind mobile browser dynamic toolbars */
+.zoom-card-responsive {
+  height: 85vh;
+}
+
+@supports (height: 85dvh) {
+  .zoom-card-responsive {
+    height: 85dvh;
+  }
+}
