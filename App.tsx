@@ -35,20 +35,14 @@ import { canPlaceCard, getValidTimelineMoves } from './utils/timelineRules';
 import AnimationLayerEnhanced, { AnimationInfo } from './components/AnimationLayerEnhanced';
 
 // Register Service Worker for offline support
+// Las imágenes de cartas NO se pre-descargan: el SW las cachea bajo demanda
+// (cache-first) la primera vez que cada una aparece en pantalla, así la primera
+// carga es ligera y cada imagen queda como recurso local tras verse una vez.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
         console.log('SW registered:', registration.scope);
-
-        // Pre-cache card images
-        const cardUrls = deckService.getDefaultDeck().cards.map(card => card.imageUrl);
-        if (registration.active) {
-          registration.active.postMessage({
-            type: 'CACHE_CARDS',
-            urls: cardUrls,
-          });
-        }
       })
       .catch((error) => {
         console.log('SW registration failed:', error);

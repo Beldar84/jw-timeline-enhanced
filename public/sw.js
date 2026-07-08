@@ -165,16 +165,19 @@ self.addEventListener('message', (event) => {
   if (!event.data) return;
 
   if (event.data.type === 'CACHE_CARDS') {
-    // Pre-cache card images
+    // Pre-cache card images (solo las que aún no están en caché)
     const cardUrls = event.data.urls || [];
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[SW] Pre-caching card images:', cardUrls.length);
       return Promise.allSettled(
         cardUrls.map((url) =>
-          fetch(url).then((response) => {
-            if (response.ok) {
-              return cache.put(url, response);
-            }
+          cache.match(url).then((existing) => {
+            if (existing) return;
+            return fetch(url).then((response) => {
+              if (response.ok) {
+                return cache.put(url, response);
+              }
+            });
           })
         )
       );

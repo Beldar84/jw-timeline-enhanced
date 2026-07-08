@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Player, Card as CardType } from '../types';
 import Card from './Card';
 
@@ -13,6 +13,16 @@ interface PlayerHandProps {
 
 const PlayerHand: React.FC<PlayerHandProps> = ({ player, onSelectCard, placementMode = false, disabled = false, hidingCardId, isStudyMode = false }) => {
   const cardRefs = useRef(new Map<number, React.RefObject<HTMLDivElement>>());
+
+  // Precalienta las imágenes de la mano en cuanto se reparten las cartas:
+  // el navegador las descarga (y el Service Worker las guarda como recurso
+  // local) aunque estén fuera del viewport por el scroll horizontal.
+  useEffect(() => {
+    player.hand.forEach(card => {
+      const img = new Image();
+      img.src = card.imageUrl;
+    });
+  }, [player.hand]);
 
   player.hand.forEach(card => {
     if (!cardRefs.current.has(card.id)) {

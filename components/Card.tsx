@@ -93,7 +93,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({ card, isFaceDown, onClick,
       onClick={onClick}
       style={{ visibility: isHidden ? 'hidden' : 'visible' }}
     >
-      <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover" />
+      <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
 
       {/* Name Banner - show for timeline cards (showYear) or study mode */}
       {(showYear || isStudyMode) && (
