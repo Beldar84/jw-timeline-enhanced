@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { profileService } from '../services/profileService';
 import { statsService } from '../services/statsService';
 import { soundService } from '../services/soundService';
+import { firebaseService } from '../services/firebaseService';
 import { PlayerLevel } from '../types';
 
 interface ProfilePanelProps {
@@ -21,10 +22,20 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
     setEditName(summary.name);
   }, [summary.name]);
 
+  // El nombre debe guardarse también en la cuenta (Firestore): si solo se
+  // cambia en localStorage, al entrar desde otro navegador vuelve "Jugador".
+  const pushNameToCloud = (name: string) => {
+    if (firebaseService.isRegisteredUser()) {
+      void firebaseService.saveProfile(name);
+      void firebaseService.pushPlayerDataToCloud();
+    }
+  };
+
   const handleCreateProfile = () => {
     const name = editName.trim();
     if (name) {
       profileService.createProfile(name);
+      pushNameToCloud(name);
       setHasProfile(true);
       setIsEditing(false);
       soundService.playCorrect();
@@ -35,6 +46,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
     const name = editName.trim();
     if (name) {
       profileService.updateName(name);
+      pushNameToCloud(name);
       setIsEditing(false);
       soundService.playClick();
     }

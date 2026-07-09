@@ -81,6 +81,43 @@ class ProfileService {
     return this.profile?.name || 'Jugador';
   }
 
+  // Combina el perfil local con los datos guardados en la nube.
+  // - El nombre de la nube solo sustituye al local si el local es el genérico.
+  // - "Miembro desde" se queda con la fecha más antigua de las dos.
+  // Devuelve si cambió el perfil local y si el nombre local (personalizado)
+  // debe subirse a la nube porque difiere del remoto.
+  mergeRemoteProfile(remote: { name?: string | null; createdAt?: number | null; lastPlayedAt?: number | null }): { localChanged: boolean; shouldPushName: boolean } {
+    if (!this.profile) {
+      this.createProfile('Jugador');
+    }
+    const profile = this.profile!;
+    let localChanged = false;
+
+    const remoteName = (remote.name || '').trim();
+    const localIsDefault = !profile.name || profile.name === 'Jugador';
+    const remoteIsDefault = !remoteName || remoteName === 'Jugador';
+
+    if (localIsDefault && !remoteIsDefault && profile.name !== remoteName) {
+      profile.name = remoteName;
+      localChanged = true;
+    }
+
+    if (typeof remote.createdAt === 'number' && remote.createdAt > 0 && remote.createdAt < profile.createdAt) {
+      profile.createdAt = remote.createdAt;
+      localChanged = true;
+    }
+
+    if (typeof remote.lastPlayedAt === 'number' && remote.lastPlayedAt > (profile.lastPlayedAt || 0)) {
+      profile.lastPlayedAt = remote.lastPlayedAt;
+      localChanged = true;
+    }
+
+    if (localChanged) this.saveProfile();
+
+    const shouldPushName = !localIsDefault && profile.name !== remoteName;
+    return { localChanged, shouldPushName };
+  }
+
   // Calculate player level based on games played
   getPlayerLevel(): PlayerLevel {
     const stats = statsService.loadStats();

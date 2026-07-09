@@ -82,21 +82,65 @@ class StatsService {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        // Merge with default to add new achievements if any
-        return {
-          ...DEFAULT_STATS,
-          ...parsed,
-          achievements: DEFAULT_STATS.achievements.map(defaultAch => {
-            const existing = parsed.achievements?.find((a: Achievement) => a.id === defaultAch.id);
-            return existing || defaultAch;
-          }),
-        };
+        return this.normalizeStats(JSON.parse(stored));
       }
     } catch (e) {
       console.error('Error loading stats:', e);
     }
     return { ...DEFAULT_STATS };
+  }
+
+  // Completa un objeto de estadísticas parcial (localStorage antiguo o nube)
+  // con los valores por defecto y la lista actual de logros.
+  private normalizeStats(raw: Partial<PlayerStats> | null | undefined): PlayerStats {
+    const base = raw || {};
+    return {
+      ...DEFAULT_STATS,
+      ...base,
+      achievements: DEFAULT_STATS.achievements.map(defaultAch => {
+        const existing = base.achievements?.find((a: Achievement) => a.id === defaultAch.id);
+        return existing || defaultAch;
+      }),
+      deckStats: base.deckStats || {},
+    };
+  }
+
+  // Combina las estadísticas locales con las guardadas en la nube.
+  // El lado con más partidas jugadas manda en los contadores; logros,
+  // rachas y récords se combinan tomando siempre el mejor de los dos.
+  // Guarda el resultado en local y devuelve si algo cambió.
+  mergeWithCloudStats(cloudRaw: Partial<PlayerStats> | null | undefined): { stats: PlayerStats; localChanged: boolean } {
+    const local = this.loadStats();
+    if (!cloudRaw) return { stats: local, localChanged: false };
+
+    const cloud = this.normalizeStats(cloudRaw);
+    const base = cloud.gamesPlayed > local.gamesPlayed ? cloud : local;
+    const other = base === cloud ? local : cloud;
+
+    const bestFastestWin = [local.fastestWin, cloud.fastestWin]
+      .filter((v): v is number => typeof v === 'number')
+      .sort((a, b) => a - b)[0] ?? null;
+
+    const merged: PlayerStats = {
+      ...base,
+      longestWinStreak: Math.max(local.longestWinStreak, cloud.longestWinStreak),
+      fastestWin: bestFastestWin,
+      achievements: DEFAULT_STATS.achievements.map(def => {
+        const localAch = local.achievements.find(a => a.id === def.id);
+        const cloudAch = cloud.achievements.find(a => a.id === def.id);
+        const unlockedAt = [localAch?.unlockedAt, cloudAch?.unlockedAt]
+          .filter((v): v is number => typeof v === 'number')
+          .sort((a, b) => a - b)[0] ?? null;
+        return { ...def, unlockedAt };
+      }),
+      deckStats: Object.keys(base.deckStats).length >= Object.keys(other.deckStats).length
+        ? base.deckStats
+        : other.deckStats,
+    };
+
+    const localChanged = JSON.stringify(merged) !== JSON.stringify(local);
+    if (localChanged) this.saveStats(merged);
+    return { stats: merged, localChanged };
   }
 
   // Save stats to localStorage

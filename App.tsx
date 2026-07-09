@@ -714,14 +714,21 @@ const AppEnhanced: React.FC = () => {
     });
   }, [turnBasedGame?.status, turnBasedGame?.id]);
 
-  // Al iniciar sesión, contabilizar partidas por turnos que terminaron
-  // mientras el usuario estaba desconectado
+  // Al iniciar sesión con una cuenta registrada:
+  // 1) descargar perfil y estadísticas de la nube y combinarlos con lo local
+  //    (así la cuenta "viaja" entre navegadores y dispositivos), y
+  // 2) contabilizar partidas por turnos que terminaron mientras el usuario
+  //    estaba desconectado.
   useEffect(() => {
     const unsubscribe = firebaseService.onAuthStateChange((user) => {
       if (user && !user.isAnonymous) {
-        void firebaseService.syncPendingTurnBasedStats().then(count => {
-          if (count > 0) setStats(statsService.loadStats());
-        });
+        void (async () => {
+          const cloudChanged = await firebaseService.syncPlayerDataFromCloud();
+          const pendingCount = await firebaseService.syncPendingTurnBasedStats();
+          if (cloudChanged || pendingCount > 0) {
+            setStats(statsService.loadStats());
+          }
+        })();
       }
     });
     return () => unsubscribe();

@@ -9,6 +9,7 @@ import { CARD_DATA } from '../data/cards';
 import { shuffleArray } from '../utils/shuffle';
 import { canPlaceCard } from '../utils/timelineRules';
 import { statsService } from './statsService';
+import { profileService } from './profileService';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -784,6 +785,8 @@ export const firebaseService = {
       const accuracy = stats.totalPlacements > 0 ? (stats.correctPlacements / stats.totalPlacements) * 100 : 0;
 
       const statsRef = doc(db, 'userStats', userId);
+      // merge:true — el documento también guarda fullStats/perfil (sincronización
+      // entre dispositivos) y un setDoc completo los borraría.
       await setDoc(statsRef, {
         id: userId,
         name,
@@ -792,7 +795,7 @@ export const firebaseService = {
         accuracy: Math.round(accuracy * 10) / 10,
         winRate: Math.round(winRate * 10) / 10,
         updatedAt: serverTimestamp()
-      });
+      }, { merge: true });
 
       console.log('[Firebase] User stats updated');
       return true;
@@ -893,7 +896,83 @@ export const firebaseService = {
       this.updateUserStats(localStats, name, avatar),
       this.updateLeaderboard(localStats, name, avatar)
     ]);
+    // Guardar también la copia completa (logros, mazos, récords...) para que
+    // las estadísticas acompañen a la cuenta en cualquier dispositivo.
+    await this.pushPlayerDataToCloud();
     return statsSynced && leaderboardSynced;
+  },
+
+  // ==================== SINCRONIZACIÓN PERFIL + ESTADÍSTICAS ====================
+  // Antes, perfil y estadísticas vivían SOLO en localStorage: al entrar desde
+  // otro navegador/dispositivo la cuenta aparecía vacía (nombre "Jugador",
+  // 0 partidas, "miembro desde hoy"), aunque amigos e historial sí estaban en
+  // Firestore. Estos dos métodos hacen que viajen con la cuenta.
+
+  // Sube a userStats/{uid} la copia completa de estadísticas y perfil local.
+  async pushPlayerDataToCloud(): Promise<boolean> {
+    const userId = this.getCurrentUserId();
+    if (!userId || !this.isRegisteredUser()) return false;
+
+    try {
+      const stats = statsService.loadStats();
+      const profile = profileService.getProfile();
+      await setDoc(doc(db, 'userStats', userId), {
+        id: userId,
+        fullStats: JSON.parse(JSON.stringify(stats)),
+        profileName: profile?.name || null,
+        profileCreatedAt: profile?.createdAt || null,
+        profileLastPlayedAt: profile?.lastPlayedAt || null,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      return true;
+    } catch (error) {
+      console.error('[Firebase] Push player data error:', error);
+      return false;
+    }
+  },
+
+  // Descarga las estadísticas/perfil de la nube, los combina con los locales
+  // y sube el resultado. Llamar al iniciar sesión con una cuenta registrada.
+  // Devuelve true si algo cambió en local (para refrescar la interfaz).
+  async syncPlayerDataFromCloud(): Promise<boolean> {
+    const userId = this.getCurrentUserId();
+    if (!userId || !this.isRegisteredUser()) return false;
+
+    try {
+      const [statsSnap, userSnap] = await Promise.all([
+        getDoc(doc(db, 'userStats', userId)),
+        getDoc(doc(db, 'users', userId))
+      ]);
+
+      const cloudData = statsSnap.exists() ? statsSnap.data() : null;
+      const userData = userSnap.exists() ? userSnap.data() : null;
+
+      const { localChanged: statsChanged } = statsService.mergeWithCloudStats(cloudData?.fullStats);
+
+      // "Miembro desde": preferir la fecha guardada con el perfil; si no existe,
+      // usar la fecha de creación de la cuenta en Firestore.
+      const remoteCreatedAt = typeof cloudData?.profileCreatedAt === 'number'
+        ? cloudData.profileCreatedAt
+        : (typeof userData?.createdAt?.toMillis === 'function' ? userData.createdAt.toMillis() : null);
+
+      const { localChanged: profileChanged, shouldPushName } = profileService.mergeRemoteProfile({
+        name: cloudData?.profileName || userData?.name || null,
+        createdAt: remoteCreatedAt,
+        lastPlayedAt: typeof cloudData?.profileLastPlayedAt === 'number' ? cloudData.profileLastPlayedAt : null
+      });
+
+      // Dejar la nube al día con el resultado combinado
+      await this.pushPlayerDataToCloud();
+      if (shouldPushName) {
+        await this.saveProfile(profileService.getName(), userData?.avatar || undefined);
+      }
+
+      console.log('[Firebase] Player data synced from cloud');
+      return statsChanged || profileChanged;
+    } catch (error) {
+      console.error('[Firebase] Sync player data from cloud error:', error);
+      return false;
+    }
   },
 
   // ==================== GAME HISTORY ====================
