@@ -52,17 +52,19 @@
         min-height: 100vh;
         min-height: 100dvh;
       }
-      /* Prevenir el bounce scroll en iOS */
+      /* El documento es el único contenedor de scroll: evita el
+         «scroll bloqueado» en móvil (doble gesto) que provocaba
+         tener el scroll en body con html{overflow:hidden}.
+         El bounce/pull-to-refresh se controla con overscroll-behavior. */
       html {
-        overflow: hidden;
         height: 100%;
+        overscroll-behavior-y: none;
       }
       body {
-        overflow-y: auto;
+        min-height: 100%;
         overflow-x: hidden;
-        height: 100%;
+        overscroll-behavior-y: none;
         -webkit-overflow-scrolling: touch;
-        overscroll-behavior: none;
       }
       ::-webkit-scrollbar {
         height: 8px;

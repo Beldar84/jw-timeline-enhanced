@@ -3,6 +3,14 @@ import { soundService } from '../services/soundService';
 import { profileService } from '../services/profileService';
 import { AI_DIFFICULTIES, AIDifficulty } from '../types';
 
+// ============================================================
+// JW Timeline — AISetup premium
+// Sustituye components/AISetup.tsx. Misma API y lógica que la
+// versión original (nombre + dificultad + modo estudio →
+// onStartGame([jugador, botBíblico], dificultad, estudio)).
+// Estilo pergamino. Requiere public/premium.css.
+// ============================================================
+
 // Nombres bíblicos para los bots de IA
 const BIBLICAL_NAMES = [
   'David', 'Abigail', 'Ruth', 'Pablo', 'Sara', 'Abraham', 'Moisés', 'María',
@@ -19,12 +27,24 @@ interface AISetupProps {
   onBack: () => void;
 }
 
+const inputStyle: React.CSSProperties = {
+  width: '100%', boxSizing: 'border-box',
+  background: 'rgba(255,255,255,.45)', color: '#2b2013',
+  padding: '11px 13px', borderRadius: 3,
+  border: '1px solid rgba(120,94,48,.4)', outline: 'none',
+  fontFamily: "'EB Garamond', serif", fontSize: 17,
+};
+
+// Nivel de dificultad → estrellas (sustituye los emojis del diseño antiguo)
+const DIFFICULTY_STARS: Record<AIDifficulty, string> = {
+  easy: '★', normal: '★★', hard: '★★★', expert: '★★★★',
+};
+
 const AISetup: React.FC<AISetupProps> = ({ onStartGame, onBack }) => {
   const [playerName, setPlayerName] = useState('');
   const [difficulty, setDifficulty] = useState<AIDifficulty>('normal');
   const [isStudyMode, setIsStudyMode] = useState(false);
 
-  // Load saved player name from profile
   useEffect(() => {
     const savedName = profileService.getName();
     if (savedName && savedName !== 'Jugador') {
@@ -38,7 +58,6 @@ const AISetup: React.FC<AISetupProps> = ({ onStartGame, onBack }) => {
     soundService.playClick();
     const trimmedPlayerName = playerName.trim();
     if (trimmedPlayerName) {
-      // Update profile with the name
       if (profileService.hasProfile()) {
         profileService.updateName(trimmedPlayerName);
       } else {
@@ -60,127 +79,85 @@ const AISetup: React.FC<AISetupProps> = ({ onStartGame, onBack }) => {
     setIsStudyMode(!isStudyMode);
   };
 
-  const selectedDifficulty = AI_DIFFICULTIES.find(d => d.id === difficulty)!;
+  const handleBack = () => {
+    soundService.playClick();
+    onBack();
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm w-full max-w-md">
-      <h2 className="text-2xl md:text-3xl font-bold text-yellow-300 mb-6">Jugar contra la IA</h2>
+    <div className="parchment-panel w-full max-w-md px-9 md:px-10 py-8">
+      <h2 className="font-display font-bold text-2xl text-center tracking-wider m-0 mb-1" style={{ color: 'var(--ink)' }}>Jugar contra IA</h2>
+      <p className="font-body italic text-base text-center m-0 mb-5" style={{ color: 'var(--gold-dark)' }}>Elige tu rival</p>
 
-      {/* Player Name Input */}
-      <div className="w-full space-y-4 mb-6">
-        <p className="text-center text-yellow-100">Introduce tu nombre para empezar.</p>
-        <input
-          type="text"
-          value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
-          className="w-full bg-gray-700 text-white p-3 rounded-lg border-2 border-gray-600 focus:border-yellow-400 focus:outline-none transition"
-          placeholder="Tu nombre"
-          maxLength={20}
-        />
-      </div>
+      {/* Nombre del jugador */}
+      <label htmlFor="ai-player-name" className="block font-display text-xs tracking-widest mb-1.5" style={{ color: '#a08a5c' }}>TU NOMBRE</label>
+      <input id="ai-player-name" type="text" value={playerName} maxLength={20}
+        onChange={(e) => setPlayerName(e.target.value)}
+        placeholder="Tu nombre" style={inputStyle} className="mb-5" />
 
-      {/* AI Difficulty Selection */}
-      <div className="w-full mb-6">
-        <h3 className="text-lg font-bold text-yellow-200 mb-3 flex items-center gap-2">
-          🤖 Dificultad de la IA
-        </h3>
-        <div className="grid grid-cols-2 gap-2">
-          {AI_DIFFICULTIES.map((d) => (
-            <button
-              key={d.id}
-              onClick={() => handleDifficultySelect(d.id)}
-              className={`p-3 rounded-lg border-2 transition transform hover:scale-105 ${
-                difficulty === d.id
-                  ? 'border-yellow-400 bg-yellow-600/30'
-                  : 'border-gray-600 bg-gray-700/50 hover:border-gray-500'
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <span className="text-xl">{d.icon}</span>
-                <span className={`font-bold ${difficulty === d.id ? 'text-yellow-300' : 'text-white'}`}>
-                  {d.name}
-                </span>
-              </div>
-              <p className="text-xs text-gray-400">{d.description}</p>
+      {/* Dificultad */}
+      <p className="font-display text-xs tracking-widest m-0 mb-2" style={{ color: '#a08a5c' }}>DIFICULTAD DE LA IA</p>
+      <div className="grid grid-cols-2 gap-2 mb-5">
+        {AI_DIFFICULTIES.map((d) => {
+          const selected = difficulty === d.id;
+          return (
+            <button key={d.id} onClick={() => handleDifficultySelect(d.id)}
+              className="p-3 text-left cursor-pointer rounded-sm transition-colors"
+              style={{
+                border: selected ? '2px solid #a8853c' : '1px solid rgba(120,94,48,.3)',
+                padding: selected ? '11px' : '12px',
+                background: selected ? 'rgba(201,162,39,.12)' : 'none',
+                boxShadow: selected ? '0 0 14px rgba(201,162,39,.18)' : 'none',
+              }}>
+              <span className="block font-display text-[11px] tracking-widest mb-0.5" style={{ color: '#8a6a2a' }}>{DIFFICULTY_STARS[d.id]}</span>
+              <span className="block font-display font-semibold text-[15px]" style={{ color: 'var(--ink)' }}>{d.name}</span>
+              <span className="block font-body text-[13px] leading-snug" style={{ color: '#7c6a48' }}>{d.description}</span>
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* Study Mode Toggle */}
-      <div className="w-full mb-6">
-        <div
-          onClick={handleStudyModeToggle}
-          className={`p-4 rounded-lg border-2 cursor-pointer transition ${
-            isStudyMode
-              ? 'border-green-400 bg-green-600/20'
-              : 'border-gray-600 bg-gray-700/50 hover:border-gray-500'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">📚</span>
-              <div>
-                <h4 className={`font-bold ${isStudyMode ? 'text-green-300' : 'text-white'}`}>
-                  Modo Estudio
-                </h4>
-                <p className="text-xs text-gray-400">
-                  Ve las fechas antes de colocar. Sin penalización por errores.
-                </p>
-              </div>
-            </div>
-            <div
-              className={`w-12 h-7 rounded-full transition-colors relative ${
-                isStudyMode ? 'bg-green-500' : 'bg-gray-600'
-              }`}
-            >
-              <div
-                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                  isStudyMode ? 'left-6' : 'left-1'
-                }`}
-              />
-            </div>
-          </div>
-        </div>
-        {isStudyMode && (
-          <div className="mt-3 p-3 bg-blue-900/30 border border-blue-500/30 rounded-lg">
-            <p className="text-sm text-blue-200 flex items-start gap-2">
-              <span>💡</span>
-              <span>
-                En modo estudio, verás la fecha de tu carta antes de colocarla y no perderás puntos por errores.
-                Ideal para aprender la cronología bíblica.
-              </span>
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Buttons */}
-      <div className="flex gap-3 w-full">
-        <button
-          onClick={() => {
-            soundService.playClick();
-            onBack();
-          }}
-          className="flex-1 px-4 py-3 md:px-6 md:py-4 bg-gray-600 text-lg font-bold rounded-lg hover:bg-gray-700 transition"
-        >
-          Volver
-        </button>
-        <button
-          onClick={handleStart}
-          disabled={!playerName.trim()}
-          className="flex-[2] px-6 py-3 md:px-8 md:py-4 bg-green-600 text-lg md:text-xl font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition transform hover:scale-105"
-        >
-          {isStudyMode ? '📚 Empezar' : '🎮 Empezar'}
-        </button>
-      </div>
-
-      {/* Summary */}
-      <div className="mt-4 text-center text-sm text-gray-400">
-        <p>
-          Dificultad: <span className="text-yellow-300">{selectedDifficulty.icon} {selectedDifficulty.name}</span>
-          {isStudyMode && <span className="text-green-300"> • Modo Estudio</span>}
+      {/* Modo estudio */}
+      <button onClick={handleStudyModeToggle}
+        className="flex items-center gap-3.5 w-full py-3.5 px-1 text-left cursor-pointer transition-colors hover:bg-[rgba(201,162,39,.08)]"
+        style={{ background: 'none', border: 'none', borderTop: '1px solid rgba(120,94,48,.2)', borderBottom: '1px solid rgba(120,94,48,.2)' }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8a6a2a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5c-2-1.5-4.5-2-8-2v16c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2V3c-3.5 0-6 .5-8 2z" /><path d="M12 5v16" /></svg>
+        <span className="flex-1">
+          <span className="block font-display font-semibold text-[15px] tracking-wide" style={{ color: 'var(--ink)' }}>Modo estudio</span>
+          <span className="block font-body text-[13.5px]" style={{ color: '#7c6a48' }}>Fechas visibles antes de colocar · sin penalización</span>
+        </span>
+        <span className="relative inline-block flex-shrink-0 rounded-full transition-colors"
+          style={{
+            width: 46, height: 25,
+            background: isStudyMode ? 'rgba(201,162,39,.35)' : 'rgba(120,94,48,.15)',
+            border: `1px solid ${isStudyMode ? '#a8853c' : 'rgba(120,94,48,.4)'}`,
+          }}>
+          <span className="absolute rounded-full transition-all"
+            style={{
+              top: 2, left: isStudyMode ? 22 : 2, width: 19, height: 19,
+              background: isStudyMode ? 'linear-gradient(180deg, #d4af37, #b08d1e)' : '#c9bda0',
+              boxShadow: '0 1px 3px rgba(0,0,0,.3)',
+            }} />
+        </span>
+      </button>
+      {isStudyMode && (
+        <p className="font-body italic text-[13.5px] m-0 mt-2.5 px-3.5 py-2.5"
+          style={{ border: '1px solid rgba(120,94,48,.3)', background: 'rgba(201,162,39,.08)', color: '#7c6a48' }}>
+          Verás la fecha de tu carta antes de colocarla y no perderás puntos por errores. Ideal para aprender la cronología bíblica.
         </p>
+      )}
+
+      {/* Botones */}
+      <div className="flex gap-3 mt-6">
+        <button onClick={handleBack}
+          className="flex-1 py-3 font-display text-[13px] tracking-wider rounded-sm cursor-pointer transition-colors"
+          style={{ background: 'none', border: '1px solid rgba(120,94,48,.3)', color: '#a08a5c' }}>
+          VOLVER
+        </button>
+        <button onClick={handleStart} disabled={!playerName.trim()}
+          className="btn-gold flex-[2] py-3 text-[13px] disabled:opacity-50 disabled:cursor-not-allowed">
+          EMPEZAR
+        </button>
       </div>
     </div>
   );
