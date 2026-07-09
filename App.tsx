@@ -767,13 +767,13 @@ const AppEnhanced: React.FC = () => {
       return winningPlayer ? (
         <GameOver winner={winningPlayer} onRestart={handleExitTurnBasedGame} />
       ) : (
-        <div className="flex flex-col items-center justify-center bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm max-w-md text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-yellow-300 mb-4">Partida terminada</h2>
-          <button
-            onClick={handleExitTurnBasedGame}
-            className="px-6 py-3 bg-blue-600 text-lg font-bold rounded-lg hover:bg-blue-700 transition"
-          >
-            Volver al Menú
+        <div className="flex flex-col items-center justify-center p-8 md:p-10 rounded-sm max-w-md text-center"
+          style={{ border: '1px solid rgba(201,162,39,.35)', background: 'rgba(0,0,0,.35)', backdropFilter: 'blur(4px)' }}>
+          <h2 className="font-display font-bold text-2xl md:text-3xl tracking-wider m-0 mb-6" style={{ color: '#e5c96a' }}>
+            Partida terminada
+          </h2>
+          <button onClick={handleExitTurnBasedGame} className="btn-gold px-8 py-3 text-sm">
+            VOLVER AL MENÚ
           </button>
         </div>
       );
@@ -901,15 +901,14 @@ const AppEnhanced: React.FC = () => {
         // Si no hay ganador pero hay mensaje (desconexión), mostrar pantalla de partida cancelada
         if (gameOverMessage) {
           return (
-            <div className="flex flex-col items-center justify-center bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm max-w-md text-center">
-              <div className="text-6xl mb-4">😔</div>
-              <h2 className="text-2xl md:text-3xl font-bold text-red-400 mb-4">Partida Terminada</h2>
-              <p className="text-lg text-white mb-6">{gameOverMessage}</p>
-              <button
-                onClick={handleRestart}
-                className="px-6 py-3 bg-blue-600 text-lg font-bold rounded-lg hover:bg-blue-700 transition transform hover:scale-105"
-              >
-                Volver al Menú
+            <div className="flex flex-col items-center justify-center p-8 md:p-10 rounded-sm max-w-md text-center"
+              style={{ border: '1px solid rgba(201,162,39,.35)', background: 'rgba(0,0,0,.35)', backdropFilter: 'blur(4px)' }}>
+              <h2 className="font-display font-bold text-2xl md:text-3xl tracking-wider m-0 mb-4" style={{ color: '#e5c96a' }}>
+                Partida terminada
+              </h2>
+              <p className="font-body italic text-lg m-0 mb-7" style={{ color: '#c9b891' }}>{gameOverMessage}</p>
+              <button onClick={handleRestart} className="btn-gold px-8 py-3 text-sm">
+                VOLVER AL MENÚ
               </button>
             </div>
           );
@@ -947,13 +946,18 @@ const AppEnhanced: React.FC = () => {
 
       {feedback && <FeedbackMessage type={feedback} />}
       {isAITurnMessageVisible && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50 pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
+          style={{ background: 'rgba(10,7,3,.55)', backdropFilter: 'blur(2px)' }}>
           <div
-            className="p-6 md:p-8 rounded-xl shadow-2xl text-white text-center bg-indigo-700/90 animate-pulse"
+            className="px-10 py-6 md:px-14 md:py-8 rounded-sm text-center"
             role="status"
             aria-live="polite"
+            style={{ border: '1px solid rgba(201,162,39,.5)', background: 'rgba(10,7,3,.72)', boxShadow: '0 18px 50px rgba(0,0,0,.5)' }}
           >
-            <p className="text-4xl md:text-5xl font-bold" style={{fontFamily: "'Trajan Pro', serif"}}>Turno de la IA</p>
+            <p className="font-display font-bold text-3xl md:text-5xl tracking-wider m-0 animate-pulse"
+              style={{ color: '#e5c96a', textShadow: '0 2px 18px rgba(201,162,39,.35)' }}>
+              Turno de la IA
+            </p>
           </div>
         </div>
       )}

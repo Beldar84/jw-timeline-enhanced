@@ -88,7 +88,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     ? 'Elige una carta para colocar'
     : `Tu mano · ${player.hand.length} ${player.hand.length === 1 ? 'carta' : 'cartas'}`;
   const mobileHint = expandedId !== null
-    ? 'Toca de nuevo la carta para colocarla'
+    ? (placementMode
+        ? 'Toca de nuevo la carta para colocarla'
+        : 'Toca un + del eje y luego la carta')
     : titleText;
   const title = disabled ? 'Esperando tu turno…' : (isMobile ? mobileHint : titleText);
 
@@ -140,7 +142,6 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                     transition: 'transform .2s',
                     zIndex: expanded || lifted ? 10 : i + 1,
                     borderRadius: 4,
-                    boxShadow: expanded ? '0 0 0 2px #e5c96a, 0 0 26px rgba(201,162,39,.45)' : undefined,
                   }}
                   onMouseEnter={() => { hovered.current = card.id; force(); }}
                   onMouseLeave={() => { hovered.current = null; force(); }}
@@ -148,6 +149,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                   <Card
                     ref={cardRef}
                     card={card}
+                    className={expanded ? 'card-expanded-ring' : ''}
                     showYear={false}
                     isStudyMode={isStudyMode}
                     onClick={() => {

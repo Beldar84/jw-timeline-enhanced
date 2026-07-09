@@ -131,7 +131,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const topDiscard = discardPile[0] || null;
 
   return (
-    <div className="flex flex-col h-full w-full overflow-y-auto overflow-x-hidden relative">
+    <div className="flex flex-col w-full relative">
 
       {/* ── Barra superior ── */}
       <div className="max-md:order-1 flex items-center justify-between gap-3 px-4 md:px-7 py-3 md:py-4 flex-shrink-0 flex-wrap">

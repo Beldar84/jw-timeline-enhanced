@@ -192,3 +192,26 @@
   .card-responsive { width: 136px; height: auto; }
   .slot-circle { width: 42px; height: 42px; }
 }
+
+/* ================== AJUSTES DE PARTIDA ==================
+   Mini-carta del descarte: nombre en máx. 2 líneas y sin
+   referencia bíblica para que conserve la proporción de carta. */
+#discard-pile-container .parchment-card .font-body { display: none; }
+#discard-pile-container .parchment-card .font-display.font-semibold {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Carta ampliada en móvil: el marco dorado se dibuja sobre la
+   propia carta para que la rodee con exactitud. */
+.card-expanded-ring {
+  box-shadow: 0 0 0 2.5px #e5c96a, 0 0 26px rgba(201,162,39,.45), 0 12px 28px rgba(0,0,0,.55) !important;
+}
+
+/* En pantallas táctiles el hover «pegajoso» desplazaba la carta
+   dentro de su marco; se desactiva la elevación por hover. */
+@media (hover: none) {
+  .parchment-card:hover { transform: none !important; }
+}

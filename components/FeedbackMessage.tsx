@@ -1,5 +1,10 @@
-
 import React from 'react';
+
+// ============================================================
+// JW Timeline — FeedbackMessage premium
+// Aviso «Correcto / Incorrecto» con estética dorada sobre la
+// mesa oscura. Misma API de props que el original.
+// ============================================================
 
 interface FeedbackMessageProps {
   type: 'correct' | 'incorrect';
@@ -7,16 +12,30 @@ interface FeedbackMessageProps {
 
 const FeedbackMessage: React.FC<FeedbackMessageProps> = ({ type }) => {
   const isCorrect = type === 'correct';
-  const bgColor = isCorrect ? 'bg-green-600/90' : 'bg-red-600/90';
-  const text = isCorrect ? 'Correcto' : 'Incorrecto';
 
   return (
-    <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50 transition-opacity duration-300 pointer-events-none">
-      <div 
-        className={`p-6 md:p-8 rounded-xl shadow-2xl text-white text-center transform scale-100 transition-transform duration-300 ${bgColor}`}
+    <div
+      className="absolute inset-0 flex items-center justify-center z-50 transition-opacity duration-300 pointer-events-none"
+      style={{ background: 'rgba(10,7,3,.55)', backdropFilter: 'blur(2px)' }}
+    >
+      <div
+        className="px-10 py-6 md:px-14 md:py-8 rounded-sm text-center"
         role="alert"
+        style={{
+          border: `1px solid ${isCorrect ? 'rgba(201,162,39,.6)' : 'rgba(192,96,77,.6)'}`,
+          background: 'rgba(10,7,3,.72)',
+          boxShadow: '0 18px 50px rgba(0,0,0,.5)',
+        }}
       >
-        <p className="text-4xl md:text-5xl font-bold" style={{fontFamily: "'Trajan Pro', serif"}}>{text}</p>
+        <p
+          className="font-display font-bold text-3xl md:text-5xl tracking-wider m-0"
+          style={{
+            color: isCorrect ? '#e5c96a' : '#e08a7a',
+            textShadow: isCorrect ? '0 2px 18px rgba(201,162,39,.35)' : '0 2px 18px rgba(192,96,77,.3)',
+          }}
+        >
+          {isCorrect ? 'Correcto' : 'Incorrecto'}
+        </p>
       </div>
     </div>
   );
