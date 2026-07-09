@@ -193,11 +193,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
         />
       </div>
 
-      {/* ── Zona inferior: mazo | mano | descarte ── */}
-      <div className="flex items-end justify-between gap-3 px-4 md:px-10 pb-4 md:pb-6 flex-shrink-0">
+      {/* ── Zona inferior: móvil = [mazo · descarte] sobre la mano; escritorio = mazo | mano | descarte ── */}
+      <div className="flex flex-wrap md:flex-nowrap items-end justify-between gap-3 px-4 md:px-10 pb-4 md:pb-6 flex-shrink-0">
 
         {/* Mazo apilado */}
-        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+        <div className="flex flex-col items-center gap-2 flex-shrink-0 order-1">
           <div id="deck-container" ref={deckRef} className="relative deck-responsive">
             {deckSize > 0 && (
               <>
@@ -217,7 +217,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         </div>
 
         {/* Mano en abanico */}
-        <div ref={handRef} id={handPlayer?.isAI ? 'ai-hand-container' : 'player-hand-container'} className="flex-1 min-w-0">
+        <div ref={handRef} id={handPlayer?.isAI ? 'ai-hand-container' : 'player-hand-container'} className="order-3 md:order-2 w-full md:w-auto flex-none md:flex-1 min-w-0">
           {handPlayer ? (
             handPlayer.isAI ? (
               <AIHand player={handPlayer} showTitle={true} />
@@ -235,7 +235,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         </div>
 
         {/* Descarte: mini-carta con nombre y fecha */}
-        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+        <div className="flex flex-col items-center gap-2 flex-shrink-0 order-2 md:order-3">
           <div id="discard-pile-container" ref={discardRef} className="w-[110px] md:w-[122px]">
             {topDiscard ? (
               <div style={{ filter: 'saturate(.85)' }}>
