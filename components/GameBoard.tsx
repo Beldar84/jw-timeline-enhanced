@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card as CardType, Player } from '../types';
 import Timeline from './Timeline';
@@ -6,7 +5,19 @@ import PlayerHand from './PlayerHand';
 import AIHand from './AIHand';
 import Card from './Card';
 import { soundService } from '../services/soundService';
-import { CARD_BACK_URL } from '../data/cards';
+import { CARD_BACK_URL, LOGO_URL } from '../data/cards';
+
+// ============================================================
+// JW Timeline — GameBoard premium (diseño 2b) · handoff/GameBoard.tsx
+// Sustituye components/GameBoard.tsx. Misma API de props y lógica;
+// solo cambia la presentación:
+//  · Barra superior: logo + chip de jugadores + mensaje (Garamond
+//    itálica) + botón SALIR outline dorado.
+//  · Centro: zona de timeline sobre eje dorado (scroll horizontal).
+//  · Abajo: mazo apilado (reversos rotados) | mano en abanico |
+//    descarte como mini-carta pergamino con nombre y fecha.
+// Requiere public/premium.css.
+// ============================================================
 
 interface GameBoardProps {
   players: Player[];
@@ -28,22 +39,9 @@ interface GameBoardProps {
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({
-  players,
-  currentPlayer,
-  timeline,
-  onAttemptPlaceCard,
-  deckSize,
-  topOfDeck,
-  discardPile,
-  message,
-  revealedAICard,
-  gameMode,
-  localPlayer,
-  hidingCardId,
-  isAnimating,
-  onPlaceCardOnline,
-  onExitGame,
-  isStudyMode = false,
+  players, currentPlayer, timeline, onAttemptPlaceCard, deckSize, topOfDeck,
+  discardPile, message, revealedAICard, gameMode, localPlayer, hidingCardId,
+  isAnimating, onPlaceCardOnline, onExitGame, isStudyMode = false,
 }) => {
   const [selectedTimelineIndex, setSelectedTimelineIndex] = useState<number | null>(null);
   const [selectedSlotElement, setSelectedSlotElement] = useState<HTMLElement | null>(null);
@@ -87,7 +85,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   const handleCardClick = (card: CardType, element: HTMLDivElement) => {
-    // Siempre permitir zoom de cartas propias, incluso cuando no es tu turno
     if (!canInteract) {
       soundService.playCardFlip();
       setZoomedCard(card);
@@ -102,9 +99,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
     }
   };
 
-  const handleCloseZoom = () => {
-    setZoomedCard(null);
-  };
+  const handleCloseZoom = () => setZoomedCard(null);
 
   const handleZoomCard = (card: CardType) => {
     soundService.playCardFlip();
@@ -116,134 +111,163 @@ const GameBoard: React.FC<GameBoardProps> = ({
     if (onExitGame) {
       const confirmExit = window.confirm(
         gameMode === 'online'
-          ? "¿Estás seguro de que quieres salir? Los demás jugadores serán notificados."
-          : "¿Estás seguro de que quieres salir de la partida?"
+          ? '¿Estás seguro de que quieres salir? Los demás jugadores serán notificados.'
+          : '¿Estás seguro de que quieres salir de la partida?'
       );
-      if (confirmExit) {
-        onExitGame();
-      }
+      if (confirmExit) onExitGame();
     }
   };
 
   const isMyTurnOnline = gameMode === 'online' && localPlayer ? currentPlayer.id === localPlayer.id : false;
   const dynamicMessage = gameMode === 'online'
-    ? (isMyTurnOnline ? "Es tu turno." : `Esperando a ${currentPlayer.name}...`)
+    ? (isMyTurnOnline ? 'Es tu turno.' : `Esperando a ${currentPlayer.name}…`)
     : message;
 
   const finalMessage = selectedTimelineIndex !== null && canInteract
-    ? "Ahora selecciona una carta de tu mano para colocarla."
+    ? 'Ahora selecciona una carta de tu mano para colocarla'
     : dynamicMessage;
 
   const handPlayer = gameMode === 'local' || gameMode === 'ai' ? currentPlayer : localPlayer;
-
-  // Dimensiones del mazo y descarte - usa clase CSS responsive
-  const containerDimensions = "deck-responsive";
+  const topDiscard = discardPile[0] || null;
 
   return (
-    <div className="space-y-1 md:space-y-2 flex flex-col h-full w-full overflow-y-auto overflow-x-hidden pb-8 md:pb-4 relative">
-      {/* Exit Button */}
-      {onExitGame && (
-        <button
-          onClick={handleExitClick}
-          className="absolute top-2 right-2 md:top-4 md:right-4 z-20 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs md:text-sm transition-all shadow-lg"
-        >
-          ✕ Salir
-        </button>
-      )}
+    <div className="flex flex-col h-full w-full overflow-y-auto overflow-x-hidden relative">
 
-      {/* Study Mode Indicator */}
-      {isStudyMode && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 bg-green-600/90 text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg flex items-center gap-2">
-          📚 Modo Estudio
-        </div>
-      )}
-
-      {gameMode === 'online' && localPlayer && (
-        <div className="bg-black/30 p-2 rounded-lg flex-shrink-0 landscape:py-1 landscape:px-2">
-          <h3 className="text-center text-yellow-200 font-semibold mb-2 text-sm md:text-base landscape:hidden">Oponentes</h3>
-          <div className="flex justify-center items-start space-x-2 md:space-x-6">
-            {players.filter(p => p.id !== localPlayer.id).map(opponent => (
-              <div key={opponent.id} className={`p-1 md:p-2 rounded-lg transition-all ${currentPlayer.id === opponent.id ? 'bg-yellow-500/20' : ''}`}>
-                <p className={`text-center font-bold text-xs md:text-base mb-1 landscape:text-[10px] landscape:leading-tight landscape:mb-0.5 ${currentPlayer.id === opponent.id ? 'text-yellow-300 animate-pulse' : 'text-white'}`}>{opponent.name}</p>
-                <AIHand player={opponent} showTitle={false} isOpponent={true} />
-              </div>
+      {/* ── Barra superior ── */}
+      <div className="flex items-center justify-between gap-3 px-4 md:px-7 py-3 md:py-4 flex-shrink-0 flex-wrap">
+        <div className="flex items-center gap-3 md:gap-5">
+          <img src={LOGO_URL} alt="JW Timeline" className="w-16 md:w-[90px] opacity-90" />
+          <div className="flex items-center gap-2 md:gap-3 px-3 py-1.5 md:px-4 md:py-2 rounded-sm"
+            style={{ border: '1px solid rgba(201,162,39,.35)', background: 'rgba(0,0,0,.35)' }}>
+            {players.map((p, i) => (
+              <React.Fragment key={p.id}>
+                {i > 0 && <span style={{ width: 1, height: 14, background: 'rgba(201,162,39,.35)' }}></span>}
+                <span className="font-display text-xs md:text-sm tracking-wider"
+                  style={{ color: p.id === currentPlayer.id ? '#e5c96a' : '#a89870', fontWeight: p.id === currentPlayer.id ? 600 : 400 }}>
+                  {p.name} · {p.hand.length}
+                </span>
+              </React.Fragment>
             ))}
           </div>
+          {isStudyMode && (
+            <span className="font-display text-[10px] md:text-xs tracking-widest px-2 py-1 rounded-sm"
+              style={{ color: '#e5c96a', border: '1px solid rgba(201,162,39,.5)', background: 'rgba(201,162,39,.12)' }}>
+              MODO ESTUDIO
+            </span>
+          )}
+        </div>
+
+        <p className="font-body italic text-base md:text-xl text-center flex-1 min-w-[200px]" style={{ color: '#e8d9b0' }}>
+          {finalMessage}
+        </p>
+
+        {onExitGame && (
+          <button onClick={handleExitClick} className="btn-outline-gold px-4 py-2 text-xs md:text-sm">
+            SALIR
+          </button>
+        )}
+      </div>
+
+      {/* ── Oponentes online ── */}
+      {gameMode === 'online' && localPlayer && (
+        <div className="flex justify-center items-start gap-2 md:gap-6 px-4 flex-shrink-0">
+          {players.filter(p => p.id !== localPlayer.id).map(opponent => (
+            <div key={opponent.id} className="p-1 md:p-2 rounded-sm"
+              style={currentPlayer.id === opponent.id ? { background: 'rgba(201,162,39,.12)', border: '1px solid rgba(201,162,39,.35)' } : {}}>
+              <p className="font-display text-center text-xs md:text-sm mb-1 tracking-wider"
+                style={{ color: currentPlayer.id === opponent.id ? '#e5c96a' : '#a89870' }}>{opponent.name}</p>
+              <AIHand player={opponent} showTitle={false} isOpponent={true} />
+            </div>
+          ))}
         </div>
       )}
 
-      <div className="bg-black/30 p-2 md:p-4 rounded-lg flex-shrink-0 landscape:py-1 landscape:px-2 md:landscape:p-4">
-        <div className="text-sm md:text-lg text-center font-semibold text-yellow-100 flex-grow px-2 self-center mb-1 landscape:text-xs landscape:mb-0.5 md:landscape:text-sm">
-            {finalMessage}
+      {/* ── Timeline (eje dorado) ── */}
+      <div className="overflow-x-auto flex-grow flex flex-col justify-center px-4 md:px-10 min-h-[260px] md:min-h-[340px]">
+        <Timeline
+          cards={timeline}
+          onSelectSlot={handleSelectSlot}
+          selectedSlotIndex={selectedTimelineIndex}
+          onCardClick={handleZoomCard}
+          disabled={!canInteract}
+        />
+      </div>
+
+      {/* ── Zona inferior: mazo | mano | descarte ── */}
+      <div className="flex items-end justify-between gap-3 px-4 md:px-10 pb-4 md:pb-6 flex-shrink-0">
+
+        {/* Mazo apilado */}
+        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+          <div id="deck-container" ref={deckRef} className="relative deck-responsive">
+            {deckSize > 0 && (
+              <>
+                <div className="absolute inset-0 rounded-md"
+                  style={{ transform: 'translate(7px,-7px) rotate(4deg)', background: `url('${CARD_BACK_URL}') center/cover`, filter: 'brightness(.72)' }}></div>
+                <div className="absolute inset-0 rounded-md"
+                  style={{ transform: 'translate(3.5px,-3.5px) rotate(2deg)', background: `url('${CARD_BACK_URL}') center/cover`, filter: 'brightness(.85)' }}></div>
+                <img src={CARD_BACK_URL} alt="Mazo"
+                  className="absolute inset-0 w-full h-full object-cover rounded-md"
+                  style={{ boxShadow: '0 12px 28px rgba(0,0,0,.6)' }} />
+              </>
+            )}
+          </div>
+          <p className="font-display text-[11px] md:text-xs tracking-widest" style={{ color: '#a89870' }}>
+            MAZO · {deckSize}
+          </p>
         </div>
-        <div className="flex justify-between items-start">
-            <div className="flex items-center space-x-1 md:space-x-4 landscape:space-x-1">
-                <div id="discard-pile-container" ref={discardRef} className={containerDimensions}>
-                  {discardPile.length > 0 ? (
-                    <Card card={discardPile[0]} showYear={true} onClick={() => handleZoomCard(discardPile[0])} className="w-full h-full" />
-                  ) : (
-                    <div className="w-full h-full rounded-lg border-2 border-dashed border-gray-600 bg-black/20 flex items-center justify-center text-gray-500 text-xs md:text-base">Vacío</div>
-                  )}
-                </div>
-                {gameMode === 'online' && (
-                  <div className="text-left hidden md:block landscape:hidden md:landscape:block">
-                      <h3 className="text-base md:text-xl font-bold text-yellow-300 landscape:text-sm md:landscape:text-base">Descartes</h3>
-                      <p className="text-sm md:text-base landscape:text-xs md:landscape:text-sm">{discardPile.length} {discardPile.length === 1 ? 'carta' : 'cartas'}</p>
-                  </div>
-                )}
-            </div>
-            <div className="flex items-center space-x-1 md:space-x-4 landscape:space-x-1">
-                <div className="text-right hidden md:block landscape:hidden md:landscape:block">
-                    <h3 className="text-base md:text-xl font-bold text-yellow-300 landscape:text-sm md:landscape:text-base">Mazo</h3>
-                    <p className="text-sm md:text-base landscape:text-xs md:landscape:text-sm">{deckSize} cartas</p>
-                </div>
-                <div id="deck-container" ref={deckRef} className={containerDimensions}>
-                   {deckSize > 0 && <Card card={{id: -1, name: 'deck', year: 0, imageUrl: CARD_BACK_URL}} isFaceDown={true} className="w-full h-full" />}
-                </div>
-            </div>
+
+        {/* Mano en abanico */}
+        <div ref={handRef} id={handPlayer?.isAI ? 'ai-hand-container' : 'player-hand-container'} className="flex-1 min-w-0">
+          {handPlayer ? (
+            handPlayer.isAI ? (
+              <AIHand player={handPlayer} showTitle={true} />
+            ) : (
+              <PlayerHand
+                player={handPlayer}
+                onSelectCard={handleCardClick}
+                placementMode={selectedTimelineIndex !== null}
+                disabled={!canInteract}
+                hidingCardId={hidingCardId}
+                isStudyMode={isStudyMode}
+              />
+            )
+          ) : null}
+        </div>
+
+        {/* Descarte: mini-carta con nombre y fecha */}
+        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+          <div id="discard-pile-container" ref={discardRef} className="w-[110px] md:w-[122px]">
+            {topDiscard ? (
+              <div style={{ filter: 'saturate(.85)' }}>
+                <Card card={topDiscard} showYear={true} onClick={() => handleZoomCard(topDiscard)} className="w-full" />
+              </div>
+            ) : (
+              <div className="w-full aspect-[122/170] rounded-md flex items-center justify-center"
+                style={{ border: '1.5px dashed rgba(201,162,39,.4)', background: 'rgba(0,0,0,.25)' }}>
+                <span className="font-body italic text-sm" style={{ color: '#a89870' }}>Vacío</span>
+              </div>
+            )}
+          </div>
+          <p className="font-display text-[11px] md:text-xs tracking-widest" style={{ color: '#a89870' }}>
+            DESCARTE · {discardPile.length}
+          </p>
         </div>
       </div>
 
-      <div className="overflow-x-auto p-2 md:p-4 lg:p-6 bg-black/30 rounded-lg shrink-0 flex-grow flex flex-col justify-center min-h-[240px] md:min-h-[290px] lg:min-h-[350px]">
-          <Timeline
-            cards={timeline}
-            onSelectSlot={handleSelectSlot}
-            selectedSlotIndex={selectedTimelineIndex}
-            onCardClick={handleZoomCard}
-            disabled={!canInteract}
-          />
-      </div>
-
-      <div ref={handRef} id={handPlayer?.isAI ? 'ai-hand-container' : 'player-hand-container'} className="bg-black/30 p-2 md:p-4 rounded-lg flex-shrink-0 landscape:py-1 landscape:px-2 md:landscape:p-4 mb-4">
-        {handPlayer ? (
-          handPlayer.isAI ? (
-            <AIHand player={handPlayer} showTitle={true} />
-          ) : (
-            <PlayerHand
-              player={handPlayer}
-              onSelectCard={handleCardClick}
-              placementMode={selectedTimelineIndex !== null}
-              disabled={!canInteract}
-              hidingCardId={hidingCardId}
-              isStudyMode={isStudyMode}
-            />
-          )
-        ) : null}
-      </div>
-
+      {/* ── Zoom ── */}
       {zoomedCard && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50" onClick={handleCloseZoom} role="dialog" aria-modal="true">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(10,7,3,.85)', backdropFilter: 'blur(4px)' }}
+          onClick={handleCloseZoom} role="dialog" aria-modal="true">
           <div onClick={handleCloseZoom} className="cursor-pointer">
             <Card card={zoomedCard} showYear={false} isZoomed={true} />
-            <p className="text-center text-gray-400 text-sm mt-2">Toca para cerrar</p>
+            <p className="font-body italic text-center text-sm mt-2" style={{ color: '#a89870' }}>Toca para cerrar</p>
           </div>
         </div>
       )}
       {revealedAICard && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50" role="dialog" aria-modal="true">
-          <div>
-            <Card card={revealedAICard} showYear={false} isZoomed={true} />
-          </div>
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(10,7,3,.85)', backdropFilter: 'blur(4px)' }}
+          role="dialog" aria-modal="true">
+          <Card card={revealedAICard} showYear={false} isZoomed={true} />
         </div>
       )}
     </div>

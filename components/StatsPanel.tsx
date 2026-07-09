@@ -4,11 +4,55 @@ import { deckService } from '../services/deckService';
 import { soundService } from '../services/soundService';
 import { firebaseService, GameHistoryEntry } from '../services/firebaseService';
 
+// ============================================================
+// JW Timeline — StatsPanel premium (diseño 2c) · handoff/StatsPanel.tsx
+// Sustituye components/StatsPanel.tsx. Misma API y lógica
+// (4 pestañas: General / Logros / Mazos / Historial, reset).
+// Presentación "libro de registro" en pergamino.
+// Requiere public/premium.css (.parchment-panel, variables).
+// ============================================================
+
 interface StatsPanelProps {
   onClose: () => void;
 }
 
 type StatsTab = 'overview' | 'achievements' | 'decks' | 'history';
+
+const TABS: { id: StatsTab; label: (a: { unlocked: number; total: number }) => string }[] = [
+  { id: 'overview',     label: () => 'GENERAL' },
+  { id: 'achievements', label: p => `LOGROS ${p.unlocked}/${p.total}` },
+  { id: 'decks',        label: () => 'MAZOS' },
+  { id: 'history',      label: () => 'HISTORIAL' },
+];
+
+const pct = (v: number) => `${v.toFixed(1).replace('.', ',')}%`;
+
+const BigFigure: React.FC<{ value: React.ReactNode; label: string; last?: boolean }> = ({ value, label, last }) => (
+  <div className="text-center px-2 py-1.5" style={{ borderRight: last ? 'none' : '1px solid rgba(120,94,48,.25)' }}>
+    <div className="font-display font-bold text-3xl md:text-4xl leading-none" style={{ color: 'var(--ink)' }}>{value}</div>
+    <div className="font-body text-sm mt-1.5" style={{ color: 'var(--gold-dark)' }}>{label}</div>
+  </div>
+);
+
+const Bar: React.FC<{ label: string; value: number; caption: string }> = ({ label, value, caption }) => (
+  <div>
+    <div className="flex justify-between items-baseline mb-2">
+      <span className="font-display text-sm tracking-wider" style={{ color: '#5c4a28' }}>{label}</span>
+      <span className="font-display font-bold text-xl" style={{ color: 'var(--ink)' }}>{pct(value)}</span>
+    </div>
+    <div style={{ height: 6, background: 'rgba(120,94,48,.2)' }}>
+      <div style={{ height: 6, width: `${Math.min(100, Math.max(0, value))}%`, background: '#8a6a2a' }}></div>
+    </div>
+    <p className="font-body italic text-sm mt-1.5 m-0" style={{ color: '#a08a5c' }}>{caption}</p>
+  </div>
+);
+
+const SectionRule: React.FC<{ title: string }> = ({ title }) => (
+  <div className="flex items-center gap-3 mb-3.5">
+    <span className="font-display text-sm tracking-wider" style={{ color: '#5c4a28' }}>{title}</span>
+    <div className="flex-1 h-px" style={{ background: 'rgba(120,94,48,.25)' }}></div>
+  </div>
+);
 
 const StatsPanel: React.FC<StatsPanelProps> = ({ onClose }) => {
   const [stats, setStats] = useState<PlayerStats>(statsService.loadStats());
@@ -23,55 +67,27 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ onClose }) => {
 
   useEffect(() => {
     if (activeTab !== 'history') return;
-    if (!firebaseService.isSignedIn()) {
-      setHistory([]);
-      return;
-    }
-
+    if (!firebaseService.isSignedIn()) { setHistory([]); return; }
     let isMounted = true;
     setHistoryLoading(true);
     firebaseService.getGameHistory(30)
-      .then(entries => {
-        if (isMounted) setHistory(entries);
-      })
-      .finally(() => {
-        if (isMounted) setHistoryLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
+      .then(entries => { if (isMounted) setHistory(entries); })
+      .finally(() => { if (isMounted) setHistoryLoading(false); });
+    return () => { isMounted = false; };
   }, [activeTab]);
 
-  const handleTabChange = (tab: StatsTab) => {
-    soundService.playClick();
-    setActiveTab(tab);
-  };
-
-  const handleClose = () => {
-    soundService.playClick();
-    onClose();
-  };
-
+  const handleTabChange = (tab: StatsTab) => { soundService.playClick(); setActiveTab(tab); };
+  const handleClose = () => { soundService.playClick(); onClose(); };
   const handleResetStats = () => {
     if (showResetConfirm) {
       statsService.resetStats();
       setStats(statsService.loadStats());
       setShowResetConfirm(false);
-      soundService.playClick();
     } else {
       setShowResetConfirm(true);
-      soundService.playClick();
     }
+    soundService.playClick();
   };
-
-  const StatCard = ({ label, value, icon }: { label: string; value: string | number; icon: string }) => (
-    <div className="bg-gray-700/50 p-4 rounded-lg">
-      <div className="text-3xl mb-2">{icon}</div>
-      <div className="text-2xl font-bold text-yellow-200">{value}</div>
-      <div className="text-sm text-gray-400">{label}</div>
-    </div>
-  );
 
   const formatHistoryDate = (dateValue: any): string => {
     const date = dateValue?.toDate ? dateValue.toDate() : dateValue ? new Date(dateValue) : null;
@@ -88,353 +104,201 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-3xl font-bold text-white" style={{fontFamily: "'Trajan Pro', serif"}}>
-              📊 Estadísticas
-            </h2>
-            <button
-              onClick={handleClose}
-              className="text-white text-3xl hover:text-gray-300 transition"
-            >
-              ×
-            </button>
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: 'rgba(10,7,3,.9)' }}>
+      <div className="parchment-panel w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+
+        {/* Cabecera */}
+        <div className="px-7 md:px-9 pt-7 flex items-start justify-between">
+          <div>
+            <h2 className="font-display font-bold text-2xl md:text-[28px] tracking-wide m-0" style={{ color: 'var(--ink)' }}>Estadísticas</h2>
+            <p className="font-body italic text-base mt-1 m-0" style={{ color: 'var(--gold-dark)' }}>Registro del jugador</p>
           </div>
+          <button onClick={handleClose}
+            className="w-[34px] h-[34px] rounded-full cursor-pointer text-lg leading-none transition-colors hover:bg-[rgba(201,162,39,.15)]"
+            style={{ background: 'none', border: '1px solid rgba(120,94,48,.35)', color: '#5c4a28' }}>×</button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-gray-700">
-          <button
-            onClick={() => handleTabChange('overview')}
-            className={`flex-1 py-3 px-4 font-bold transition ${
-              activeTab === 'overview'
-                ? 'bg-gray-700 text-yellow-200 border-b-2 border-yellow-200'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            General
-          </button>
-          <button
-            onClick={() => handleTabChange('achievements')}
-            className={`flex-1 py-3 px-4 font-bold transition ${
-              activeTab === 'achievements'
-                ? 'bg-gray-700 text-yellow-200 border-b-2 border-yellow-200'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Logros ({achievementProgress.unlocked}/{achievementProgress.total})
-          </button>
-          <button
-            onClick={() => handleTabChange('decks')}
-            className={`flex-1 py-3 px-4 font-bold transition ${
-              activeTab === 'decks'
-                ? 'bg-gray-700 text-yellow-200 border-b-2 border-yellow-200'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Mazos
-          </button>
-          <button
-            onClick={() => handleTabChange('history')}
-            className={`flex-1 py-3 px-4 font-bold transition ${
-              activeTab === 'history'
-                ? 'bg-gray-700 text-yellow-200 border-b-2 border-yellow-200'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Historial
-          </button>
+        {/* Pestañas */}
+        <div className="flex gap-5 md:gap-7 px-7 md:px-9 pt-4" style={{ borderBottom: '1px solid rgba(120,94,48,.3)' }}>
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => handleTabChange(t.id)}
+              className="pb-2.5 px-0.5 cursor-pointer font-display text-[13px] md:text-[14.5px] tracking-wider transition-colors"
+              style={{
+                background: 'none', border: 'none',
+                borderBottom: activeTab === t.id ? '2px solid #8a6a2a' : '2px solid transparent',
+                color: activeTab === t.id ? 'var(--ink)' : '#a08a5c',
+                fontWeight: activeTab === t.id ? 600 : 400,
+              }}>
+              {t.label(achievementProgress)}
+            </button>
+          ))}
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Contenido */}
+        <div className="flex-1 overflow-y-auto px-7 md:px-9 py-7 flex flex-col gap-7">
+
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Main Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard label="Partidas Jugadas" value={stats.gamesPlayed} icon="🎮" />
-                <StatCard label="Victorias" value={stats.gamesWon} icon="🏆" />
-                <StatCard label="Derrotas" value={stats.gamesLost} icon="😔" />
-                <StatCard label="Racha Actual" value={stats.currentWinStreak} icon="🔥" />
+            <>
+              <div className="grid grid-cols-4">
+                <BigFigure value={stats.gamesPlayed} label="partidas jugadas" />
+                <BigFigure value={stats.gamesWon} label="victorias" />
+                <BigFigure value={stats.gamesLost} label="derrotas" />
+                <BigFigure value={stats.currentWinStreak} label="racha actual" last />
               </div>
-
-              {/* Percentages */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-700/50 p-4 rounded-lg">
-                  <h3 className="text-lg font-bold text-white mb-2">Tasa de Victoria</h3>
-                  <div className="flex items-end gap-2">
-                    <span className="text-4xl font-bold text-green-400">{winRate.toFixed(1)}%</span>
-                    <span className="text-gray-400 mb-1">
-                      ({stats.gamesWon}/{stats.gamesPlayed})
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-600 rounded-full h-2 mt-2">
-                    <div
-                      className="bg-green-500 h-2 rounded-full transition-all"
-                      style={{ width: `${winRate}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-700/50 p-4 rounded-lg">
-                  <h3 className="text-lg font-bold text-white mb-2">Precisión</h3>
-                  <div className="flex items-end gap-2">
-                    <span className="text-4xl font-bold text-blue-400">{accuracy.toFixed(1)}%</span>
-                    <span className="text-gray-400 mb-1">
-                      ({stats.correctPlacements}/{stats.totalCardsPlaced})
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-600 rounded-full h-2 mt-2">
-                    <div
-                      className="bg-blue-500 h-2 rounded-full transition-all"
-                      style={{ width: `${accuracy}%` }}
-                    ></div>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Bar label="TASA DE VICTORIA" value={winRate} caption={`${stats.gamesWon} de ${stats.gamesPlayed} partidas`} />
+                <Bar label="PRECISIÓN" value={accuracy} caption={`${stats.correctPlacements} de ${stats.totalCardsPlaced} cartas colocadas`} />
+              </div>
+              <div className="flex flex-wrap gap-x-10 gap-y-2">
+                <p className="font-body text-base m-0" style={{ color: '#5c4a28' }}>
+                  Victoria más rápida <span className="font-display font-bold" style={{ color: 'var(--ink)' }}>
+                    {stats.fastestWin ? statsService.formatTime(stats.fastestWin) : '--'}</span>
+                </p>
+                <p className="font-body text-base m-0" style={{ color: '#5c4a28' }}>
+                  Tiempo promedio <span className="font-display font-bold" style={{ color: 'var(--ink)' }}>
+                    {statsService.formatTime(stats.averageGameDuration)}</span>
+                </p>
+                <p className="font-body text-base m-0" style={{ color: '#5c4a28' }}>
+                  Mayor racha <span className="font-display font-bold" style={{ color: 'var(--ink)' }}>{stats.longestWinStreak}</span>
+                </p>
+              </div>
+              <div>
+                <SectionRule title="CARTAS" />
+                <div className="grid grid-cols-3">
+                  <BigFigure value={stats.totalCardsPlaced} label="total jugadas" />
+                  <BigFigure value={stats.correctPlacements} label="correctas" />
+                  <BigFigure value={stats.incorrectPlacements} label="incorrectas" last />
                 </div>
               </div>
-
-              {/* Additional Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <StatCard
-                  label="Mayor Racha"
-                  value={stats.longestWinStreak}
-                  icon="⭐"
-                />
-                <StatCard
-                  label="Victoria Más Rápida"
-                  value={stats.fastestWin ? statsService.formatTime(stats.fastestWin) : '--'}
-                  icon="⚡"
-                />
-                <StatCard
-                  label="Tiempo Promedio"
-                  value={statsService.formatTime(stats.averageGameDuration)}
-                  icon="⏱️"
-                />
-              </div>
-
-              {/* Card Stats */}
-              <div className="bg-gray-700/50 p-4 rounded-lg">
-                <h3 className="text-lg font-bold text-white mb-3">Estadísticas de Cartas</h3>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-yellow-200">{stats.totalCardsPlaced}</div>
-                    <div className="text-sm text-gray-400">Total Jugadas</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-green-400">{stats.correctPlacements}</div>
-                    <div className="text-sm text-gray-400">Correctas</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-red-400">{stats.incorrectPlacements}</div>
-                    <div className="text-sm text-gray-400">Incorrectas</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            </>
           )}
 
           {activeTab === 'achievements' && (
-            <div className="space-y-4">
-              <div className="bg-gray-700/50 p-4 rounded-lg mb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-white">Progreso de Logros</h3>
-                    <p className="text-sm text-gray-400">
-                      Has desbloqueado {achievementProgress.unlocked} de {achievementProgress.total} logros
-                    </p>
-                  </div>
-                  <div className="text-3xl">{achievementProgress.unlocked === achievementProgress.total ? '🎉' : '🎯'}</div>
+            <>
+              <div>
+                <div className="flex justify-between items-baseline mb-2">
+                  <span className="font-display text-sm tracking-wider" style={{ color: '#5c4a28' }}>PROGRESO</span>
+                  <span className="font-body italic text-sm" style={{ color: '#a08a5c' }}>
+                    {achievementProgress.unlocked} de {achievementProgress.total} logros desbloqueados
+                  </span>
                 </div>
-                <div className="w-full bg-gray-600 rounded-full h-3 mt-3">
-                  <div
-                    className="bg-gradient-to-r from-yellow-500 to-yellow-300 h-3 rounded-full transition-all"
-                    style={{ width: `${(achievementProgress.unlocked / achievementProgress.total) * 100}%` }}
-                  ></div>
+                <div style={{ height: 6, background: 'rgba(120,94,48,.2)' }}>
+                  <div style={{ height: 6, width: `${(achievementProgress.unlocked / achievementProgress.total) * 100}%`, background: '#8a6a2a' }}></div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {stats.achievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className={`p-4 rounded-lg border-2 ${
-                      achievement.unlockedAt
-                        ? 'bg-gradient-to-r from-yellow-600/20 to-yellow-500/20 border-yellow-500'
-                        : 'bg-gray-700/30 border-gray-600'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`text-4xl ${achievement.unlockedAt ? '' : 'grayscale opacity-50'}`}>
-                        {achievement.icon}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className={`font-bold ${achievement.unlockedAt ? 'text-yellow-200' : 'text-gray-400'}`}>
-                          {achievement.name}
-                        </h4>
-                        <p className="text-sm text-gray-400 mt-1">{achievement.description}</p>
-                        {achievement.unlockedAt && (
-                          <p className="text-xs text-green-400 mt-2">
-                            ✓ Desbloqueado {new Date(achievement.unlockedAt).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {stats.achievements.map(a => (
+                  <div key={a.id} className="flex items-start gap-3 px-3.5 py-3 rounded-sm"
+                    style={a.unlockedAt
+                      ? { border: '1px solid #a8853c', background: 'rgba(201,162,39,.1)' }
+                      : { border: '1px dashed rgba(120,94,48,.4)', opacity: .55 }}>
+                    <span className="text-2xl" style={a.unlockedAt ? {} : { filter: 'grayscale(1)' }}>{a.icon}</span>
+                    <div className="flex-1">
+                      <p className="font-display font-semibold text-sm m-0" style={{ color: 'var(--ink)' }}>{a.name}</p>
+                      <p className="font-body text-[13px] m-0 mt-0.5" style={{ color: 'var(--gold-dark)' }}>{a.description}</p>
+                      {a.unlockedAt && (
+                        <p className="font-body italic text-xs m-0 mt-1" style={{ color: '#a08a5c' }}>
+                          Desbloqueado {new Date(a.unlockedAt).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </>
           )}
 
           {activeTab === 'decks' && (
-            <div className="space-y-4">
-              {Object.keys(stats.deckStats).length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
-                  <div className="text-6xl mb-4">📚</div>
-                  <p>Aún no has jugado con ningún mazo.</p>
-                  <p className="text-sm mt-2">¡Comienza a jugar para ver tus estadísticas por mazo!</p>
-                </div>
-              ) : (
-                Object.entries(stats.deckStats).map(([deckId, deckStatsData]) => {
-                  const deckStats = deckStatsData as DeckStats;
-                  const deck = deckService.getDeckById(deckId);
-                  if (!deck) return null;
-
-                  const deckWinRate = deckStats.gamesPlayed > 0
-                    ? (deckStats.gamesWon / deckStats.gamesPlayed) * 100
-                    : 0;
-                  const deckAccuracy = deckStats.cardsPlaced > 0
-                    ? (deckStats.correctPlacements / deckStats.cardsPlaced) * 100
-                    : 0;
-                  const colors = deckService.getColorClasses(deck.color);
-
-                  return (
-                    <div key={deckId} className={`p-4 rounded-lg border-2 ${colors.border} bg-gray-700/30`}>
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="text-4xl">{deck.icon}</span>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-bold text-white">{deck.name}</h3>
-                          <p className="text-sm text-gray-400">{deckStats.gamesPlayed} partidas jugadas</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-                        <div className="bg-gray-800/50 p-2 rounded">
-                          <div className="text-lg font-bold text-green-400">{deckStats.gamesWon}</div>
-                          <div className="text-xs text-gray-400">Victorias</div>
-                        </div>
-                        <div className="bg-gray-800/50 p-2 rounded">
-                          <div className="text-lg font-bold text-blue-400">{deckWinRate.toFixed(0)}%</div>
-                          <div className="text-xs text-gray-400">Tasa Victoria</div>
-                        </div>
-                        <div className="bg-gray-800/50 p-2 rounded">
-                          <div className="text-lg font-bold text-yellow-400">{deckStats.cardsPlaced}</div>
-                          <div className="text-xs text-gray-400">Cartas Jugadas</div>
-                        </div>
-                        <div className="bg-gray-800/50 p-2 rounded">
-                          <div className="text-lg font-bold text-purple-400">{deckAccuracy.toFixed(0)}%</div>
-                          <div className="text-xs text-gray-400">Precisión</div>
-                        </div>
-                      </div>
+            Object.keys(stats.deckStats).length === 0 ? (
+              <p className="font-body italic text-center text-base py-10 m-0" style={{ color: '#a08a5c' }}>
+                Aún no has jugado con ningún mazo. ¡Comienza a jugar para ver tus estadísticas por mazo!
+              </p>
+            ) : (
+              Object.entries(stats.deckStats).map(([deckId, deckStatsData]) => {
+                const d = deckStatsData as DeckStats;
+                const deck = deckService.getDeckById(deckId);
+                if (!deck) return null;
+                const deckWinRate = d.gamesPlayed > 0 ? (d.gamesWon / d.gamesPlayed) * 100 : 0;
+                const deckAccuracy = d.cardsPlaced > 0 ? (d.correctPlacements / d.cardsPlaced) * 100 : 0;
+                return (
+                  <div key={deckId} className="pb-5" style={{ borderBottom: '1px solid rgba(120,94,48,.2)' }}>
+                    <div className="flex items-baseline justify-between mb-3">
+                      <h3 className="font-display font-semibold text-base m-0" style={{ color: 'var(--ink)' }}>{deck.name}</h3>
+                      <span className="font-body italic text-sm" style={{ color: '#a08a5c' }}>{d.gamesPlayed} partidas</span>
                     </div>
-                  );
-                })
-              )}
-            </div>
+                    <div className="grid grid-cols-4">
+                      <BigFigure value={d.gamesWon} label="victorias" />
+                      <BigFigure value={pct(deckWinRate)} label="tasa victoria" />
+                      <BigFigure value={d.cardsPlaced} label="cartas jugadas" />
+                      <BigFigure value={pct(deckAccuracy)} label="precisión" last />
+                    </div>
+                  </div>
+                );
+              })
+            )
           )}
 
           {activeTab === 'history' && (
-            <div className="space-y-4">
-              {!firebaseService.isSignedIn() ? (
-                <div className="text-center py-12 text-gray-400">
-                  <div className="text-6xl mb-4">☁️</div>
-                  <p>Inicia sesión para guardar y consultar tu historial en la nube.</p>
-                </div>
-              ) : historyLoading ? (
-                <div className="text-center py-12 text-gray-400">Cargando historial...</div>
-              ) : history.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
-                  <div className="text-6xl mb-4">🕰️</div>
-                  <p>Aún no hay partidas guardadas en tu historial.</p>
-                </div>
-              ) : (
-                history.map(entry => {
-                  const accuracy = entry.cardsPlaced
-                    ? ((entry.correctPlacements || 0) / entry.cardsPlaced) * 100
-                    : 0;
-
-                  return (
-                    <div key={entry.id} className="bg-gray-700/40 border border-gray-600 rounded-lg p-4">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`px-2 py-1 rounded text-xs font-bold ${
-                              entry.result === 'win'
-                                ? 'bg-green-600/30 text-green-300'
-                                : 'bg-red-600/30 text-red-300'
-                            }`}>
-                              {entry.result === 'win' ? 'Victoria' : 'Derrota'}
-                            </span>
-                            <span className="text-sm text-gray-300">{getModeLabel(entry.mode)}</span>
-                          </div>
-                          <h3 className="text-lg font-bold text-white">
-                            Ganador: {entry.winnerName || 'Sin ganador'}
-                          </h3>
-                          <p className="text-sm text-gray-400">
-                            {entry.players.map(player => player.name).join(' vs ')}
-                          </p>
-                        </div>
-                        <div className="text-sm text-gray-400 md:text-right">
-                          <div>{formatHistoryDate(entry.finishedAt)}</div>
-                          <div>{entry.durationSeconds ? statsService.formatTime(entry.durationSeconds) : '--'}</div>
-                        </div>
+            !firebaseService.isSignedIn() ? (
+              <p className="font-body italic text-center text-base py-10 m-0" style={{ color: '#a08a5c' }}>
+                Inicia sesión para guardar y consultar tu historial en la nube.
+              </p>
+            ) : historyLoading ? (
+              <p className="font-body italic text-center text-base py-10 m-0" style={{ color: '#a08a5c' }}>Cargando historial…</p>
+            ) : history.length === 0 ? (
+              <p className="font-body italic text-center text-base py-10 m-0" style={{ color: '#a08a5c' }}>
+                Aún no hay partidas guardadas en tu historial.
+              </p>
+            ) : (
+              history.map(entry => {
+                const acc = entry.cardsPlaced ? ((entry.correctPlacements || 0) / entry.cardsPlaced) * 100 : 0;
+                return (
+                  <div key={entry.id} className="pb-4" style={{ borderBottom: '1px solid rgba(120,94,48,.2)' }}>
+                    <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
+                      <div className="flex items-baseline gap-2.5">
+                        <span className="font-display text-[11px] tracking-[.12em] px-2 py-0.5 rounded-sm"
+                          style={entry.result === 'win'
+                            ? { color: '#8a6a2a', border: '1px solid #a8853c', background: 'rgba(201,162,39,.12)' }
+                            : { color: '#8a4a3a', border: '1px solid rgba(160,80,60,.5)' }}>
+                          {entry.result === 'win' ? 'VICTORIA' : 'DERROTA'}
+                        </span>
+                        <span className="font-body text-sm" style={{ color: '#5c4a28' }}>{getModeLabel(entry.mode)}</span>
                       </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mt-4">
-                        <div className="bg-gray-800/50 p-2 rounded">
-                          <div className="text-lg font-bold text-yellow-300">{entry.cardsPlaced || 0}</div>
-                          <div className="text-xs text-gray-400">Movimientos</div>
-                        </div>
-                        <div className="bg-gray-800/50 p-2 rounded">
-                          <div className="text-lg font-bold text-green-400">{entry.correctPlacements || 0}</div>
-                          <div className="text-xs text-gray-400">Correctas</div>
-                        </div>
-                        <div className="bg-gray-800/50 p-2 rounded">
-                          <div className="text-lg font-bold text-red-400">{entry.incorrectPlacements || 0}</div>
-                          <div className="text-xs text-gray-400">Incorrectas</div>
-                        </div>
-                        <div className="bg-gray-800/50 p-2 rounded">
-                          <div className="text-lg font-bold text-blue-400">{accuracy.toFixed(0)}%</div>
-                          <div className="text-xs text-gray-400">Precisión</div>
-                        </div>
-                      </div>
+                      <span className="font-body italic text-sm" style={{ color: '#a08a5c' }}>
+                        {formatHistoryDate(entry.finishedAt)} · {entry.durationSeconds ? statsService.formatTime(entry.durationSeconds) : '--'}
+                      </span>
                     </div>
-                  );
-                })
-              )}
-            </div>
+                    <p className="font-display font-semibold text-[15px] m-0" style={{ color: 'var(--ink)' }}>
+                      Ganador: {entry.winnerName || 'Sin ganador'}
+                    </p>
+                    <p className="font-body italic text-sm m-0 mb-2" style={{ color: '#a08a5c' }}>
+                      {entry.players.map(p => p.name).join(' vs ')}
+                    </p>
+                    <p className="font-body text-sm m-0" style={{ color: '#5c4a28' }}>
+                      {entry.cardsPlaced || 0} movimientos · {entry.correctPlacements || 0} correctas ·{' '}
+                      {entry.incorrectPlacements || 0} incorrectas · {pct(acc)} precisión
+                    </p>
+                  </div>
+                );
+              })
+            )
           )}
         </div>
 
-        {/* Footer */}
-        <div className="bg-gray-700 p-4 flex justify-between items-center">
-          <button
-            onClick={handleResetStats}
-            className={`px-4 py-2 rounded font-bold transition ${
-              showResetConfirm
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-gray-600 hover:bg-gray-500 text-white'
-            }`}
-          >
-            {showResetConfirm ? '¿Confirmar reinicio?' : 'Reiniciar Estadísticas'}
+        {/* Pie */}
+        <div className="px-7 md:px-9 py-4 flex justify-between items-center" style={{ borderTop: '1px solid rgba(120,94,48,.3)' }}>
+          <button onClick={handleResetStats}
+            className="font-display text-[13px] tracking-wider px-4 py-2 rounded-sm cursor-pointer"
+            style={showResetConfirm
+              ? { background: 'rgba(160,80,60,.15)', border: '1px solid rgba(160,80,60,.6)', color: '#8a4a3a' }
+              : { background: 'none', border: '1px solid rgba(120,94,48,.35)', color: '#5c4a28' }}>
+            {showResetConfirm ? '¿CONFIRMAR REINICIO?' : 'REINICIAR ESTADÍSTICAS'}
           </button>
           {showResetConfirm && (
-            <button
-              onClick={() => setShowResetConfirm(false)}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded font-bold text-white transition"
-            >
-              Cancelar
+            <button onClick={() => setShowResetConfirm(false)}
+              className="font-display text-[13px] tracking-wider px-4 py-2 rounded-sm cursor-pointer"
+              style={{ background: 'none', border: '1px solid rgba(120,94,48,.25)', color: '#a08a5c' }}>
+              CANCELAR
             </button>
           )}
         </div>

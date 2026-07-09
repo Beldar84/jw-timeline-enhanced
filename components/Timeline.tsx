@@ -1,8 +1,14 @@
-
 import React, { createRef, useRef, forwardRef } from 'react';
 import { Card as CardType } from '../types';
-import Card from './Card';
-import { PlusCircleIcon } from './icons';
+import Card, { formatYearPremium } from './Card';
+
+// ============================================================
+// JW Timeline — Timeline premium (diseño 2b) · handoff/Timeline.tsx
+// Sustituye components/Timeline.tsx. Misma API de props.
+// Eje dorado horizontal + ranuras circulares (medallones "+")
+// + chip de fecha dorado bajo cada carta.
+// Requiere public/premium.css (.gold-axis, .slot-circle, .year-chip).
+// ============================================================
 
 interface TimelineProps {
   cards: CardType[];
@@ -13,33 +19,32 @@ interface TimelineProps {
 }
 
 interface PlacementSlotProps {
-    id: string;
-    onClick: () => void;
-    isSelected: boolean;
-    disabled?: boolean;
+  id: string;
+  onClick: () => void;
+  isSelected: boolean;
+  disabled?: boolean;
 }
 
-const PlacementSlot = forwardRef<HTMLDivElement, PlacementSlotProps>(({ id, onClick, isSelected, disabled }, ref) => {
-    // Dimensions defined in /public/index.css (.slot-responsive) and kept in
-    // sync with .card-responsive so slots and cards align at every breakpoint
-    const baseStyle = 'group slot-responsive flex-shrink-0 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-600 transition-all duration-300';
-    const selectedStyle = isSelected ? 'bg-yellow-400/30 border-yellow-400 scale-105' : 'bg-gray-700/50';
-    const hoverStyle = !disabled ? 'hover:bg-yellow-400/20 hover:border-yellow-400 cursor-pointer' : 'cursor-not-allowed';
+const PlusIcon: React.FC<{ selected: boolean }> = ({ selected }) => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+    stroke={selected ? '#f2e8d5' : 'currentColor'} strokeWidth={selected ? 2 : 1.8} strokeLinecap="round">
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
 
-    return (
-        <div
-            id={id}
-            ref={ref}
-            onClick={!disabled ? onClick : undefined}
-            className={`${baseStyle} ${selectedStyle} ${hoverStyle}`}
-            aria-label={isSelected ? "Ranura de colocación seleccionada" : "Seleccionar esta ranura para colocar una carta"}
-            aria-disabled={disabled}
-        >
-           <PlusCircleIcon className={`w-8 h-8 md:w-12 md:h-12 transition-colors ${isSelected ? 'text-yellow-400' : 'text-gray-500'} ${!disabled ? 'group-hover:text-yellow-400' : ''}`} />
-        </div>
-    );
-});
-
+const PlacementSlot = forwardRef<HTMLDivElement, PlacementSlotProps>(({ id, onClick, isSelected, disabled }, ref) => (
+  <div
+    id={id}
+    ref={ref}
+    onClick={!disabled ? onClick : undefined}
+    className={`slot-circle ${isSelected ? 'selected' : ''} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+    aria-label={isSelected ? 'Ranura de colocación seleccionada' : 'Seleccionar esta ranura para colocar una carta'}
+    aria-disabled={disabled}
+  >
+    <PlusIcon selected={isSelected} />
+  </div>
+));
 
 const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIndex, onCardClick, disabled = false }) => {
   const slotRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
@@ -54,32 +59,40 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
   };
 
   return (
-    <div className="flex items-center min-w-max px-4 space-x-2 md:space-x-4">
-      <PlacementSlot
-        id="timeline-slot-0"
-        ref={slotRefs.current[0]}
-        onClick={() => handleSelect(0)}
-        isSelected={selectedSlotIndex === 0}
-        disabled={disabled}
-      />
+    <div className="relative">
+      {/* Eje temporal dorado detrás de cartas y ranuras */}
+      <div className="gold-axis" aria-hidden="true"></div>
 
-      {cards.map((card, index) => (
-        <React.Fragment key={card.id}>
-            <Card
+      <div className="relative flex items-center min-w-max px-4 gap-4 md:gap-7">
+        <PlacementSlot
+          id="timeline-slot-0"
+          ref={slotRefs.current[0]}
+          onClick={() => handleSelect(0)}
+          isSelected={selectedSlotIndex === 0}
+          disabled={disabled}
+        />
+
+        {cards.map((card, index) => (
+          <React.Fragment key={card.id}>
+            <div className="flex flex-col items-center gap-2 md:gap-3 flex-shrink-0">
+              <Card
                 card={card}
-                showYear={true}
+                showYear={false}
                 onClick={() => onCardClick(card)}
                 className="card-responsive"
-            />
+              />
+              <span className="year-chip text-sm md:text-base">{formatYearPremium(card.year)}</span>
+            </div>
             <PlacementSlot
-                id={`timeline-slot-${index + 1}`}
-                ref={slotRefs.current[index + 1]}
-                onClick={() => handleSelect(index + 1)}
-                isSelected={selectedSlotIndex === index + 1}
-                disabled={disabled}
+              id={`timeline-slot-${index + 1}`}
+              ref={slotRefs.current[index + 1]}
+              onClick={() => handleSelect(index + 1)}
+              isSelected={selectedSlotIndex === index + 1}
+              disabled={disabled}
             />
-        </React.Fragment>
-      ))}
+          </React.Fragment>
+        ))}
+      </div>
     </div>
   );
 };

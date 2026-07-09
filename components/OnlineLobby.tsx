@@ -1,7 +1,14 @@
-
 import React, { useState } from 'react';
 import { GameState } from '../types';
 import { soundService } from '../services/soundService';
+
+// ============================================================
+// JW Timeline — OnlineLobby premium (diseño 2e) · handoff/OnlineLobby.tsx
+// Sustituye components/OnlineLobby.tsx. Misma API de props.
+// Panel de pergamino, código en grande estilo letterpress,
+// lista de jugadores con divisores, botones dorados.
+// Requiere public/premium.css (.parchment-panel, .btn-gold…).
+// ============================================================
 
 interface OnlineLobbyProps {
   gameState: GameState;
@@ -13,109 +20,118 @@ interface OnlineLobbyProps {
 
 const OnlineLobby: React.FC<OnlineLobbyProps> = ({ gameState, localPlayerId, onStartGame, onAddBot, onBack }) => {
   const [copied, setCopied] = useState(false);
-
   const isHost = gameState.hostId === localPlayerId;
+  const canStart = gameState.players.length >= 2;
 
   const handleCopy = () => {
     soundService.playClick();
     if (navigator.clipboard) {
-        navigator.clipboard.writeText(gameState.id).then(() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        });
+      navigator.clipboard.writeText(gameState.id).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
     } else {
-        alert("No se pudo copiar el ID. Por favor, cópielo manualmente.");
+      alert('No se pudo copiar el ID. Por favor, cópielo manualmente.');
     }
   };
-  
-  const handleAddBotClick = () => {
-    soundService.playClick();
-    onAddBot(gameState.id);
-  }
-  
-  const handleStartGameClick = () => {
-    soundService.playClick();
-    onStartGame(gameState.id);
-  }
 
-  const handleBack = () => {
-    soundService.playClick();
-    onBack();
-  }
-
-  const canStart = gameState.players.length >= 2;
+  const handleAddBotClick = () => { soundService.playClick(); onAddBot(gameState.id); };
+  const handleStartGameClick = () => { soundService.playClick(); onStartGame(gameState.id); };
+  const handleBack = () => { soundService.playClick(); onBack(); };
 
   return (
-    <div className="flex flex-col items-center bg-gray-800/50 p-4 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm w-full max-w-2xl text-center max-h-[85vh] overflow-y-auto">
-      <h2 className="text-xl md:text-3xl font-bold text-yellow-300 mb-3 md:mb-4">Sala de Espera Online</h2>
-      <p className="text-yellow-100 mb-4 md:mb-6 text-xs md:text-base">Comparte el ID de la partida para que otros se unan. El juego comenzará cuando el anfitrión lo inicie.</p>
-      
-      <div className="w-full max-w-md mb-4 md:mb-6">
-        <label htmlFor="join-link" className="block text-xs md:text-sm font-medium text-yellow-100 mb-1">ID de Partida</label>
-        <div className="flex items-center space-x-2">
-          <input
-            id="join-link"
-            type="text"
-            readOnly
-            value={gameState.id}
-            className="w-full bg-gray-900 text-white p-2.5 md:p-3 rounded-lg border-2 border-gray-600 focus:outline-none select-all text-center font-bold text-lg md:text-xl tracking-widest"
-            onFocus={(e) => e.target.select()}
-          />
+    <div className="parchment-panel w-full max-w-lg px-8 md:px-11 py-9 text-center max-h-[85vh] overflow-y-auto">
+      <h2 className="font-display font-bold text-2xl md:text-[26px] tracking-wider mb-2" style={{ color: 'var(--ink)' }}>
+        Sala de espera
+      </h2>
+      <p className="font-body italic text-base mb-7" style={{ color: 'var(--gold-dark)' }}>
+        Comparte el código para que otros se unan. El anfitrión inicia la partida.
+      </p>
+
+      <p className="font-display text-xs tracking-[.14em] mb-1.5" style={{ color: '#a08a5c' }}>CÓDIGO DE PARTIDA</p>
+      <div className="flex items-center justify-center gap-3 mb-7">
+        <p className="font-display font-bold text-3xl md:text-4xl select-all"
+          style={{ color: 'var(--ink)', letterSpacing: '.28em', textIndent: '.28em' }}>
+          {gameState.id}
+        </p>
+        <button onClick={handleCopy} title={copied ? '¡Copiado!' : 'Copiar código'}
+          className="w-10 h-10 flex items-center justify-center rounded-sm cursor-pointer flex-shrink-0"
+          style={{ background: copied ? 'rgba(201,162,39,.2)' : 'none', border: '1px solid rgba(120,94,48,.35)' }}>
+          {copied ? (
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8a6a2a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4 10-10" /></svg>
+          ) : (
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8a6a2a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+          )}
+        </button>
+      </div>
+
+      <div className="flex items-center gap-3 mb-3">
+        <div className="flex-1 h-px" style={{ background: 'rgba(120,94,48,.25)' }}></div>
+        <span className="font-display text-xs tracking-[.14em]" style={{ color: '#a08a5c' }}>
+          JUGADORES · {gameState.players.length} DE 6
+        </span>
+        <div className="flex-1 h-px" style={{ background: 'rgba(120,94,48,.25)' }}></div>
+      </div>
+      <ul className="flex flex-col mb-7 min-h-[100px] list-none m-0 p-0">
+        {gameState.players.map((player, i) => (
+          <li key={player.id} className="flex items-center justify-between py-2.5 px-1.5"
+            style={{ borderBottom: i < gameState.players.length - 1 ? '1px solid rgba(120,94,48,.18)' : 'none' }}>
+            <span className="font-body text-lg" style={{ color: 'var(--ink)', fontWeight: player.id === gameState.hostId ? 600 : 400 }}>
+              {player.name}
+            </span>
+            <span className="flex gap-2">
+              {player.isAI && (
+                <span className="font-display text-[11px] tracking-[.12em] px-2.5 py-0.5 rounded-sm"
+                  style={{ color: '#5c4a28', border: '1px solid rgba(120,94,48,.4)' }}>IA</span>
+              )}
+              {player.id === gameState.hostId && (
+                <span className="font-display text-[11px] tracking-[.12em] px-2.5 py-0.5 rounded-sm"
+                  style={{ color: '#8a6a2a', border: '1px solid #a8853c', background: 'rgba(201,162,39,.12)' }}>ANFITRIÓN</span>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {isHost ? (
+        <div className="flex flex-col gap-3">
           <button
-            onClick={handleCopy}
-            className="px-3 py-2.5 md:px-4 md:py-3 bg-blue-600 rounded-lg hover:bg-blue-700 transition w-24 md:w-32 text-sm md:text-base"
+            onClick={handleStartGameClick}
+            disabled={!canStart}
+            title={!canStart ? 'Se necesitan al menos 2 jugadores para empezar' : ''}
+            className="btn-gold w-full py-4 text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {copied ? '¡Copiado!' : 'Copiar'}
+            EMPEZAR PARTIDA
           </button>
-        </div>
-      </div>
-
-      <div className="w-full max-w-md mb-6 md:mb-8">
-        <h3 className="text-lg md:text-2xl font-semibold text-yellow-200 mb-3 md:mb-4">Jugadores en la sala ({gameState.players.length}/6)</h3>
-        <ul className="bg-black/20 rounded-lg p-3 md:p-4 space-y-2 min-h-[100px] md:min-h-[120px]">
-          {gameState.players.map((player) => (
-            <li key={player.id} className="text-base md:text-lg text-white flex items-center justify-center">
-              <span>{player.name}</span>
-              {player.isAI && <span className="ml-2 text-xs bg-cyan-500 text-black font-bold px-2 py-0.5 rounded-full">IA</span>}
-              {player.id === gameState.hostId && <span className="ml-2 text-xs bg-yellow-500 text-black font-bold px-2 py-0.5 rounded-full">Anfitrión</span>}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {isHost && (
-        <div className="flex flex-col items-center w-full max-w-md space-y-3 md:space-y-4 pb-6">
+          <div className="flex gap-3">
             <button
               onClick={handleAddBotClick}
               disabled={gameState.players.length >= 6}
-              className="w-full px-4 py-2 md:px-8 md:py-3 bg-blue-600 text-sm md:text-lg font-bold rounded-lg hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition"
+              className="flex-1 py-3 text-[13px] font-display tracking-wider rounded-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: 'none', color: '#5c4a28', border: '1px solid rgba(120,94,48,.35)' }}
             >
-              Añadir Jugador IA
-            </button>
-            <button
-              onClick={handleStartGameClick}
-              disabled={!canStart}
-              className="w-full px-4 py-2.5 md:px-8 md:py-4 bg-green-600 text-base md:text-xl font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition"
-              title={!canStart ? "Se necesitan al menos 2 jugadores para empezar" : ""}
-            >
-              Empezar Partida
+              AÑADIR JUGADOR IA
             </button>
             <button
               onClick={handleBack}
-              className="w-full px-4 py-2 md:px-6 md:py-2.5 bg-gray-600 text-sm md:text-base font-bold rounded-lg hover:bg-gray-700 transition"
+              className="flex-1 py-3 text-[13px] font-display tracking-wider rounded-sm cursor-pointer"
+              style={{ background: 'none', color: '#a08a5c', border: '1px solid rgba(120,94,48,.25)' }}
             >
-              Volver al Menú
+              VOLVER AL MENÚ
             </button>
+          </div>
         </div>
-      )}
-      {!isHost && (
-        <div className="flex flex-col items-center w-full max-w-md space-y-3 pb-6">
-          <p className="text-yellow-100 text-sm md:text-base">Esperando a que el anfitrión inicie la partida...</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <p className="font-body italic text-base" style={{ color: 'var(--gold-dark)' }}>
+            Esperando a que el anfitrión inicie la partida…
+          </p>
           <button
             onClick={handleBack}
-            className="w-full px-4 py-2 md:px-6 md:py-2.5 bg-gray-600 text-sm md:text-base font-bold rounded-lg hover:bg-gray-700 transition"
+            className="w-full py-3 text-[13px] font-display tracking-wider rounded-sm cursor-pointer"
+            style={{ background: 'none', color: '#a08a5c', border: '1px solid rgba(120,94,48,.25)' }}
           >
-            Volver al Menú
+            VOLVER AL MENÚ
           </button>
         </div>
       )}

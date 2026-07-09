@@ -1,7 +1,13 @@
-
 import React, { forwardRef } from 'react';
 import { Card as CardType } from '../types';
 import { CARD_BACK_URL } from '../data/cards';
+
+// ============================================================
+// JW Timeline — Card premium (diseño 2b) · handoff/Card.tsx
+// Sustituye components/Card.tsx. Misma API de props (drop-in).
+// Requiere public/premium.css cargado (clases .parchment-card,
+// .torn-art, .font-display, .font-body, .year-chip).
+// ============================================================
 
 interface CardProps {
   card?: CardType;
@@ -12,115 +18,107 @@ interface CardProps {
   isZoomed?: boolean;
   className?: string;
   isHidden?: boolean;
-  isStudyMode?: boolean; // New: show year in study mode
+  isStudyMode?: boolean;
 }
 
-const Card = forwardRef<HTMLDivElement, CardProps>(({ card, isFaceDown, onClick, isPlaceholder = false, showYear = false, isZoomed = false, className = "", isHidden = false, isStudyMode = false }, ref) => {
-  const getYearText = (year: number) => {
-    if (year === -14000000000) return "-14.000M";
-    return year.toLocaleString('de-DE'); // Use '.' for thousands separator like in PDF
-  };
+// Formato premium: "4026 a.e.c." / "33 e.c." (Cinzel, chip dorado)
+export const formatYearPremium = (year: number): string => {
+  if (year === -14000000000) return '14.000 M a.e.c.';
+  const abs = Math.abs(year).toLocaleString('de-DE');
+  return year < 0 ? `${abs} a.e.c.` : `${abs} e.c.`;
+};
+
+const Card = forwardRef<HTMLDivElement, CardProps>(({
+  card, isFaceDown, onClick, isPlaceholder = false, showYear = false,
+  isZoomed = false, className = '', isHidden = false, isStudyMode = false,
+}, ref) => {
 
   if (isZoomed) {
     if (!card) return null;
-    // Solo mostrar año en zoom si showYear es true (carta del timeline) o isStudyMode
     const showYearInZoom = showYear || isStudyMode;
     return (
-      <div className="relative zoom-card-responsive max-w-[90vw] aspect-[500/734] rounded-lg shadow-2xl overflow-hidden border-2 border-yellow-300/50 bg-gray-900 mb-4">
-        <img
-          src={card.imageUrl}
-          alt={card.name}
-          className="w-full h-full object-contain"
-          loading="eager"
-          decoding="sync"
-          crossOrigin="anonymous"
-          style={{
-            imageRendering: 'high-quality',
-            WebkitBackfaceVisibility: 'hidden',
-            backfaceVisibility: 'hidden',
-            transform: 'translateZ(0)',
-            WebkitFontSmoothing: 'subpixel-antialiased',
-            maxWidth: '100%',
-            maxHeight: '100%',
-            minWidth: '100%',
-            minHeight: '100%',
-          }}
-        />
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-4 pt-20 pb-6 text-center">
-          <h3 className="font-bold text-2xl md:text-3xl text-white leading-tight drop-shadow-lg px-2">{card.name}</h3>
-          {/* Bible Reference */}
+      <div className="relative zoom-card-responsive max-w-[90vw] aspect-[500/734] parchment-card p-2 mb-4 flex flex-col">
+        <div className="torn-art flex-1 min-h-0">
+          <img
+            src={card.imageUrl}
+            alt={card.name}
+            loading="eager"
+            decoding="sync"
+            crossOrigin="anonymous"
+            style={{ height: '112%', width: '112%', objectFit: 'cover' }}
+          />
+        </div>
+        <div className="text-center px-3 pt-3 pb-2">
+          <h3 className="font-display font-semibold text-2xl md:text-3xl leading-tight" style={{ color: 'var(--ink)' }}>{card.name}</h3>
           {card.bibleRef && (
-            <p className="text-yellow-300 text-lg md:text-xl mt-2 font-semibold">
-              📖 {card.bibleRef}
-            </p>
+            <p className="font-body italic text-lg md:text-xl mt-1" style={{ color: 'var(--gold-dark)' }}>{card.bibleRef}</p>
           )}
-          {/* Year in zoomed view - solo si es carta del timeline o modo estudio */}
           {showYearInZoom && (
-            <p className="text-blue-300 text-base md:text-lg mt-1">
-              Año: {getYearText(card.year)}
-            </p>
+            <p className="font-display font-bold text-base md:text-lg mt-1" style={{ color: 'var(--gold-dark)' }}>{formatYearPremium(card.year)}</p>
           )}
         </div>
       </div>
     );
   }
 
-  // Dimensiones de la carta - usa clase CSS responsive para mejor compatibilidad
-  // Los tamaños se definen en /public/index.css con media queries
   const hasCustomSize = className.includes('w-') || className.includes('h-') || className.includes('card-responsive');
-  const cardBaseStyle = hasCustomSize
-    ? "relative flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600"
-    : "relative card-responsive flex-shrink-0 rounded-lg shadow-lg transition-transform duration-300 overflow-hidden bg-gray-900 border-2 border-gray-600";
-  const selectableStyle = onClick ? "cursor-pointer hover:scale-105 hover:shadow-2xl hover:border-yellow-400" : "";
+  const sizeClass = hasCustomSize ? '' : 'card-responsive';
+  const selectableStyle = onClick ? 'cursor-pointer hover:-translate-y-1.5 hover:shadow-2xl' : '';
 
   if (isPlaceholder || isFaceDown) {
-      return (
-        <div ref={ref} className={`${cardBaseStyle} ${selectableStyle} bg-gray-800 ${className}`} style={{ visibility: isHidden ? 'hidden' : 'visible' }}>
-            <img src={CARD_BACK_URL} alt="Reverso de la carta" className="w-full h-full object-cover rounded-md" />
-        </div>
-      )
+    return (
+      <div
+        ref={ref}
+        className={`relative flex-shrink-0 rounded-md overflow-hidden transition-transform duration-300 ${sizeClass} ${selectableStyle} ${className}`}
+        style={{
+          visibility: isHidden ? 'hidden' : 'visible',
+          border: '1px solid rgba(201,162,39,.3)',
+          boxShadow: '0 12px 28px rgba(0,0,0,.6)',
+        }}
+      >
+        <img src={CARD_BACK_URL} alt="Reverso de la carta" className="w-full h-full object-cover" />
+      </div>
+    );
   }
 
   if (!card) return null;
 
-  const cardYearText = getYearText(card.year);
   const shouldShowYear = showYear || isStudyMode;
 
   return (
     <div
       ref={ref}
-      className={`${cardBaseStyle} ${selectableStyle} ${className} ${isStudyMode ? 'ring-2 ring-green-400/50' : ''}`}
+      className={`parchment-card flex-shrink-0 flex flex-col transition-transform duration-300 ${sizeClass} ${selectableStyle} ${className}`}
       onClick={onClick}
-      style={{ visibility: isHidden ? 'hidden' : 'visible' }}
+      style={{
+        visibility: isHidden ? 'hidden' : 'visible',
+        padding: '6px 6px 0 6px',
+        boxSizing: 'border-box',
+        outline: isStudyMode ? '1px solid rgba(138,106,42,.6)' : undefined,
+        outlineOffset: isStudyMode ? '2px' : undefined,
+      }}
     >
-      <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+      {/* Ilustración recortada con borde roto de papiro */}
+      <div className="torn-art w-full" style={{ aspectRatio: '500/610' }}>
+        <img src={card.imageUrl} alt={card.name} loading="lazy" decoding="async" />
+      </div>
 
-      {/* Name Banner - show for timeline cards (showYear) or study mode */}
-      {(showYear || isStudyMode) && (
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent p-2 md:p-3 pt-6 md:pt-10 text-center">
-          <h3 className="font-bold text-sm md:text-xl text-white leading-tight drop-shadow-lg">{card.name}</h3>
-          {/* Bible Reference (small) */}
-          {card.bibleRef && (
-            <p className="text-yellow-300/80 text-xs md:text-sm mt-0.5 truncate">
-              {card.bibleRef}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Year Banner */}
-      {shouldShowYear && (
-        <div className={`absolute top-2 left-1/2 -translate-x-1/2 ${isStudyMode ? 'bg-green-500/90' : 'bg-blue-500/90'} backdrop-blur-sm rounded-md px-2 py-1 md:px-4 md:py-2 shadow-md z-10`}>
-            <p className="text-lg md:text-3xl text-white font-extrabold drop-shadow-md" style={{fontFamily: "'Trajan Pro', serif"}}>{cardYearText}</p>
-        </div>
-      )}
-
-      {/* Study Mode Indicator */}
-      {isStudyMode && !showYear && (
-        <div className="absolute top-2 right-2 bg-green-500/90 rounded-full p-1.5 shadow-md z-10">
-          <span className="text-white text-xs">📚</span>
-        </div>
-      )}
+      {/* Nombre + referencia impresos en el marco */}
+      <div className="text-center" style={{ padding: '6px 3px 8px 3px' }}>
+        <p className="font-display font-semibold leading-tight" style={{ color: 'var(--ink)', fontSize: 'clamp(11px, 1.05vw, 14px)' }}>
+          {card.name}
+        </p>
+        {card.bibleRef && (
+          <p className="font-body italic truncate" style={{ color: 'var(--gold-dark)', fontSize: 'clamp(10px, .9vw, 12.5px)', marginTop: '1px' }}>
+            {card.bibleRef}
+          </p>
+        )}
+        {shouldShowYear && (
+          <p className="font-display font-bold" style={{ color: 'var(--gold-dark)', fontSize: 'clamp(11px, 1vw, 13px)', letterSpacing: '.04em', marginTop: '2px' }}>
+            {formatYearPremium(card.year)}
+          </p>
+        )}
+      </div>
     </div>
   );
 });

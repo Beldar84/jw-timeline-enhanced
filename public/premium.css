@@ -1,0 +1,177 @@
+/* ============================================================
+   JW Timeline — Premium (diseño 2b)  ·  handoff/premium.css
+   Copiar a: public/premium.css  y añadir en index.html:
+     <link rel="stylesheet" href="/premium.css">
+   Junto con las fuentes (en <head>):
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+   Y sustituir el background de #bg-fixed (index.html) por el
+   gradiente de mesa premium (ver .premium-table más abajo).
+   ============================================================ */
+
+:root {
+  --parch: #f2e8d5;
+  --parch-2: #eadfc6;
+  --parch-3: #e3d5b8;
+  --parch-edge: #efe4cb;
+  --parch-edge-2: #eee2c7;
+  --ink: #2b2013;
+  --gold: #c9a227;
+  --gold-bright: #e5c96a;
+  --gold-dark: #8a6a2a;
+  --gold-border: #a8853c;
+  --gold-muted: #a89870;
+  --table: #171008;
+}
+
+/* Mesa: aplicar a #bg-fixed (sustituye la imagen fondomesa.png) */
+.premium-table {
+  background-color: #171008 !important;
+  background-image: radial-gradient(ellipse 160% 110% at 50% 15%,
+    #2e2113 0%, #1c1409 55%, #100a05 100%) !important;
+}
+
+.font-display { font-family: 'Cinzel', serif; }
+.font-body    { font-family: 'EB Garamond', serif; }
+
+/* Marco de pergamino (cartas, paneles) */
+.parchment-card {
+  background: linear-gradient(175deg, #f2e8d5 0%, #eadfc6 60%, #e3d5b8 100%);
+  border-radius: 4px;
+  box-shadow: 0 18px 40px -10px rgba(0,0,0,.7),
+              inset 0 0 0 1px rgba(120,94,48,.3);
+}
+
+/* Panel grande de pergamino (menú, modales) con doble filete */
+.parchment-panel {
+  background: linear-gradient(175deg, #f2e8d5 0%, #eadfc6 60%, #e3d5b8 100%);
+  border-radius: 6px;
+  box-shadow: 0 30px 60px -15px rgba(0,0,0,.7),
+              inset 0 0 0 1px rgba(120,94,48,.35),
+              inset 0 0 0 5px rgba(242,232,213,1),
+              inset 0 0 0 6px rgba(120,94,48,.25);
+}
+
+/* Ventana de ilustración: recorta el marco blanco original de la
+   lámina y aplica borde roto de papiro 100% opaco.
+   Uso: <div class="torn-art"><img src="..."/></div>            */
+.torn-art {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+}
+.torn-art > img {
+  width: 112%;
+  max-width: none;
+  margin: -3% 0 0 -6%;
+  display: block;
+}
+.torn-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 4px var(--parch-edge);
+  background-image:
+    radial-gradient(circle 32px at 0% 0%,    var(--parch-edge)   60%, transparent 65%),
+    radial-gradient(circle 32px at 100% 0%,  var(--parch-edge-2) 60%, transparent 65%),
+    radial-gradient(circle 32px at 0% 100%,  var(--parch-edge-2) 60%, transparent 65%),
+    radial-gradient(circle 32px at 100% 100%,var(--parch-edge)   60%, transparent 65%),
+    radial-gradient(ellipse 24px 11px at 5% 0%,   var(--parch-edge)   58%, transparent 62%),
+    radial-gradient(ellipse 30px 9px  at 24% 0%,  var(--parch-edge-2) 58%, transparent 62%),
+    radial-gradient(ellipse 20px 12px at 43% 0%,  var(--parch-edge)   58%, transparent 62%),
+    radial-gradient(ellipse 28px 10px at 63% 0%,  var(--parch-edge-2) 58%, transparent 62%),
+    radial-gradient(ellipse 22px 12px at 82% 0%,  var(--parch-edge)   58%, transparent 62%),
+    radial-gradient(ellipse 26px 10px at 98% 0%,  var(--parch-edge-2) 58%, transparent 62%),
+    radial-gradient(ellipse 26px 10px at 8% 100%, var(--parch-edge)   58%, transparent 62%),
+    radial-gradient(ellipse 32px 9px  at 30% 100%,var(--parch-edge-2) 58%, transparent 62%),
+    radial-gradient(ellipse 22px 12px at 52% 100%,var(--parch-edge)   58%, transparent 62%),
+    radial-gradient(ellipse 28px 10px at 72% 100%,var(--parch-edge-2) 58%, transparent 62%),
+    radial-gradient(ellipse 24px 11px at 92% 100%,var(--parch-edge)   58%, transparent 62%),
+    radial-gradient(ellipse 10px 22px at 0% 10%,  var(--parch-edge)   58%, transparent 62%),
+    radial-gradient(ellipse 9px 28px  at 0% 34%,  var(--parch-edge-2) 58%, transparent 62%),
+    radial-gradient(ellipse 11px 20px at 0% 58%,  var(--parch-edge)   58%, transparent 62%),
+    radial-gradient(ellipse 9px 26px  at 0% 82%,  var(--parch-edge-2) 58%, transparent 62%),
+    radial-gradient(ellipse 10px 22px at 100% 14%,var(--parch-edge)   58%, transparent 62%),
+    radial-gradient(ellipse 9px 28px  at 100% 40%,var(--parch-edge-2) 58%, transparent 62%),
+    radial-gradient(ellipse 11px 20px at 100% 64%,var(--parch-edge)   58%, transparent 62%),
+    radial-gradient(ellipse 9px 24px  at 100% 88%,var(--parch-edge-2) 58%, transparent 62%);
+}
+
+/* Chip de fecha dorado (bajo cada carta del timeline) */
+.year-chip {
+  display: inline-block;
+  padding: 4px 16px;
+  background: rgba(201,162,39,.14);
+  border: 1px solid rgba(201,162,39,.5);
+  border-radius: 2px;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  color: var(--gold-bright);
+  letter-spacing: .05em;
+}
+
+/* Ranura de colocación circular sobre el eje dorado */
+.slot-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(201,162,39,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(23,16,8,.9);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all .25s;
+  color: var(--gold);
+}
+.slot-circle:hover {
+  border-color: var(--gold-bright);
+  background: rgba(201,162,39,.15);
+}
+.slot-circle.selected {
+  border: 2px solid var(--gold-bright);
+  background: rgba(201,162,39,.22);
+  box-shadow: 0 0 24px rgba(201,162,39,.4);
+  transform: scale(1.1);
+  color: #f2e8d5;
+}
+
+/* Eje temporal dorado (línea horizontal detrás de las cartas) */
+.gold-axis {
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 2px;
+  background: linear-gradient(to right, transparent,
+    rgba(201,162,39,.55) 8%, rgba(201,162,39,.55) 92%, transparent);
+}
+
+/* Botón dorado principal */
+.btn-gold {
+  background: linear-gradient(180deg, #d4af37, #b08d1e);
+  color: #1a130b;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  letter-spacing: .1em;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 12px 30px -8px rgba(201,162,39,.5);
+  transition: transform .15s;
+}
+.btn-gold:hover { transform: translateY(-2px); }
+
+/* Botón contorno (secundario, sobre mesa oscura) */
+.btn-outline-gold {
+  background: none;
+  color: #c9b891;
+  font-family: 'Cinzel', serif;
+  letter-spacing: .08em;
+  border: 1px solid rgba(201,162,39,.4);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-outline-gold:hover { border-color: var(--gold); color: var(--gold-bright); }

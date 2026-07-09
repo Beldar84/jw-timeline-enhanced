@@ -1,35 +1,62 @@
-
 import React from 'react';
 import { Player } from '../types';
 import { soundService } from '../services/soundService';
+
+// ============================================================
+// JW Timeline — GameOver premium (diseño 2d) · handoff/GameOver.tsx
+// Sustituye components/GameOver.tsx. Misma API + botón opcional
+// de volver al menú (prop onBackToMenu, opcional).
+// ============================================================
 
 interface GameOverProps {
   winner: Player;
   onRestart: () => void;
   message?: string | null;
+  onBackToMenu?: () => void;
 }
 
-const GameOver: React.FC<GameOverProps> = ({ winner, onRestart, message }) => {
+const GoldRule: React.FC = () => (
+  <div className="flex items-center gap-3.5" aria-hidden="true">
+    <div style={{ width: 70, height: 1, background: 'linear-gradient(to right, transparent, #c9a227)' }}></div>
+    <div style={{ width: 7, height: 7, transform: 'rotate(45deg)', background: '#c9a227' }}></div>
+    <div style={{ width: 70, height: 1, background: 'linear-gradient(to left, transparent, #c9a227)' }}></div>
+  </div>
+);
+
+const GameOver: React.FC<GameOverProps> = ({ winner, onRestart, message, onBackToMenu }) => {
   const handleRestartClick = () => {
     soundService.playClick();
     onRestart();
   };
+  const handleBackClick = () => {
+    soundService.playClick();
+    if (onBackToMenu) onBackToMenu();
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center bg-gray-800/50 p-6 md:p-12 rounded-xl shadow-2xl backdrop-blur-sm text-center">
-      <h2 className="text-3xl md:text-5xl font-bold text-yellow-300 mb-4" style={{fontFamily: "'Trajan Pro', serif"}}>¡Fin del Juego!</h2>
-      <p className="text-xl md:text-3xl text-white mb-6">
-        ¡Felicidades, <span className="font-bold text-yellow-400">{winner.name}</span>!
+    <div className="flex flex-col items-center justify-center text-center p-8 md:p-12">
+      <div className="mb-6"><GoldRule /></div>
+      <h2 className="font-display font-bold text-4xl md:text-6xl mb-3 tracking-wider"
+        style={{ color: '#f2e8d5', textShadow: '0 4px 24px rgba(0,0,0,.6)' }}>
+        Fin del juego
+      </h2>
+      <p className="font-body text-xl md:text-2xl mb-1.5" style={{ color: '#e5c96a' }}>
+        Felicidades, <span className="font-semibold">{winner.name}</span>
       </p>
-      <p className="text-lg md:text-xl text-yellow-100 mb-8">
-        {message || '¡Has colocado correctamente todas tus cartas y has ganado el juego!'}
+      <p className="font-body italic text-base md:text-lg mb-10 max-w-md" style={{ color: '#c9b891' }}>
+        {message || 'Has colocado correctamente todas tus cartas en la línea del tiempo'}
       </p>
-      <button
-        onClick={handleRestartClick}
-        className="px-8 py-3 md:px-10 md:py-4 bg-green-600 text-lg md:text-xl font-bold rounded-lg hover:bg-green-700 transition transform hover:scale-105"
-      >
-        Jugar de Nuevo
-      </button>
+      <div className="flex flex-wrap justify-center gap-4">
+        <button onClick={handleRestartClick} className="btn-gold px-10 py-4 text-base">
+          JUGAR DE NUEVO
+        </button>
+        {onBackToMenu && (
+          <button onClick={handleBackClick} className="btn-outline-gold px-8 py-4 text-base">
+            VOLVER AL MENÚ
+          </button>
+        )}
+      </div>
+      <div className="mt-8"><GoldRule /></div>
     </div>
   );
 };

@@ -4,6 +4,15 @@ import { soundService } from '../services/soundService';
 import { profileService } from '../services/profileService';
 import { firebaseService } from '../services/firebaseService';
 
+// ============================================================
+// JW Timeline — MainMenu premium (diseño 2a)
+// Sustituye components/MainMenuEnhanced.tsx. Misma API de props
+// y misma lógica (auth, partidas pendientes, notificaciones,
+// silencio rápido); presentación en panel de pergamino con
+// lista de modos e iconos de línea (sin emojis).
+// Requiere public/premium.css.
+// ============================================================
+
 interface MainMenuEnhancedProps {
   onSelectMode: (mode: 'local' | 'ai' | 'online' | 'study') => void;
   onShowStats: () => void;
@@ -14,277 +23,215 @@ interface MainMenuEnhancedProps {
   onShowAuth: () => void;
   onShowFriends: () => void;
   onShowTurnBasedGames?: () => void;
+  onShowRules?: () => void;
 }
 
+/* ---------- Iconos de línea (stroke #8a6a2a) ---------- */
+const stroke = '#8a6a2a';
+const IconCards = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="6" width="11" height="15" rx="1.5" transform="rotate(-8 8 13)" />
+    <rect x="10" y="4" width="11" height="15" rx="1.5" transform="rotate(7 16 11)" />
+  </svg>
+);
+const IconRobot = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="5" y="8" width="14" height="11" rx="2" />
+    <line x1="12" y1="4" x2="12" y2="8" />
+    <circle cx="9.5" cy="13" r="1" /><circle cx="14.5" cy="13" r="1" />
+  </svg>
+);
+const IconGlobe = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round">
+    <circle cx="12" cy="12" r="9" /><ellipse cx="12" cy="12" rx="4" ry="9" /><line x1="3" y1="12" x2="21" y2="12" />
+  </svg>
+);
+const IconBook = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 5c-2-1.5-4.5-2-8-2v16c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2V3c-3.5 0-6 .5-8 2z" /><line x1="12" y1="5" x2="12" y2="21" />
+  </svg>
+);
+const IconChart = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round">
+    <line x1="5" y1="20" x2="5" y2="12" /><line x1="12" y1="20" x2="12" y2="6" /><line x1="19" y1="20" x2="19" y2="15" />
+  </svg>
+);
+const IconTrophy = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" /><path d="M7 6H4v1a3 3 0 0 0 3 3" /><path d="M17 6h3v1a3 3 0 0 1-3 3" />
+    <line x1="12" y1="14" x2="12" y2="18" /><line x1="8" y1="20" x2="16" y2="20" />
+  </svg>
+);
+const IconCap = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9l9-5 9 5-9 5-9-5z" /><path d="M7 11.5V16c0 1.5 2.2 3 5 3s5-1.5 5-3v-4.5" />
+  </svg>
+);
+const IconSound = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 10v4h4l5 4V6l-5 4H4z" /><path d="M16.5 9.5a4 4 0 0 1 0 5" />
+  </svg>
+);
+const IconUser = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round">
+    <circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5" />
+  </svg>
+);
+const IconChevron = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a8853c" strokeWidth="2" strokeLinecap="round">
+    <path d="M9 6l6 6-6 6" />
+  </svg>
+);
+
+/* Números romanos para el nivel (I–X) */
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+
+const MODES: { mode: 'local' | 'ai' | 'online' | 'study'; icon: React.ReactNode; title: string; subtitle: string }[] = [
+  { mode: 'local',  icon: <IconCards />, title: 'Jugar en local',   subtitle: 'Con amigos en este dispositivo' },
+  { mode: 'ai',     icon: <IconRobot />, title: 'Jugar contra IA',  subtitle: 'Tres niveles de dificultad' },
+  { mode: 'online', icon: <IconGlobe />, title: 'Jugar online',     subtitle: 'Partidas en tiempo real o por turnos' },
+  { mode: 'study',  icon: <IconBook />,  title: 'Modo estudio',     subtitle: 'Fechas visibles, sin presión' },
+];
+
 const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
-  onSelectMode,
-  onShowStats,
-  onShowTutorial,
-  onShowProfile,
-  onShowLeaderboard,
-  onShowSoundSettings,
-  onShowAuth,
-  onShowFriends,
-  onShowTurnBasedGames,
+  onSelectMode, onShowStats, onShowTutorial, onShowProfile, onShowLeaderboard,
+  onShowSoundSettings, onShowAuth, onShowFriends, onShowTurnBasedGames,
 }) => {
   const [showRules, setShowRules] = useState(false);
   const [isMuted, setIsMuted] = useState(soundService.isMuted());
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [pendingTurnGames, setPendingTurnGames] = useState(0);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  // Get player info for display
   const profile = profileService.getProfileSummary();
 
-  // Listen to auth state
   useEffect(() => {
     const unsubscribe = firebaseService.onAuthStateChange(async (user) => {
       setIsLoggedIn(user !== null && !user.isAnonymous);
       setUserEmail(user?.email || null);
-
-      // Check pending turn-based games
       if (user && !user.isAnonymous) {
         const games = await firebaseService.getTurnBasedGames();
-        const myTurnCount = games.filter(g => g.currentTurnPlayerId === user.uid).length;
-        setPendingTurnGames(myTurnCount);
-
-        // Check notification permission
-        setNotificationsEnabled('Notification' in window && Notification.permission === 'granted');
+        setPendingTurnGames(games.filter(g => g.currentTurnPlayerId === user.uid).length);
       }
     });
     return () => unsubscribe();
   }, []);
 
-  const handleModeSelect = (mode: 'local' | 'ai' | 'online' | 'study') => {
-    soundService.playClick();
-    onSelectMode(mode);
-  };
-
-  const handleShowRules = () => {
-    soundService.playClick();
-    setShowRules(true);
-  };
-
-  const handleShowStats = () => {
-    soundService.playClick();
-    onShowStats();
-  };
-
-  const handleShowTutorial = () => {
-    soundService.playClick();
-    onShowTutorial();
-  };
-
-  const handleShowProfile = () => {
-    soundService.playClick();
-    onShowProfile();
-  };
-
-  const handleShowLeaderboard = () => {
-    soundService.playClick();
-    onShowLeaderboard();
-  };
-
-  const handleShowSoundSettings = () => {
-    soundService.playClick();
-    onShowSoundSettings();
-  };
-
-  const handleAuthClick = () => {
-    soundService.playClick();
-    onShowAuth();
-  };
-
-  const handleFriendsClick = () => {
-    soundService.playClick();
-    onShowFriends();
-  };
-
-  const handleSignOut = async () => {
-    soundService.playClick();
-    await firebaseService.signOutUser();
-  };
-
-  const handleTurnBasedGamesClick = () => {
-    soundService.playClick();
-    if (onShowTurnBasedGames) {
-      onShowTurnBasedGames();
-    }
-  };
-
-  const handleEnableNotifications = async () => {
-    soundService.playClick();
-    const token = await firebaseService.requestNotificationPermission();
-    if (token) {
-      await firebaseService.saveNotificationToken(token);
-      setNotificationsEnabled(true);
-    }
-  };
-
+  const click = (fn?: () => void) => () => { soundService.playClick(); fn && fn(); };
   const handleQuickMute = () => {
     const muted = soundService.toggleMute();
     setIsMuted(muted);
-    if (!muted) {
-      soundService.playClick();
-    }
+    if (!muted) soundService.playClick();
   };
+
+  const secondary = [
+    { icon: <IconChart />,  label: 'Estadísticas',  fn: onShowStats },
+    { icon: <IconTrophy />, label: 'Clasificación', fn: onShowLeaderboard },
+    { icon: <IconCap />,    label: 'Tutorial',      fn: onShowTutorial },
+    { icon: <IconSound />,  label: 'Sonido',        fn: onShowSoundSettings },
+  ];
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm relative">
-        {/* Auth Status Bar */}
-        <div className="w-full max-w-sm mb-3">
-          {isLoggedIn ? (
-            <div className="flex items-center justify-between p-2 bg-green-600/20 border border-green-500/30 rounded-lg">
-              <div className="flex items-center gap-2">
-                <span className="text-green-400">✓</span>
-                <span className="text-sm text-green-300 truncate max-w-[180px]">{userEmail}</span>
-              </div>
-              <div className="flex gap-1">
-                <button
-                  onClick={handleFriendsClick}
-                  className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition"
-                >
-                  👥
-                </button>
-                {onShowTurnBasedGames && (
-                  <button
-                    onClick={handleTurnBasedGamesClick}
-                    className="px-2 py-1 bg-orange-600 hover:bg-orange-700 text-white text-xs rounded transition relative"
-                  >
-                    🕐
-                    {pendingTurnGames > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                        {pendingTurnGames}
-                      </span>
-                    )}
-                  </button>
-                )}
-                <button
-                  onClick={handleSignOut}
-                  className="px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded transition"
-                >
-                  ✕
-                </button>
-              </div>
+      <div className="flex flex-col items-center relative">
+        <p className="font-body italic text-lg mb-8 tracking-wide" style={{ color: '#c9b891' }}>
+          Cronología bíblica · un juego de cartas
+        </p>
+
+        <div className="parchment-panel w-full max-w-md px-10 pt-9 pb-8 flex flex-col">
+
+          {/* Jugador / sesión */}
+          <div className="flex items-center gap-3.5 pb-5 cursor-pointer" style={{ borderBottom: '1px solid rgba(120,94,48,.3)' }}
+            onClick={click(onShowProfile)}>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ border: '1.5px solid #a8853c', background: 'rgba(201,162,39,.12)' }}>
+              <IconUser />
             </div>
-          ) : (
-            <button
-              onClick={handleAuthClick}
-              className="w-full p-2 bg-blue-600/20 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center justify-center gap-2"
-            >
-              <span className="text-blue-400">🔐</span>
-              <span className="text-sm text-blue-300">Iniciar sesión / Registrarse</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-display font-semibold text-[17px] tracking-wide m-0 truncate" style={{ color: 'var(--ink)' }}>
+                {profile.name}
+              </p>
+              <p className="font-body text-sm m-0" style={{ color: 'var(--gold-dark)' }}>
+                {profile.level.title} · Nivel {ROMAN[profile.level.level - 1] || profile.level.level}
+              </p>
+            </div>
+            {isLoggedIn ? (
+              <span className="font-body italic text-sm truncate max-w-[130px]" style={{ color: '#a08a5c' }}
+                onClick={(e) => { e.stopPropagation(); click(onShowFriends)(); }}>
+                {userEmail}
+              </span>
+            ) : (
+              <span className="font-body italic text-sm" style={{ color: '#a08a5c' }}
+                onClick={(e) => { e.stopPropagation(); click(onShowAuth)(); }}>
+                iniciar sesión
+              </span>
+            )}
+          </div>
+
+          {/* Partidas por turnos pendientes */}
+          {isLoggedIn && onShowTurnBasedGames && pendingTurnGames > 0 && (
+            <button onClick={click(onShowTurnBasedGames)}
+              className="flex items-center justify-center gap-2 mt-4 py-2.5 rounded-sm cursor-pointer font-display text-[13px] tracking-wider"
+              style={{ background: 'rgba(201,162,39,.14)', border: '1px solid #a8853c', color: '#5c4a28' }}>
+              ES TU TURNO EN {pendingTurnGames} {pendingTurnGames === 1 ? 'PARTIDA' : 'PARTIDAS'}
             </button>
           )}
-        </div>
 
-        {/* Player Info Bar */}
-        <div
-          onClick={handleShowProfile}
-          className="w-full max-w-sm mb-4 p-3 bg-gradient-to-r from-indigo-600/30 to-purple-600/30 rounded-lg border border-indigo-500/30 cursor-pointer hover:border-indigo-400/50 transition"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{profile.level.icon}</span>
-            <div className="flex-1">
-              <p className="font-bold text-white">{profile.name}</p>
-              <p className="text-xs text-indigo-300">{profile.level.title} • Nivel {profile.level.level}</p>
-            </div>
-            <span className="text-gray-400 text-sm">✏️</span>
+          {/* Modos de juego */}
+          <div className="flex flex-col">
+            {MODES.map((m, i) => (
+              <button key={m.mode} onClick={click(() => onSelectMode(m.mode))}
+                className="flex items-center gap-4 py-[18px] px-1 text-left cursor-pointer transition-colors hover:bg-[rgba(201,162,39,.1)]"
+                style={{ background: 'none', border: 'none', borderBottom: i < MODES.length - 1 ? '1px solid rgba(120,94,48,.2)' : 'none' }}>
+                {m.icon}
+                <span className="flex-1">
+                  <span className="block font-display font-semibold text-lg tracking-wide" style={{ color: 'var(--ink)' }}>{m.title}</span>
+                  <span className="block font-body text-[14.5px]" style={{ color: '#7c6a48' }}>{m.subtitle}</span>
+                </span>
+                <IconChevron />
+              </button>
+            ))}
           </div>
-        </div>
 
-        {/* Main Game Modes */}
-        <div className="w-full max-w-sm space-y-4">
-          <button
-            onClick={() => handleModeSelect('local')}
-            className="w-full px-6 py-3 md:px-8 md:py-4 bg-green-600 text-lg md:text-xl font-bold rounded-lg hover:bg-green-700 transition transform hover:scale-105 shadow-lg"
-          >
-            🎮 Jugar en local
-          </button>
-          <button
-            onClick={() => handleModeSelect('ai')}
-            className="w-full px-6 py-3 md:px-8 md:py-4 bg-blue-600 text-lg md:text-xl font-bold rounded-lg hover:bg-blue-700 transition transform hover:scale-105 shadow-lg"
-          >
-            🤖 Jugar contra IA
-          </button>
-          <button
-            onClick={() => handleModeSelect('online')}
-            className="w-full px-6 py-3 md:px-8 md:py-4 bg-purple-600 text-lg md:text-xl font-bold rounded-lg hover:bg-purple-700 transition transform hover:scale-105 shadow-lg"
-          >
-            🌐 Jugar online
-          </button>
-          <button
-            onClick={() => handleModeSelect('study')}
-            className="w-full px-6 py-3 md:px-8 md:py-4 bg-emerald-600 text-lg md:text-xl font-bold rounded-lg hover:bg-emerald-700 transition transform hover:scale-105 shadow-lg"
-          >
-            📚 Modo Estudio
-          </button>
-        </div>
-
-        {/* Secondary Options - Grid */}
-        <div className="w-full max-w-sm mt-6 grid grid-cols-2 gap-3">
-          <button
-            onClick={handleShowStats}
-            className="px-4 py-3 bg-indigo-600 text-sm md:text-base font-bold rounded-lg hover:bg-indigo-700 transition transform hover:scale-105"
-          >
-            📊 Estadísticas
-          </button>
-          <button
-            onClick={handleShowLeaderboard}
-            className="px-4 py-3 bg-amber-600 text-sm md:text-base font-bold rounded-lg hover:bg-amber-700 transition transform hover:scale-105"
-          >
-            🏆 Clasificación
-          </button>
-          <button
-            onClick={handleShowTutorial}
-            className="px-4 py-3 bg-cyan-600 text-sm md:text-base font-bold rounded-lg hover:bg-cyan-700 transition transform hover:scale-105"
-          >
-            🎓 Tutorial
-          </button>
-          <button
-            onClick={handleShowSoundSettings}
-            className="px-4 py-3 bg-pink-600 text-sm md:text-base font-bold rounded-lg hover:bg-pink-700 transition transform hover:scale-105"
-          >
-            🔊 Sonido
-          </button>
-        </div>
-
-        {/* Notifications - only show if logged in and not enabled */}
-        {isLoggedIn && !notificationsEnabled && 'Notification' in window && (
-          <div className="w-full max-w-sm mt-4">
-            <button
-              onClick={handleEnableNotifications}
-              className="w-full px-4 py-2 bg-gradient-to-r from-purple-600/50 to-blue-600/50 border border-purple-500/30 text-sm font-semibold rounded-lg hover:from-purple-600/70 hover:to-blue-600/70 transition flex items-center justify-center gap-2"
-            >
-              <span>🔔</span>
-              <span>Activar notificaciones</span>
-            </button>
+          {/* Filete dorado */}
+          <div className="flex items-center gap-3 my-3.5" aria-hidden="true">
+            <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, #a8853c)' }}></div>
+            <div style={{ width: 6, height: 6, transform: 'rotate(45deg)', background: '#a8853c' }}></div>
+            <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, #a8853c)' }}></div>
           </div>
-        )}
 
-        {/* Rules Button */}
-        <div className="w-full max-w-sm mt-4">
-          <button
-            onClick={handleShowRules}
-            className="w-full px-6 py-2 bg-yellow-700 text-base font-bold rounded-lg hover:bg-yellow-800 transition"
-          >
-            📖 Reglas
-          </button>
+          {/* Secundarios */}
+          <div className="grid grid-cols-4 gap-2">
+            {secondary.map(s => (
+              <button key={s.label} onClick={click(s.fn)}
+                className="flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-sm cursor-pointer transition-colors hover:bg-[rgba(201,162,39,.12)]"
+                style={{ background: 'none', border: '1px solid rgba(120,94,48,.25)' }}>
+                {s.icon}
+                <span className="font-body text-[13px]" style={{ color: '#5c4a28' }}>{s.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Reglas */}
+          <p className="text-center mt-5 mb-0">
+            <span onClick={click(() => setShowRules(true))}
+              className="font-body italic text-[15px] cursor-pointer pb-px"
+              style={{ color: 'var(--gold-dark)', borderBottom: '1px solid rgba(138,106,42,.4)' }}>
+              Leer las reglas del juego
+            </span>
+          </p>
         </div>
 
-        {/* Quick Mute Button - Bottom corner */}
-        <button
-          onClick={handleQuickMute}
-          className={`absolute -bottom-12 right-0 p-3 rounded-full transition-all ${
-            isMuted
-              ? 'bg-red-600/80 hover:bg-red-700'
-              : 'bg-gray-700/80 hover:bg-gray-600'
-          }`}
-          title={isMuted ? 'Activar sonido' : 'Silenciar'}
-        >
-          <span className="text-xl">{isMuted ? '🔇' : '🔊'}</span>
+        {/* Silencio rápido */}
+        <button onClick={handleQuickMute} title={isMuted ? 'Activar sonido' : 'Silenciar'}
+          className="absolute -bottom-14 right-0 w-11 h-11 rounded-full flex items-center justify-center cursor-pointer"
+          style={{ background: 'rgba(0,0,0,.35)', border: `1px solid ${isMuted ? 'rgba(220,80,60,.6)' : 'rgba(201,162,39,.4)'}` }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isMuted ? '#d0604a' : '#c9b891'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 10v4h4l5 4V6l-5 4H4z" />
+            {isMuted
+              ? <><line x1="16" y1="9" x2="21" y2="14" /><line x1="21" y1="9" x2="16" y2="14" /></>
+              : <path d="M16.5 9.5a4 4 0 0 1 0 5" />}
+          </svg>
         </button>
       </div>
 

@@ -920,7 +920,8 @@ const AppEnhanced: React.FC = () => {
     }
   };
 
-  const showPlayerStatus = gamePhase === GamePhase.PLAYING && (gameMode === 'local' || gameMode === 'ai');
+  // Oculto: el chip de jugadores de la barra superior del nuevo GameBoard ya muestra esta información
+  const showPlayerStatus = false;
   const showLogo = [GamePhase.MENU, GamePhase.SETUP, GamePhase.LOBBY].includes(gamePhase) && !showDeckSelector && !selectedTurnBasedGameId;
 
   return (
