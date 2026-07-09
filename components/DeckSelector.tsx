@@ -2,20 +2,81 @@ import React, { useState } from 'react';
 import { deckService, Deck } from '../services/deckService';
 import { soundService } from '../services/soundService';
 
+// ============================================================
+// JW Timeline — DeckSelector premium (diseño 4a)
+// Sustituye components/DeckSelector.tsx. Misma API y lógica
+// (solo "Biblia Completa" seleccionable). Tarjetas de pergamino
+// con estrellas de dificultad; iconos de línea en vez de emojis.
+// Requiere public/premium.css.
+// ============================================================
+
 interface DeckSelectorProps {
   onSelectDeck: (deckId: string) => void;
   onBack: () => void;
 }
+
+const stroke = '#8a6a2a';
+
+// Iconos de línea por mazo (geometría simple)
+const DECK_ICONS: Record<string, React.ReactNode> = {
+  complete: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 5c-2-1.5-4.5-2-8-2v16c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2V3c-3.5 0-6 .5-8 2z" /><line x1="12" y1="5" x2="12" y2="21" />
+    </svg>
+  ),
+  old_testament: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 20L9 8l4 7 3-4 5 9H3z" />
+    </svg>
+  ),
+  new_testament: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="6" y="4" width="12" height="16" rx="1" /><line x1="9" y1="9" x2="15" y2="9" /><line x1="9" y1="13" x2="15" y2="13" />
+    </svg>
+  ),
+  patriarchs: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round">
+      <circle cx="12" cy="7" r="3.5" /><path d="M5 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5" />
+    </svg>
+  ),
+  kings: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 18L5.5 8l4 4L12 6l2.5 6 4-4L20 18H4z" />
+    </svg>
+  ),
+  jesus: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round">
+      <circle cx="12" cy="12" r="8" /><path d="M12 7v5l3 3" />
+    </svg>
+  ),
+  early_church: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 21c-4 0-6-3-6-6 0-4 4-6 4-9 2 2 1 4 1 4s3-2 3-6c3 3 4 6.5 4 9.5 0 4-2 7.5-6 7.5z" />
+    </svg>
+  ),
+  creation: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round">
+      <circle cx="12" cy="12" r="9" /><ellipse cx="12" cy="12" rx="4" ry="9" /><line x1="3" y1="12" x2="21" y2="12" />
+    </svg>
+  ),
+  exile: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round">
+      <line x1="4" y1="20" x2="20" y2="20" /><line x1="6" y1="20" x2="6" y2="8" /><line x1="12" y1="20" x2="12" y2="8" /><line x1="18" y1="20" x2="18" y2="8" /><path d="M4 8h16l-2-4H6l-2 4z" />
+    </svg>
+  ),
+};
+
+const FallbackIcon = DECK_ICONS.complete;
+
+const difficultyStars = (difficulty: string): string =>
+  difficulty === 'hard' ? '★★★' : difficulty === 'medium' ? '★★' : '★';
 
 const DeckSelector: React.FC<DeckSelectorProps> = ({ onSelectDeck, onBack }) => {
   const [selectedDeck, setSelectedDeck] = useState<Deck | null>(null);
   const decks = deckService.getAllDecks();
 
   const handleDeckClick = (deck: Deck) => {
-    // Only allow "Biblia Completa" deck to be selected
-    if (deck.id !== 'complete') {
-      return; // Disabled deck, do nothing
-    }
+    if (deck.id !== 'complete') return; // Solo Biblia Completa disponible
     soundService.playClick();
     setSelectedDeck(deck);
   };
@@ -33,111 +94,56 @@ const DeckSelector: React.FC<DeckSelectorProps> = ({ onSelectDeck, onBack }) => 
   };
 
   return (
-    <div className="w-full max-w-6xl bg-gray-800/50 p-4 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm max-h-[90vh] overflow-y-auto flex flex-col">
-      <h2 className="text-2xl md:text-4xl font-bold text-center text-yellow-200 mb-4 md:mb-6 flex-shrink-0" style={{fontFamily: "'Trajan Pro', serif"}}>
-        Selecciona un Mazo
+    <div className="parchment-panel w-full max-w-4xl px-8 md:px-10 py-8 max-h-[90vh] overflow-y-auto flex flex-col">
+      <h2 className="font-display font-bold text-2xl md:text-[26px] text-center tracking-wider m-0 mb-1" style={{ color: 'var(--ink)' }}>
+        Selecciona un mazo
       </h2>
+      <p className="font-body italic text-base text-center m-0 mb-6" style={{ color: 'var(--gold-dark)' }}>
+        Los mazos temáticos se irán desbloqueando próximamente
+      </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 md:mb-6 p-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
         {decks.map((deck) => {
-          const colors = deckService.getColorClasses(deck.color);
-          const difficultyInfo = deckService.getDifficultyInfo(deck.difficulty);
           const isSelected = selectedDeck?.id === deck.id;
-          const isDisabled = deck.id !== 'complete'; // Disable all except "Biblia Completa"
-
+          const isDisabled = deck.id !== 'complete';
           return (
             <button
               key={deck.id}
               onClick={() => handleDeckClick(deck)}
               disabled={isDisabled}
-              className={`
-                relative p-4 rounded-lg transition-all transform
-                ${isDisabled
-                  ? 'bg-gray-800 border-2 border-gray-700 opacity-50 cursor-not-allowed grayscale'
-                  : isSelected
-                    ? `${colors.bg} scale-105 shadow-xl border-4 ${colors.border}`
-                    : 'bg-gray-700 hover:bg-gray-600 border-2 border-gray-600'
-                }
-              `}
+              className="relative p-4 pb-3.5 rounded-sm text-left transition-all cursor-pointer disabled:cursor-not-allowed font-body"
+              style={isDisabled
+                ? { background: 'none', border: '1px dashed rgba(120,94,48,.4)', opacity: .5 }
+                : isSelected
+                  ? { background: 'rgba(201,162,39,.12)', border: '2px solid #a8853c', boxShadow: '0 0 18px rgba(201,162,39,.25)' }
+                  : { background: 'none', border: '1px solid rgba(120,94,48,.3)' }}
             >
-              {/* Difficulty Badge */}
-              <div className={`absolute top-2 right-2 ${difficultyInfo.color} px-2 py-1 rounded text-xs font-bold`}>
-                {difficultyInfo.icon}
-              </div>
-
-              {/* Icon */}
-              <div className="text-5xl mb-2">{deck.icon}</div>
-
-              {/* Name */}
-              <h3 className="text-lg font-bold text-white mb-2">{deck.name}</h3>
-
-              {/* Description */}
-              <p className="text-sm text-gray-300 mb-2">{deck.description}</p>
-
-              {/* Card Count */}
-              <p className="text-xs text-gray-400">
-                {deck.cards.length} cartas
+              <span className="absolute top-2.5 right-2.5 font-display text-[10px] tracking-widest" style={{ color: 'var(--gold-dark)' }}>
+                {difficultyStars(deck.difficulty)}
+              </span>
+              {DECK_ICONS[deck.id] || FallbackIcon}
+              <h3 className="font-display font-semibold text-[15px] m-0 mt-2 mb-0.5" style={{ color: 'var(--ink)' }}>{deck.name}</h3>
+              <p className="font-body text-[13.5px] m-0" style={{ color: '#7c6a48' }}>
+                {deck.description} · {deck.cards.length} cartas
               </p>
-
-              {/* Disabled Badge */}
-              {isDisabled && (
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-red-600 px-3 py-1 rounded-full text-xs font-bold">
-                  🔒 No disponible
-                </div>
-              )}
-
-              {/* Selected Indicator */}
-              {isSelected && !isDisabled && (
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                  <span className="text-2xl">✓</span>
-                </div>
-              )}
+              <p className="font-display text-[11px] tracking-widest m-0 mt-2"
+                style={{ color: isDisabled ? '#a08a5c' : 'var(--gold-dark)' }}>
+                {isDisabled ? 'PRÓXIMAMENTE' : isSelected ? '✓ SELECCIONADO' : 'DISPONIBLE'}
+              </p>
             </button>
           );
         })}
       </div>
 
-      {/* Selected Deck Preview */}
-      {selectedDeck && (
-        <div className="bg-gray-700/50 p-3 md:p-4 rounded-lg mb-3 md:mb-4 flex-shrink-0">
-          <div className="flex items-center gap-4">
-            <span className="text-3xl md:text-4xl">{selectedDeck.icon}</span>
-            <div className="flex-1">
-              <h3 className="text-lg md:text-xl font-bold text-yellow-200">{selectedDeck.name}</h3>
-              <p className="text-xs md:text-sm text-gray-300">{selectedDeck.description}</p>
-              <div className="flex gap-2 mt-2">
-                <span className={`${deckService.getDifficultyInfo(selectedDeck.difficulty).color} px-2 py-1 rounded text-xs font-bold`}>
-                  {deckService.getDifficultyInfo(selectedDeck.difficulty).label}
-                </span>
-                <span className="bg-gray-600 px-2 py-1 rounded text-xs font-bold">
-                  {selectedDeck.cards.length} cartas
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="flex gap-3 md:gap-4 flex-shrink-0 pb-2">
-        <button
-          onClick={handleBackClick}
-          className="flex-1 px-4 py-2.5 md:px-6 md:py-3 bg-gray-600 text-base md:text-lg font-bold rounded-lg hover:bg-gray-700 transition"
-        >
-          Volver
+      <div className="flex gap-3">
+        <button onClick={handleBackClick}
+          className="flex-1 py-3 font-display text-sm tracking-wider rounded-sm cursor-pointer transition-colors"
+          style={{ background: 'none', border: '1px solid rgba(120,94,48,.3)', color: '#a08a5c' }}>
+          VOLVER
         </button>
-        <button
-          onClick={handleConfirm}
-          disabled={!selectedDeck}
-          className={`
-            flex-1 px-4 py-2.5 md:px-6 md:py-3 text-base md:text-lg font-bold rounded-lg transition transform
-            ${selectedDeck
-              ? 'bg-green-600 hover:bg-green-700 hover:scale-105'
-              : 'bg-gray-500 cursor-not-allowed opacity-50'
-            }
-          `}
-        >
-          Continuar
+        <button onClick={handleConfirm} disabled={!selectedDeck}
+          className="btn-gold flex-1 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+          CONTINUAR
         </button>
       </div>
     </div>

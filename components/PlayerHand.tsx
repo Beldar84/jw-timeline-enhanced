@@ -5,8 +5,12 @@ import Card from './Card';
 // ============================================================
 // JW Timeline — PlayerHand premium (diseño 2b) · handoff/PlayerHand.tsx
 // Sustituye components/PlayerHand.tsx. Misma API de props.
-// Mano en abanico: rotaciones -7°/-2.5°/2.5°/7°, solape -8px,
-// hover eleva la carta. Título en EB Garamond itálica.
+// Mano en abanico siempre (también en móvil):
+//  · Escritorio: hover eleva la carta; clic la selecciona.
+//  · Móvil (≤767px): abanico compacto (±10°, solape -22px);
+//    un toque AMPLÍA la carta (scale 1.32 + glow dorado),
+//    un segundo toque sobre la ampliada la coloca/selecciona.
+// Título en EB Garamond itálica.
 // ============================================================
 
 interface PlayerHandProps {
@@ -18,10 +22,17 @@ interface PlayerHandProps {
   isStudyMode?: boolean;
 }
 
-// Rotación del abanico según posición relativa al centro
-const fanTransform = (i: number, n: number, lifted: boolean) => {
+// Rotación del abanico según posición relativa al centro.
+// En móvil el abanico es más compacto y la carta ampliada
+// (expanded) crece hacia arriba desde su base.
+const fanTransform = (i: number, n: number, lifted: boolean, isMobile: boolean, expanded: boolean) => {
   const center = (n - 1) / 2;
   const offset = n > 1 ? (i - center) / center : 0; // -1..1
+  if (isMobile) {
+    if (expanded) return 'translateY(-34px) scale(1.32)';
+    const rot = offset * 10; // máx ±10°
+    return `rotate(${rot}deg) translateY(${Math.abs(offset) * 16}px)`;
+  }
   const rot = offset * 7; // máx ±7°
   const y = lifted ? -16 : Math.abs(offset) * 14; // extremos más bajos
   return `rotate(${rot}deg) translateY(${y}px)`;
@@ -33,6 +44,17 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const cardRefs = useRef(new Map<number, React.RefObject<HTMLDivElement>>());
   const hovered = useRef<number | null>(null);
   const [, force] = React.useReducer(x => x + 1, 0);
+  const [expandedId, setExpandedId] = React.useState<number | null>(null);
+  const [isMobile, setIsMobile] = React.useState(
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   // Precalienta imágenes de la mano (el SW las cachea)
   useEffect(() => {
@@ -48,10 +70,16 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     }
   });
 
+  // Al cambiar la mano (carta jugada/robada), colapsa la ampliada
+  useEffect(() => { setExpandedId(null); }, [player.hand.length]);
+
   const titleText = placementMode
     ? 'Elige una carta para colocar'
     : `Tu mano · ${player.hand.length} ${player.hand.length === 1 ? 'carta' : 'cartas'}`;
-  const title = disabled ? 'Esperando tu turno…' : titleText;
+  const mobileHint = expandedId !== null
+    ? 'Toca de nuevo la carta para colocarla'
+    : titleText;
+  const title = disabled ? 'Esperando tu turno…' : (isMobile ? mobileHint : titleText);
 
   const n = player.hand.length;
 
@@ -68,20 +96,24 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
           </span>
         )}
       </div>
-      <div className="overflow-x-auto pb-2" style={disabled ? { opacity: 0.7 } : {}}>
-        <div className="flex justify-center items-end min-w-max px-6 pt-4">
+      <div className="overflow-x-auto pb-2" style={{ ...(disabled ? { opacity: 0.7 } : {}), overflow: isMobile ? 'visible' : undefined }}>
+        <div className={`flex items-end px-6 ${isMobile ? 'justify-center pt-11' : 'justify-center min-w-max pt-4'}`}>
           {n > 0 ? (
             player.hand.map((card, i) => {
               const cardRef = cardRefs.current.get(card.id)!;
               const lifted = hovered.current === card.id;
+              const expanded = isMobile && expandedId === card.id;
               return (
                 <div
                   key={card.id}
                   style={{
-                    margin: '0 -8px',
-                    transform: fanTransform(i, n, lifted),
+                    margin: isMobile ? '0 -22px' : '0 -8px',
+                    transform: fanTransform(i, n, lifted, isMobile, expanded),
+                    transformOrigin: 'bottom center',
                     transition: 'transform .2s',
-                    zIndex: lifted ? 10 : i + 1,
+                    zIndex: expanded || lifted ? 10 : i + 1,
+                    borderRadius: 4,
+                    boxShadow: expanded ? '0 0 0 2px #e5c96a, 0 0 26px rgba(201,162,39,.45)' : undefined,
                   }}
                   onMouseEnter={() => { hovered.current = card.id; force(); }}
                   onMouseLeave={() => { hovered.current = null; force(); }}
@@ -92,6 +124,12 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                     showYear={false}
                     isStudyMode={isStudyMode}
                     onClick={() => {
+                      if (isMobile && expandedId !== card.id) {
+                        // Primer toque: amplía la carta para verla bien
+                        setExpandedId(card.id);
+                        return;
+                      }
+                      // Escritorio, o segundo toque en móvil: seleccionar
                       if (cardRef.current) onSelectCard(card, cardRef.current);
                     }}
                     isHidden={hidingCardId === card.id}
