@@ -48,12 +48,23 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const [isMobile, setIsMobile] = React.useState(
     typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
   );
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [wrapW, setWrapW] = React.useState(0);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
     const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  // Mide el ancho disponible para calcular el solape del abanico en móvil
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(entries => setWrapW(entries[0].contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   // Precalienta imágenes de la mano (el SW las cachea)
@@ -83,10 +94,26 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
   const n = player.hand.length;
 
+  // Solape dinámico en móvil: el abanico se comprime lo justo para
+  // que las cartas de los extremos no queden cortadas por los bordes.
+  const CARD_W = 140; // .card-responsive en ≤767px
+  let mobileOverlap = 22;
+  if (isMobile && n > 1 && wrapW > 0) {
+    const usable = wrapW - 48; // px-6 a cada lado
+    const needed = Math.ceil((CARD_W - (usable - CARD_W) / (n - 1)) / 2);
+    mobileOverlap = Math.min(58, Math.max(22, needed));
+  }
+
   return (
-    <div>
-      <div className="flex items-center justify-center gap-2 mb-2 landscape:mb-1">
-        <h3 className="font-body italic text-center text-base md:text-lg" style={{ color: placementMode && !disabled ? 'var(--gold-bright)' : '#c9b891' }}>
+    <div ref={wrapRef}>
+      <div className="relative z-20 flex items-center justify-center gap-2 mb-2 landscape:mb-1">
+        <h3 className="font-body italic text-center text-base md:text-lg"
+          style={{
+            color: placementMode && !disabled ? 'var(--gold-bright)' : '#c9b891',
+            ...(isMobile && expandedId !== null
+              ? { background: 'rgba(10,7,3,.78)', padding: '3px 14px', borderRadius: 999, border: '1px solid rgba(201,162,39,.35)' }
+              : {}),
+          }}>
           {title}
         </h3>
         {isStudyMode && (
@@ -107,7 +134,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                 <div
                   key={card.id}
                   style={{
-                    margin: isMobile ? '0 -22px' : '0 -8px',
+                    margin: isMobile ? `0 -${mobileOverlap}px` : '0 -8px',
                     transform: fanTransform(i, n, lifted, isMobile, expanded),
                     transformOrigin: 'bottom center',
                     transition: 'transform .2s',

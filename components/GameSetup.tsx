@@ -1,12 +1,33 @@
-
 import React, { useState, useEffect } from 'react';
 import { soundService } from '../services/soundService';
 import { profileService } from '../services/profileService';
+
+// ============================================================
+// JW Timeline — GameSetup premium
+// Pantalla «Configurar partida» con estética pergamino/dorado
+// (Cinzel + EB Garamond). Misma API de props que el original.
+// ============================================================
 
 interface GameSetupProps {
   onStartGame: (playerNames: string[]) => void;
   onBack: () => void;
 }
+
+const GoldRule: React.FC = () => (
+  <div className="flex items-center justify-center gap-3.5 my-3" aria-hidden="true">
+    <div style={{ width: 70, height: 1, background: 'linear-gradient(to right, transparent, #c9a227)' }}></div>
+    <div style={{ width: 7, height: 7, transform: 'rotate(45deg)', background: '#c9a227' }}></div>
+    <div style={{ width: 70, height: 1, background: 'linear-gradient(to left, transparent, #c9a227)' }}></div>
+  </div>
+);
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', boxSizing: 'border-box',
+  background: 'rgba(255,255,255,.45)', color: '#2b2013',
+  padding: '11px 13px', borderRadius: 3,
+  border: '1px solid rgba(120,94,48,.4)', outline: 'none',
+  fontFamily: "'EB Garamond', serif", fontSize: 17,
+};
 
 const GameSetup: React.FC<GameSetupProps> = ({ onStartGame, onBack }) => {
   const [players, setPlayers] = useState(['Jugador 1', 'Jugador 2']);
@@ -38,7 +59,7 @@ const GameSetup: React.FC<GameSetupProps> = ({ onStartGame, onBack }) => {
     newPlayers[index] = name;
     setPlayers(newPlayers);
   };
-  
+
   const handleStart = () => {
     soundService.playClick();
     const validPlayers = players.filter(p => p.trim() !== '');
@@ -47,54 +68,67 @@ const GameSetup: React.FC<GameSetupProps> = ({ onStartGame, onBack }) => {
     }
   };
 
+  const canStart = players.filter(p => p.trim() !== '').length >= 2;
+
   return (
-    <div className="flex flex-col items-center justify-center bg-gray-800/50 p-4 md:p-8 rounded-xl shadow-2xl backdrop-blur-sm">
-      <h2 className="text-2xl md:text-3xl font-bold text-yellow-300 mb-6">Configurar Partida</h2>
-      <div className="w-full max-w-md space-y-4 mb-6">
+    <div className="parchment-panel w-full max-w-md px-6 md:px-10 py-8">
+      <h2 className="font-display font-bold text-2xl md:text-[26px] text-center tracking-wider m-0" style={{ color: 'var(--ink)' }}>
+        Configurar partida
+      </h2>
+      <GoldRule />
+      <p className="font-body italic text-base text-center m-0 mb-6" style={{ color: 'var(--gold-dark)' }}>
+        De 2 a 6 jugadores en este dispositivo
+      </p>
+
+      <label className="block font-display text-xs tracking-widest mb-2" style={{ color: '#a08a5c' }}>
+        JUGADORES
+      </label>
+      <div className="space-y-3 mb-4">
         {players.map((player, index) => (
-          <div key={index} className="flex items-center space-x-2">
+          <div key={index} className="flex items-center gap-2">
             <input
               type="text"
               value={player}
               onChange={(e) => handlePlayerNameChange(index, e.target.value)}
-              className="w-full bg-gray-700 text-white p-3 rounded-lg border-2 border-gray-600 focus:border-yellow-400 focus:outline-none transition"
               placeholder={`Jugador ${index + 1}`}
+              style={inputStyle}
             />
             <button
               onClick={() => handleRemovePlayer(index)}
               disabled={players.length <= 2}
-              className="p-3 bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition"
+              aria-label={`Quitar a ${player || `Jugador ${index + 1}`}`}
+              className="flex-shrink-0 w-[44px] h-[44px] rounded-sm font-display text-xl leading-none transition disabled:opacity-35 disabled:cursor-not-allowed"
+              style={{ border: '1px solid rgba(120,94,48,.4)', color: '#5c4a28', background: 'rgba(201,162,39,.08)' }}
             >
               &ndash;
             </button>
           </div>
         ))}
       </div>
-      <div className="flex space-x-4 mb-8">
+
+      <button
+        onClick={handleAddPlayer}
+        disabled={players.length >= 6}
+        className="w-full py-2.5 mb-7 rounded-sm font-display text-xs tracking-widest transition disabled:opacity-35 disabled:cursor-not-allowed"
+        style={{ border: '1px dashed rgba(120,94,48,.5)', color: '#5c4a28', background: 'none' }}
+      >
+        + AÑADIR JUGADOR
+      </button>
+
+      <div className="flex gap-3">
         <button
-          onClick={handleAddPlayer}
-          disabled={players.length >= 6}
-          className="px-4 py-2 md:px-6 md:py-3 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition"
+          onClick={() => { soundService.playClick(); onBack(); }}
+          className="btn-outline-gold flex-1 py-3 text-sm"
+          style={{ borderColor: 'rgba(120,94,48,.5)', color: '#5c4a28' }}
         >
-          Añadir Jugador
-        </button>
-      </div>
-      <div className="flex gap-3 w-full max-w-md">
-        <button
-          onClick={() => {
-            soundService.playClick();
-            onBack();
-          }}
-          className="flex-1 px-4 py-3 md:px-6 md:py-4 bg-gray-600 text-lg font-bold rounded-lg hover:bg-gray-700 transition"
-        >
-          Volver
+          VOLVER
         </button>
         <button
           onClick={handleStart}
-          disabled={players.filter(p => p.trim() !== '').length < 2}
-          className="flex-[2] px-6 py-3 md:px-8 md:py-4 bg-green-600 text-lg md:text-xl font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition transform hover:scale-105"
+          disabled={!canStart}
+          className="btn-gold flex-[2] py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Empezar Partida
+          EMPEZAR PARTIDA
         </button>
       </div>
     </div>

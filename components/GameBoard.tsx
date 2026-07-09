@@ -134,7 +134,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
     <div className="flex flex-col h-full w-full overflow-y-auto overflow-x-hidden relative">
 
       {/* ── Barra superior ── */}
-      <div className="flex items-center justify-between gap-3 px-4 md:px-7 py-3 md:py-4 flex-shrink-0 flex-wrap">
+      <div className="max-md:order-1 flex items-center justify-between gap-3 px-4 md:px-7 py-3 md:py-4 flex-shrink-0 flex-wrap">
         <div className="flex items-center gap-3 md:gap-5">
           <img src={LOGO_URL} alt="JW Timeline" className="w-16 md:w-[90px] opacity-90" />
           <div className="flex items-center gap-2 md:gap-3 px-3 py-1.5 md:px-4 md:py-2 rounded-sm"
@@ -170,7 +170,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       {/* ── Oponentes online ── */}
       {gameMode === 'online' && localPlayer && (
-        <div className="flex justify-center items-start gap-2 md:gap-6 px-4 flex-shrink-0">
+        <div className="max-md:order-2 flex justify-center items-start gap-2 md:gap-6 px-4 flex-shrink-0">
           {players.filter(p => p.id !== localPlayer.id).map(opponent => (
             <div key={opponent.id} className="p-1 md:p-2 rounded-sm"
               style={currentPlayer.id === opponent.id ? { background: 'rgba(201,162,39,.12)', border: '1px solid rgba(201,162,39,.35)' } : {}}>
@@ -183,7 +183,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       )}
 
       {/* ── Timeline (eje dorado) ── */}
-      <div className="overflow-x-auto flex-grow flex flex-col justify-center px-4 md:px-10 min-h-[260px] md:min-h-[340px]">
+      <div className="max-md:order-4 overflow-x-auto flex-grow flex flex-col justify-center px-4 md:px-10 min-h-[240px] md:min-h-[340px]">
         <Timeline
           cards={timeline}
           onSelectSlot={handleSelectSlot}
@@ -193,11 +193,15 @@ const GameBoard: React.FC<GameBoardProps> = ({
         />
       </div>
 
-      {/* ── Zona inferior: móvil = [mazo · descarte] sobre la mano; escritorio = mazo | mano | descarte ── */}
-      <div className="flex flex-wrap md:flex-nowrap items-end justify-between gap-3 px-4 md:px-10 pb-4 md:pb-6 flex-shrink-0">
+      {/* ── Zona inferior: móvil = fila [mazo · descarte] sobre el timeline y mano abajo;
+             escritorio = mazo | mano | descarte ── */}
+      <div className="max-md:contents md:flex md:items-end md:justify-between md:gap-3 md:px-10 md:pb-6 md:flex-shrink-0">
+
+        {/* Pilas: en móvil fila propia encima del timeline; en escritorio se disuelve (contents) */}
+        <div className="max-md:order-3 max-md:flex max-md:items-end max-md:justify-between max-md:px-4 max-md:pt-1 max-md:pb-1 md:contents">
 
         {/* Mazo apilado */}
-        <div className="flex flex-col items-center gap-2 flex-shrink-0 order-1">
+        <div className="flex flex-col items-center gap-2 flex-shrink-0 md:order-1">
           <div id="deck-container" ref={deckRef} className="relative deck-responsive">
             {deckSize > 0 && (
               <>
@@ -216,8 +220,28 @@ const GameBoard: React.FC<GameBoardProps> = ({
           </p>
         </div>
 
+        {/* Descarte: mini-carta con nombre y fecha */}
+        <div className="flex flex-col items-center gap-2 flex-shrink-0 md:order-3">
+          <div id="discard-pile-container" ref={discardRef} className="w-[84px] md:w-[122px]">
+            {topDiscard ? (
+              <div style={{ filter: 'saturate(.85)' }}>
+                <Card card={topDiscard} showYear={true} onClick={() => handleZoomCard(topDiscard)} className="w-full" />
+              </div>
+            ) : (
+              <div className="w-full aspect-[122/170] rounded-md flex items-center justify-center"
+                style={{ border: '1.5px dashed rgba(201,162,39,.4)', background: 'rgba(0,0,0,.25)' }}>
+                <span className="font-body italic text-sm" style={{ color: '#a89870' }}>Vacío</span>
+              </div>
+            )}
+          </div>
+          <p className="font-display text-[11px] md:text-xs tracking-widest" style={{ color: '#a89870' }}>
+            DESCARTE · {discardPile.length}
+          </p>
+        </div>
+        </div>
+
         {/* Mano en abanico */}
-        <div ref={handRef} id={handPlayer?.isAI ? 'ai-hand-container' : 'player-hand-container'} className="order-3 md:order-2 w-full md:w-auto flex-none md:flex-1 min-w-0">
+        <div ref={handRef} id={handPlayer?.isAI ? 'ai-hand-container' : 'player-hand-container'} className="max-md:order-5 max-md:w-full max-md:pb-3 md:order-2 md:flex-1 min-w-0">
           {handPlayer ? (
             handPlayer.isAI ? (
               <AIHand player={handPlayer} showTitle={true} />
@@ -234,24 +258,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
           ) : null}
         </div>
 
-        {/* Descarte: mini-carta con nombre y fecha */}
-        <div className="flex flex-col items-center gap-2 flex-shrink-0 order-2 md:order-3">
-          <div id="discard-pile-container" ref={discardRef} className="w-[110px] md:w-[122px]">
-            {topDiscard ? (
-              <div style={{ filter: 'saturate(.85)' }}>
-                <Card card={topDiscard} showYear={true} onClick={() => handleZoomCard(topDiscard)} className="w-full" />
-              </div>
-            ) : (
-              <div className="w-full aspect-[122/170] rounded-md flex items-center justify-center"
-                style={{ border: '1.5px dashed rgba(201,162,39,.4)', background: 'rgba(0,0,0,.25)' }}>
-                <span className="font-body italic text-sm" style={{ color: '#a89870' }}>Vacío</span>
-              </div>
-            )}
-          </div>
-          <p className="font-display text-[11px] md:text-xs tracking-widest" style={{ color: '#a89870' }}>
-            DESCARTE · {discardPile.length}
-          </p>
-        </div>
       </div>
 
       {/* ── Zoom ── */}
