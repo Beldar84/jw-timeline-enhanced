@@ -16,7 +16,6 @@ import FeedbackMessage from './components/FeedbackMessage';
 import AISetup from './components/AISetup';
 import OnlineSetup from './components/OnlineSetup';
 import OnlineLobby from './components/OnlineLobby';
-import DeckSelector from './components/DeckSelector';
 import StatsPanel from './components/StatsPanel';
 import Tutorial from './components/Tutorial';
 import AchievementNotification from './components/AchievementNotification';
@@ -34,6 +33,12 @@ import { gameStateService } from './services/gameStateService';
 import { canPlaceCard, getValidTimelineMoves } from './utils/timelineRules';
 import { drawReplacementCard } from './utils/drawReplacementCard';
 import AnimationLayerEnhanced, { AnimationInfo } from './components/AnimationLayerEnhanced';
+
+const ACTIVE_DECK_ID = 'complete';
+const BIBLICAL_AI_NAMES = [
+  'David', 'Abigail', 'Ruth', 'Pablo', 'Sara', 'Abraham', 'Moisés', 'María',
+  'José', 'Rebeca', 'Isaac', 'Raquel', 'Jacob', 'Lea', 'Samuel', 'Ana'
+] as const;
 
 // Register Service Worker for offline support
 // Las imágenes de cartas NO se pre-descargan: el SW las cachea bajo demanda
@@ -86,7 +91,7 @@ const PlayerStatus: React.FC<PlayerStatusProps> = ({ players, currentPlayerId, d
 const AppEnhanced: React.FC = () => {
   const [gamePhase, setGamePhase] = useState<GamePhase>(GamePhase.MENU);
   const [gameMode, setGameMode] = useState<'local' | 'ai' | 'online' | null>(null);
-  const [selectedDeckId, setSelectedDeckId] = useState<string>('complete');
+  const [selectedDeckId, setSelectedDeckId] = useState<string>(ACTIVE_DECK_ID);
 
   // AI and Study Mode settings
   const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('normal');
@@ -114,7 +119,6 @@ const AppEnhanced: React.FC = () => {
   const [turnBasedGame, setTurnBasedGame] = useState<TurnBasedGame | null>(null);
 
   // Enhanced features state
-  const [showDeckSelector, setShowDeckSelector] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -488,8 +492,14 @@ const AppEnhanced: React.FC = () => {
     setAiMove(null);
   }, [aiMove, animation, timeline, currentPlayer]);
 
-  const startGame = (playerNames: string[], withAI: boolean, difficulty?: AIDifficulty, studyMode?: boolean) => {
-    const selectedDeck = deckService.getDeckById(selectedDeckId);
+  const startGame = (
+    playerNames: string[],
+    withAI: boolean,
+    difficulty?: AIDifficulty,
+    studyMode?: boolean,
+    deckId: string = ACTIVE_DECK_ID
+  ) => {
+    const selectedDeck = deckService.getDeckById(deckId);
     if (!selectedDeck) return;
 
     // Set game options
@@ -507,7 +517,7 @@ const AppEnhanced: React.FC = () => {
       isAI: withAI && index > 0,
     }));
 
-    const initialHandSize = deckService.getInitialHandSize(selectedDeckId, newPlayers.length);
+    const initialHandSize = deckService.getInitialHandSize(deckId, newPlayers.length);
     if (initialHandSize === 0) return;
 
     for (let i = 0; i < initialHandSize; i++) {
@@ -527,58 +537,35 @@ const AppEnhanced: React.FC = () => {
     setGamePhase(GamePhase.PLAYING);
 
     // Start stats session
-    statsService.startSession(selectedDeckId, studyMode);
+    statsService.startSession(deckId, studyMode);
   };
 
   const handleSelectMode = (mode: 'local' | 'ai' | 'online' | 'study') => {
+    setSelectedDeckId(ACTIVE_DECK_ID);
+
     if (mode === 'study') {
-      // Study mode is a special case of AI mode with study enabled
       setGameMode('ai');
       setIsStudyMode(true);
-      setShowDeckSelector(true);
-    } else {
-      setGameMode(mode);
-      setIsStudyMode(false);
-      if (mode === 'online') {
-        setGamePhase(GamePhase.SETUP);
-      } else {
-        setShowDeckSelector(true);
-      }
-    }
-  };
-
-  const handleDeckSelected = (deckId: string) => {
-    setSelectedDeckId(deckId);
-    setShowDeckSelector(false);
-
-    // If study mode was pre-selected, start the game directly
-    if (isStudyMode && gameMode === 'ai') {
-      // Get player name from profile
       const profile = profileService.getProfile();
       const playerName = profile.name || 'Estudiante';
-
-      // Get a random biblical name for the AI
-      const biblicalNames = [
-        'David', 'Abigail', 'Ruth', 'Pablo', 'Sara', 'Abraham', 'Moisés', 'María',
-        'José', 'Rebeca', 'Isaac', 'Raquel', 'Jacob', 'Lea', 'Samuel', 'Ana'
-      ];
-      const aiName = biblicalNames[Math.floor(Math.random() * biblicalNames.length)];
-
-      // Start game with easy difficulty in study mode
+      const aiName = BIBLICAL_AI_NAMES[Math.floor(Math.random() * BIBLICAL_AI_NAMES.length)];
       scheduleTimeout(() => {
-        startGame([playerName, aiName], true, 'easy', true);
+        startGame([playerName, aiName], true, 'easy', true, ACTIVE_DECK_ID);
       }, 100);
-    } else {
-      setGamePhase(GamePhase.SETUP);
+      return;
     }
+
+    setGameMode(mode);
+    setIsStudyMode(false);
+    setGamePhase(GamePhase.SETUP);
   };
 
   const handleStartLocalGame = (playerNames: string[]) => {
-    startGame(playerNames, false);
+    startGame(playerNames, false, undefined, undefined, ACTIVE_DECK_ID);
   };
 
   const handleStartAIGame = (playerNames: string[], difficulty: AIDifficulty, studyMode: boolean) => {
-    startGame(playerNames, true, difficulty, studyMode);
+    startGame(playerNames, true, difficulty, studyMode, ACTIVE_DECK_ID);
   };
 
   const handleRestart = () => {
@@ -607,6 +594,7 @@ const AppEnhanced: React.FC = () => {
     setAiMove(null);
     setIsStudyMode(false);
     setAiDifficulty('normal');
+    setSelectedDeckId(ACTIVE_DECK_ID);
     // Return to menu
     setGamePhase(GamePhase.MENU);
     setStats(statsService.loadStats());
@@ -826,18 +814,6 @@ const AppEnhanced: React.FC = () => {
       return renderTurnBasedGame();
     }
 
-    if (showDeckSelector) {
-      return (
-        <DeckSelector
-          onSelectDeck={handleDeckSelected}
-          onBack={() => {
-            setShowDeckSelector(false);
-            setGameMode(null);
-          }}
-        />
-      );
-    }
-
     switch (gamePhase) {
       case GamePhase.MENU:
         return (
@@ -854,8 +830,8 @@ const AppEnhanced: React.FC = () => {
           />
         );
       case GamePhase.SETUP:
-        if (gameMode === 'local') return <GameSetup onStartGame={handleStartLocalGame} onBack={() => { setShowDeckSelector(true); setGamePhase(GamePhase.MENU); }} />;
-        if (gameMode === 'ai') return <AISetup onStartGame={handleStartAIGame} onBack={() => { setShowDeckSelector(true); setGamePhase(GamePhase.MENU); }} />;
+        if (gameMode === 'local') return <GameSetup onStartGame={handleStartLocalGame} onBack={handleRestart} />;
+        if (gameMode === 'ai') return <AISetup onStartGame={handleStartAIGame} onBack={handleRestart} />;
         if (gameMode === 'online') return <OnlineSetup onJoinLobby={handleJoinLobby} onBack={handleRestart} />;
         return null;
       case GamePhase.LOBBY:
@@ -939,7 +915,7 @@ const AppEnhanced: React.FC = () => {
 
   // Oculto: el chip de jugadores de la barra superior del nuevo GameBoard ya muestra esta información
   const showPlayerStatus = false;
-  const showLogo = [GamePhase.MENU, GamePhase.SETUP, GamePhase.LOBBY].includes(gamePhase) && !showDeckSelector && !selectedTurnBasedGameId;
+  const showLogo = [GamePhase.MENU, GamePhase.SETUP, GamePhase.LOBBY].includes(gamePhase) && !selectedTurnBasedGameId;
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center justify-start md:justify-center p-2 md:p-4 pt-4 pb-8 text-white font-sans">
