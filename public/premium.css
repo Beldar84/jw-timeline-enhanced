@@ -226,6 +226,18 @@
   transform: scale(1.32);
 }
 
+/* Las transformaciones no aumentan el alto del documento. Esta reserva solo
+   aparece mientras hay una carta ampliada y permite hacer scroll hasta verla
+   completa, incluyendo las cartas del modo estudio que muestran la fecha. */
+.player-hand-wrap {
+  transition: padding-bottom .2s ease;
+}
+@media (max-width: 767px) {
+  .player-hand-wrap.player-hand-expanded-space {
+    padding-bottom: 84px;
+  }
+}
+
 /* Las cartas ya colocadas se amplían dentro del eje, sin abrir
    el visor a pantalla completa. El origen inferior mantiene la
    fecha estable y la elevación evita que ambas se superpongan. */

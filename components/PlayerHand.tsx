@@ -83,6 +83,23 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   // Al cambiar la mano (carta jugada/robada), colapsa la ampliada
   useEffect(() => { setExpandedId(null); }, [player.hand.length]);
 
+  // Un toque fuera de la carta ampliada la devuelve a su tamaño normal.
+  // Se escucha pointerdown para que tocar otra carta pueda contraer la actual
+  // y ampliar la nueva en el click que se dispara justo después.
+  useEffect(() => {
+    if (!isMobile || expandedId === null) return;
+
+    const handleOutsidePointer = (event: PointerEvent) => {
+      const expandedCard = cardRefs.current.get(expandedId)?.current;
+      if (!expandedCard || !expandedCard.contains(event.target as Node)) {
+        setExpandedId(null);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleOutsidePointer, true);
+    return () => document.removeEventListener('pointerdown', handleOutsidePointer, true);
+  }, [expandedId, isMobile]);
+
   const titleText = placementMode
     ? 'Elige una carta para colocar'
     : `Tu mano · ${player.hand.length} ${player.hand.length === 1 ? 'carta' : 'cartas'}`;
@@ -103,7 +120,10 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   }
 
   return (
-    <div ref={wrapRef}>
+    <div
+      ref={wrapRef}
+      className={`player-hand-wrap ${isMobile && expandedId !== null ? 'player-hand-expanded-space' : ''}`}
+    >
       <div className="relative z-20 flex items-center justify-center gap-2 mb-2 landscape:mb-1">
         <h3 className="font-body italic text-center text-base md:text-lg"
           style={{
