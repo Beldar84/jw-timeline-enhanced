@@ -3,16 +3,8 @@
 
 /* Base card size (used by .card-responsive class) */
 .card-responsive {
-  width: 150px;
-  height: 220px;
-}
-
-/* Landscape mobile */
-@media (orientation: landscape) and (max-width: 1023px) {
-  .card-responsive {
-    width: 120px;
-    height: 176px;
-  }
+  width: 140px;
+  height: auto;
 }
 
 /* Tablet (768px+) */
@@ -55,17 +47,18 @@
   }
 }
 
-/* Deck/Discard pile sizes */
-.deck-responsive {
-  width: 100px;
-  height: 146px;
+/* Keep landscape mobile compact; this must come after min-width rules. */
+@media (orientation: landscape) and (max-width: 1023px) {
+  .card-responsive {
+    width: 120px;
+    height: 176px;
+  }
 }
 
-@media (orientation: landscape) and (max-width: 1023px) {
-  .deck-responsive {
-    width: 90px;
-    height: 132px;
-  }
+/* Deck/Discard pile sizes */
+.deck-responsive {
+  width: 84px;
+  height: 122px;
 }
 
 @media (min-width: 768px) {
@@ -103,17 +96,18 @@
   }
 }
 
+@media (orientation: landscape) and (max-width: 1023px) {
+  .deck-responsive {
+    width: 90px;
+    height: 132px;
+  }
+}
+
 /* Timeline placement slots - heights MUST match .card-responsive at every breakpoint
    so slots and cards align on all devices */
 .slot-responsive {
   width: 64px;
   height: 220px;
-}
-
-@media (orientation: landscape) and (max-width: 1023px) {
-  .slot-responsive {
-    height: 176px;
-  }
 }
 
 @media (min-width: 768px) {
@@ -145,6 +139,12 @@
 @media (min-width: 1920px) {
   .slot-responsive {
     height: 352px;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 1023px) {
+  .slot-responsive {
+    height: 176px;
   }
 }
 

@@ -98,7 +98,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
   // Solape dinámico en móvil: el abanico se comprime lo justo para
   // que las cartas de los extremos no queden cortadas por los bordes.
-  const CARD_W = 140; // .card-responsive en ≤767px
+  const CARD_W = isMobile && window.matchMedia('(orientation: landscape)').matches
+    ? 120
+    : 140;
   let mobileOverlap = 22;
   if (isMobile && n > 1 && wrapW > 0) {
     const usable = wrapW - 48; // px-6 a cada lado

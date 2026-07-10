@@ -2,6 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './tailwind.css';
 import './services/gameService'; // Initialize the game service
 
 const rootElement = document.getElementById('root');

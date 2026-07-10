@@ -72,7 +72,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
     }
   }, [selectedCard, selectedSlotElement, selectedTimelineIndex, onAttemptPlaceCard, gameMode, onPlaceCardOnline]);
 
-  const handleSelectSlot = (index: number, element: HTMLDivElement) => {
+  const handleSelectSlot = (index: number, element: HTMLButtonElement) => {
     if (!canInteract) return;
     soundService.playClick();
     if (selectedTimelineIndex === index) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card as CardType } from '../types';
 import Card from './Card';
 
@@ -16,13 +16,17 @@ interface AnimationLayerProps {
 }
 
 const AnimationLayerEnhanced: React.FC<AnimationLayerProps> = ({ animation }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
   const [styles, setStyles] = useState<React.CSSProperties>({});
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number }>>([]);
 
   useEffect(() => {
     if (animation) {
       const { fromRect, toRect, onComplete, type = 'placement' } = animation;
+      const timeoutIds: number[] = [];
+      const schedule = (callback: () => void, delay: number) => {
+        const timeoutId = window.setTimeout(callback, delay);
+        timeoutIds.push(timeoutId);
+      };
 
       // Determine animation duration and easing based on type
       const duration = type === 'draw' ? 400 : 600;
@@ -49,8 +53,8 @@ const AnimationLayerEnhanced: React.FC<AnimationLayerProps> = ({ animation }) =>
           x: toRect.left + toRect.width / 2,
           y: toRect.top + toRect.height / 2,
         }));
-        setTimeout(() => setParticles(particleArray), duration - 100);
-        setTimeout(() => setParticles([]), duration + 500);
+        schedule(() => setParticles(particleArray), duration - 100);
+        schedule(() => setParticles([]), duration + 500);
       }
 
       // Use requestAnimationFrame for smooth animation start
@@ -61,7 +65,7 @@ const AnimationLayerEnhanced: React.FC<AnimationLayerProps> = ({ animation }) =>
 
         if (type === 'placement') {
           // First move to midpoint with rotation and scale
-          setTimeout(() => {
+          schedule(() => {
             setStyles({
               position: 'fixed',
               left: `${midX - fromRect.width / 2}px`,
@@ -77,7 +81,7 @@ const AnimationLayerEnhanced: React.FC<AnimationLayerProps> = ({ animation }) =>
           }, 10);
 
           // Then move to final position
-          setTimeout(() => {
+          schedule(() => {
             setStyles({
               position: 'fixed',
               left: `${toRect.left}px`,
@@ -108,11 +112,11 @@ const AnimationLayerEnhanced: React.FC<AnimationLayerProps> = ({ animation }) =>
         }
       });
 
-      const timeoutId = setTimeout(onComplete, duration);
+      schedule(onComplete, duration);
 
       return () => {
         cancelAnimationFrame(frameId);
-        clearTimeout(timeoutId);
+        timeoutIds.forEach(timeoutId => window.clearTimeout(timeoutId));
         setParticles([]);
       };
     }
@@ -125,7 +129,7 @@ const AnimationLayerEnhanced: React.FC<AnimationLayerProps> = ({ animation }) =>
   return (
     <>
       {/* Animated Card */}
-      <div ref={cardRef} style={styles}>
+      <div style={styles}>
         <Card card={animation.card} showYear={false} className="w-full h-full" />
       </div>
 
@@ -145,11 +149,11 @@ const AnimationLayerEnhanced: React.FC<AnimationLayerProps> = ({ animation }) =>
                 style={{
                   left: `${particle.x}px`,
                   top: `${particle.y}px`,
-                  transform: `translate(${tx}px, ${ty}px)`,
-                  opacity: 0,
+                  '--tx': `${tx}px`,
+                  '--ty': `${ty}px`,
                   animation: 'sparkle 0.6s ease-out forwards',
                   animationDelay: `${index * 0.05}s`,
-                }}
+                } as React.CSSProperties}
               />
             );
           })}

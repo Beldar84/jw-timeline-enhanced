@@ -32,6 +32,7 @@ import { firebaseService, TurnBasedGame } from './services/firebaseService';
 import { soundService } from './services/soundService';
 import { gameStateService } from './services/gameStateService';
 import { canPlaceCard, getValidTimelineMoves } from './utils/timelineRules';
+import { drawReplacementCard } from './utils/drawReplacementCard';
 import AnimationLayerEnhanced, { AnimationInfo } from './components/AnimationLayerEnhanced';
 
 // Register Service Worker for offline support
@@ -124,6 +125,23 @@ const AppEnhanced: React.FC = () => {
   const [showTurnBasedGames, setShowTurnBasedGames] = useState(false);
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [stats, setStats] = useState<PlayerStats>(statsService.loadStats());
+  const pendingTimeoutsRef = useRef<Set<number>>(new Set());
+
+  const scheduleTimeout = useCallback((callback: () => void, delay: number): number => {
+    const timeoutId = window.setTimeout(() => {
+      pendingTimeoutsRef.current.delete(timeoutId);
+      callback();
+    }, delay);
+    pendingTimeoutsRef.current.add(timeoutId);
+    return timeoutId;
+  }, []);
+
+  const clearPendingTimeouts = useCallback(() => {
+    pendingTimeoutsRef.current.forEach(timeoutId => window.clearTimeout(timeoutId));
+    pendingTimeoutsRef.current.clear();
+  }, []);
+
+  useEffect(() => clearPendingTimeouts, [clearPendingTimeouts]);
 
   // Load saved game state on mount
   useEffect(() => {
@@ -141,6 +159,11 @@ const AppEnhanced: React.FC = () => {
       setAiDifficulty(savedState.aiDifficulty);
       setIsStudyMode(savedState.isStudyMode);
       setMessage(`Es el turno de ${savedState.players[savedState.currentPlayerIndex].name}.`);
+      statsService.restoreSession(
+        savedState.statsSession,
+        savedState.selectedDeckId,
+        savedState.isStudyMode
+      );
     }
   }, []);
 
@@ -158,6 +181,7 @@ const AppEnhanced: React.FC = () => {
         selectedDeckId,
         aiDifficulty,
         isStudyMode,
+        statsSession: statsService.getCurrentSession(),
       });
     }
     // Clear saved state when game ends
@@ -182,11 +206,11 @@ const AppEnhanced: React.FC = () => {
     setMessage(`Es el turno de ${nextPlayer.name}.`);
 
     if (gameMode === 'local' && !nextPlayer.isAI) {
-      setTimeout(() => {
+      scheduleTimeout(() => {
         setGamePhase(GamePhase.TRANSITION);
       }, 1500);
     }
-  }, [currentPlayerIndex, players, gameMode]);
+  }, [currentPlayerIndex, players, gameMode, scheduleTimeout]);
 
   const finishLocalGame = (winningPlayer: Player, finalTimelineLength: number = timeline.length) => {
     setWinner(winningPlayer);
@@ -270,10 +294,10 @@ const AppEnhanced: React.FC = () => {
     } else {
         soundService.playIncorrect();
         const newDiscard = [card, ...discardPile];
-        setDiscardPile(newDiscard);
 
         // In study mode, don't draw a new card (no penalty)
         if (isStudyMode) {
+          setDiscardPile(newDiscard);
           setPlayers(players.map(p => p.id === player.id ? { ...p, hand: newHand } : p));
           if (newHand.length === 0) {
             finishLocalGame(player);
@@ -283,9 +307,12 @@ const AppEnhanced: React.FC = () => {
           return;
         }
 
-        if (deck.length > 0) {
-            const [drawnCard, ...remainingDeck] = deck;
-            setDeck(remainingDeck);
+        const replacementDraw = drawReplacementCard(deck, newDiscard);
+        const drawnCard = replacementDraw.drawnCard;
+
+        if (drawnCard) {
+            setDeck(replacementDraw.deck);
+            setDiscardPile(replacementDraw.discardPile);
             const handWithDrawnCard = [...newHand, drawnCard];
             setPlayers(players.map(p => p.id === player.id ? { ...p, hand: handWithDrawnCard } : p));
 
@@ -314,12 +341,10 @@ const AppEnhanced: React.FC = () => {
                 handleNextTurn();
             }
         } else {
-            setPlayers(players.map(p => p.id === player.id ? { ...p, hand: newHand } : p));
-            if (newHand.length === 0) {
-              finishLocalGame(player);
-            } else {
-              handleNextTurn();
-            }
+            // Defensive fallback: never turn a failed placement into a win.
+            setDiscardPile(discardPile);
+            setPlayers(players.map(p => p.id === player.id ? { ...p, hand: [...newHand, card] } : p));
+            handleNextTurn();
         }
     }
   };
@@ -337,7 +362,7 @@ const AppEnhanced: React.FC = () => {
     const isCorrect = canPlaceCard(card, timeline, timelineIndex);
 
     setFeedback(isCorrect ? 'correct' : 'incorrect');
-    setTimeout(() => setFeedback(null), 1500);
+    scheduleTimeout(() => setFeedback(null), 1500);
 
     const fromRect = cardEl.getBoundingClientRect();
     const toRect = isCorrect ? slotEl.getBoundingClientRect() : discardEl.getBoundingClientRect();
@@ -386,14 +411,14 @@ const AppEnhanced: React.FC = () => {
     setMessage(`Turno de ${currentPlayer.name}...`);
     setIsAITurnMessageVisible(true);
 
-    setTimeout(() => {
+    scheduleTimeout(() => {
       const move = decideAIMove();
       if (!move) return;
 
       setRevealedAICard(move.card);
       soundService.playClick();
 
-      setTimeout(() => {
+      scheduleTimeout(() => {
           setRevealedAICard(null);
           setAiMove(move);
       }, 1500);
@@ -434,7 +459,7 @@ const AppEnhanced: React.FC = () => {
     const isCorrect = canPlaceCard(card, timeline, timelineIndex);
 
     setFeedback(isCorrect ? 'correct' : 'incorrect');
-    setTimeout(() => setFeedback(null), 1500);
+    scheduleTimeout(() => setFeedback(null), 1500);
 
     const targetElId = isCorrect ? `timeline-slot-${timelineIndex}` : 'discard-pile-container';
     const targetEl = document.getElementById(targetElId);
@@ -533,7 +558,7 @@ const AppEnhanced: React.FC = () => {
       const aiName = biblicalNames[Math.floor(Math.random() * biblicalNames.length)];
 
       // Start game with easy difficulty in study mode
-      setTimeout(() => {
+      scheduleTimeout(() => {
         startGame([playerName, aiName], true, 'easy', true);
       }, 100);
     } else {
@@ -550,8 +575,10 @@ const AppEnhanced: React.FC = () => {
   };
 
   const handleRestart = () => {
+    clearPendingTimeouts();
     // Disconnect for online cleanup
     gameService.disconnect();
+    statsService.cancelSession();
     // Clear local state
     setOnlineGameState(null);
     setLocalPlayerId(null);
@@ -565,6 +592,12 @@ const AppEnhanced: React.FC = () => {
     setCurrentPlayerIndex(0);
     setWinner(null);
     setMessage(null);
+    setFeedback(null);
+    setRevealedAICard(null);
+    setIsAITurnMessageVisible(false);
+    setAnimation(null);
+    setHidingCardId(null);
+    setAiMove(null);
     setIsStudyMode(false);
     setAiDifficulty('normal');
     // Return to menu

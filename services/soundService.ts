@@ -83,6 +83,12 @@ soundEffects.forEach(audio => {
 });
 applyVolume();
 
+const reportPlaybackError = (message: string, error: unknown) => {
+  const errorName = error instanceof Error ? error.name : '';
+  if (errorName === 'NotAllowedError' || errorName === 'AbortError') return;
+  console.warn(message, error);
+};
+
 const playSound = async (audio: HTMLAudioElement) => {
   if (isMuted) return;
 
@@ -91,8 +97,8 @@ const playSound = async (audio: HTMLAudioElement) => {
     audio.currentTime = 0;
     await audio.play();
   } catch (error) {
-    // Silently fail if audio context is not allowed or format not supported
-    console.warn("Audio playback failed:", error);
+    // Browser autoplay policies can reject playback even after synthetic input.
+    reportPlaybackError('Audio playback failed:', error);
   }
 };
 
@@ -110,7 +116,7 @@ const initBackgroundMusic = () => {
     if (backgroundMusic) {
       backgroundMusic.src = backgroundMusicTracks[currentTrackIndex];
       if (isMusicEnabled && !isMuted) {
-        backgroundMusic.play().catch(console.warn);
+        backgroundMusic.play().catch(error => reportPlaybackError('Background music playback failed:', error));
       }
     }
   });
@@ -127,7 +133,7 @@ const startBackgroundMusic = async () => {
     backgroundMusic.volume = isMuted ? 0 : musicVolume;
     await backgroundMusic.play();
   } catch (error) {
-    console.warn("Background music playback failed:", error);
+    reportPlaybackError('Background music playback failed:', error);
   }
 };
 
@@ -152,7 +158,7 @@ const resumeBackgroundMusic = async () => {
     try {
       await backgroundMusic.play();
     } catch (error) {
-      console.warn("Background music resume failed:", error);
+      reportPlaybackError('Background music resume failed:', error);
     }
   }
 };
@@ -228,7 +234,7 @@ export const soundService = {
     applyVolume();
     saveSettings();
     if (isMusicEnabled && backgroundMusic) {
-      backgroundMusic.play().catch(console.warn);
+      backgroundMusic.play().catch(error => reportPlaybackError('Background music playback failed:', error));
     }
   },
 

@@ -73,6 +73,16 @@ const DEFAULT_STATS: PlayerStats = {
   deckStats: {},
 };
 
+function cloneStats(stats: PlayerStats): PlayerStats {
+  return {
+    ...stats,
+    achievements: stats.achievements.map(achievement => ({ ...achievement })),
+    deckStats: Object.fromEntries(
+      Object.entries(stats.deckStats).map(([deckId, deckStats]) => [deckId, { ...deckStats }])
+    ),
+  };
+}
+
 class StatsService {
   private currentSession: GameSession | null = null;
   private lastCompletedSession: GameSession | null = null;
@@ -87,7 +97,7 @@ class StatsService {
     } catch (e) {
       console.error('Error loading stats:', e);
     }
-    return { ...DEFAULT_STATS };
+    return cloneStats(DEFAULT_STATS);
   }
 
   // Completa un objeto de estadísticas parcial (localStorage antiguo o nube)
@@ -99,9 +109,11 @@ class StatsService {
       ...base,
       achievements: DEFAULT_STATS.achievements.map(defaultAch => {
         const existing = base.achievements?.find((a: Achievement) => a.id === defaultAch.id);
-        return existing || defaultAch;
+        return { ...(existing || defaultAch) };
       }),
-      deckStats: base.deckStats || {},
+      deckStats: Object.fromEntries(
+        Object.entries(base.deckStats || {}).map(([deckId, deckStats]) => [deckId, { ...deckStats }])
+      ),
     };
   }
 
@@ -155,6 +167,8 @@ class StatsService {
   // Reset all stats
   resetStats(): void {
     localStorage.removeItem(STORAGE_KEY);
+    this.currentSession = null;
+    this.lastCompletedSession = null;
   }
 
   // Start a new game session
@@ -167,6 +181,38 @@ class StatsService {
       incorrectPlacements: 0,
       isStudyMode,
     };
+  }
+
+  getCurrentSession(): GameSession | null {
+    return this.currentSession ? { ...this.currentSession } : null;
+  }
+
+  restoreSession(session: GameSession | null | undefined, deckId: string, isStudyMode: boolean): void {
+    const isValidSession = session
+      && Number.isFinite(session.startTime)
+      && typeof session.deckId === 'string'
+      && session.deckId.length > 0
+      && Number.isInteger(session.cardsPlaced)
+      && session.cardsPlaced >= 0
+      && Number.isInteger(session.correctPlacements)
+      && session.correctPlacements >= 0
+      && Number.isInteger(session.incorrectPlacements)
+      && session.incorrectPlacements >= 0;
+
+    if (!isValidSession) {
+      this.startSession(deckId, isStudyMode);
+      return;
+    }
+
+    this.currentSession = {
+      ...session,
+      endTime: undefined,
+      result: undefined,
+    };
+  }
+
+  cancelSession(): void {
+    this.currentSession = null;
   }
 
   // Record a card placement

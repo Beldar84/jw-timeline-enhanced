@@ -131,6 +131,11 @@
   border-color: var(--gold-bright);
   background: rgba(201,162,39,.15);
 }
+.slot-circle:focus-visible,
+.parchment-card[role="button"]:focus-visible {
+  outline: 3px solid var(--gold-bright);
+  outline-offset: 4px;
+}
 .slot-circle.selected {
   border: 2px solid var(--gold-bright);
   background: rgba(201,162,39,.22);

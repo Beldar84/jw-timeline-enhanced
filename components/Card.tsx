@@ -32,6 +32,11 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({
   card, isFaceDown, onClick, isPlaceholder = false, showYear = false,
   isZoomed = false, className = '', isHidden = false, isStudyMode = false,
 }, ref) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onClick || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    onClick();
+  };
 
   if (isZoomed) {
     if (!card) return null;
@@ -70,6 +75,10 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({
       <div
         ref={ref}
         className={`relative flex-shrink-0 rounded-md overflow-hidden transition-transform duration-300 ${sizeClass} ${selectableStyle} ${className}`}
+        onClick={onClick}
+        onKeyDown={handleKeyDown}
+        role={onClick ? 'button' : undefined}
+        tabIndex={onClick ? 0 : undefined}
         style={{
           visibility: isHidden ? 'hidden' : 'visible',
           border: '1px solid rgba(201,162,39,.3)',
@@ -90,6 +99,9 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({
       ref={ref}
       className={`parchment-card flex-shrink-0 flex flex-col transition-transform duration-300 ${sizeClass} ${selectableStyle} ${className}`}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
       style={{
         visibility: isHidden ? 'hidden' : 'visible',
         padding: '6px 6px 0 6px',

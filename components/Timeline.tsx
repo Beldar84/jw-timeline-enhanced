@@ -12,7 +12,7 @@ import Card, { formatYearPremium } from './Card';
 
 interface TimelineProps {
   cards: CardType[];
-  onSelectSlot: (timelineIndex: number, element: HTMLDivElement) => void;
+  onSelectSlot: (timelineIndex: number, element: HTMLButtonElement) => void;
   selectedSlotIndex: number | null;
   onCardClick: (card: CardType) => void;
   disabled?: boolean;
@@ -27,29 +27,32 @@ interface PlacementSlotProps {
 
 const PlusIcon: React.FC<{ selected: boolean }> = ({ selected }) => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-    stroke={selected ? '#f2e8d5' : 'currentColor'} strokeWidth={selected ? 2 : 1.8} strokeLinecap="round">
+    stroke={selected ? '#f2e8d5' : 'currentColor'} strokeWidth={selected ? 2 : 1.8} strokeLinecap="round"
+    aria-hidden="true" focusable="false">
     <line x1="12" y1="5" x2="12" y2="19" />
     <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
 
-const PlacementSlot = forwardRef<HTMLDivElement, PlacementSlotProps>(({ id, onClick, isSelected, disabled }, ref) => (
-  <div
+const PlacementSlot = forwardRef<HTMLButtonElement, PlacementSlotProps>(({ id, onClick, isSelected, disabled }, ref) => (
+  <button
+    type="button"
     id={id}
     ref={ref}
-    onClick={!disabled ? onClick : undefined}
+    onClick={onClick}
+    disabled={disabled}
     className={`slot-circle ${isSelected ? 'selected' : ''} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
     aria-label={isSelected ? 'Ranura de colocación seleccionada' : 'Seleccionar esta ranura para colocar una carta'}
-    aria-disabled={disabled}
+    aria-pressed={isSelected}
   >
     <PlusIcon selected={isSelected} />
-  </div>
+  </button>
 ));
 
 const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIndex, onCardClick, disabled = false }) => {
-  const slotRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
+  const slotRefs = useRef<React.RefObject<HTMLButtonElement>[]>([]);
   slotRefs.current = [...Array(cards.length + 1)].map(
-    (_, i) => slotRefs.current[i] ?? createRef<HTMLDivElement>()
+    (_, i) => slotRefs.current[i] ?? createRef<HTMLButtonElement>()
   );
 
   const handleSelect = (index: number) => {

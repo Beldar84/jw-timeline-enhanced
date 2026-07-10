@@ -1,4 +1,5 @@
 import { GamePhase, Card as CardType, Player, AIDifficulty } from '../types';
+import type { GameSession } from './statsService';
 
 const STORAGE_KEY = 'jw_timeline_game_state';
 
@@ -13,6 +14,7 @@ export interface SavedGameState {
   selectedDeckId: string;
   aiDifficulty: AIDifficulty;
   isStudyMode: boolean;
+  statsSession?: GameSession | null;
   savedAt: number;
 }
 

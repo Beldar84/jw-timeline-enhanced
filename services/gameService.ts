@@ -3,6 +3,7 @@ import { GameState, Player, Card, OnlineGamePhase } from '../types';
 import { CARD_DATA } from '../data/cards';
 import { shuffleArray } from '../utils/shuffle';
 import { canPlaceCard, getValidTimelineMoves } from '../utils/timelineRules';
+import { drawReplacementCard } from '../utils/drawReplacementCard';
 import { firebaseService, firestoreDb } from './firebaseService';
 
 type RealtimeGameDocument = GameState & {
@@ -236,6 +237,7 @@ class GameService {
     this.gameState = toGameState(data);
     this.participantAuthIds = data.participantAuthIds || [];
     this.createdBy = data.createdBy || null;
+    this.isHost = this.localPlayerId !== null && this.localPlayerId === data.hostId;
     this.trackPresenceFromDocument(data);
   }
 
@@ -291,10 +293,14 @@ class GameService {
           const nextPlayerIndex = currentTurnPlayer?.id === leavingPlayerId
             ? gameState.currentPlayerIndex % remainingPlayers.length
             : Math.max(0, remainingPlayers.findIndex(player => player.id === currentTurnPlayer?.id));
+          const nextHostId = gameState.hostId === leavingPlayerId
+            ? remainingHumanPlayers[0].id
+            : gameState.hostId;
           await updateDoc(this.gameRef(gameState.id), {
             players: remainingPlayers,
             participantAuthIds: this.participantAuthIds.filter(id => id !== leavingPlayerId),
             currentPlayerIndex: Math.max(0, nextPlayerIndex),
+            hostId: nextHostId,
             message: `${leavingPlayer.name} ha abandonado la partida.`,
             updatedAt: serverTimestamp(),
           });
@@ -577,8 +583,8 @@ class GameService {
     }));
     const activePlayer = players[this.gameState.currentPlayerIndex];
     const timeline = [...this.gameState.timeline];
-    const deck = [...this.gameState.deck];
-    const discardPile = [...this.gameState.discardPile];
+    let deck = [...this.gameState.deck];
+    let discardPile = [...this.gameState.discardPile];
 
     activePlayer.hand = activePlayer.hand.filter(card => card.id !== cardId);
 
@@ -587,11 +593,18 @@ class GameService {
       timeline.splice(timelineIndex, 0, cardToPlace);
     } else {
       discardPile.unshift(cardToPlace);
-      const drawnCard = deck.pop();
-      if (drawnCard) activePlayer.hand.push(drawnCard);
+      const replacementDraw = drawReplacementCard(deck, discardPile);
+      deck = replacementDraw.deck;
+      discardPile = replacementDraw.discardPile;
+      if (replacementDraw.drawnCard) {
+        activePlayer.hand.push(replacementDraw.drawnCard);
+      } else {
+        // Defensive fallback: preserve the card instead of awarding a false win.
+        activePlayer.hand.push(cardToPlace);
+      }
     }
 
-    if (activePlayer.hand.length === 0) {
+    if (isCorrect && activePlayer.hand.length === 0) {
       this.gameState = {
         ...this.gameState,
         players,

@@ -1,13 +1,11 @@
-// @ts-ignore - Firebase types will be available after npm install in Vercel
 import { initializeApp } from 'firebase/app';
-// @ts-ignore
 import { initializeFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, serverTimestamp, Timestamp, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
-// @ts-ignore
 import { getAuth, signInAnonymously, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { Card } from '../types';
 import { CARD_DATA } from '../data/cards';
 import { shuffleArray } from '../utils/shuffle';
 import { canPlaceCard } from '../utils/timelineRules';
+import { drawReplacementCard } from '../utils/drawReplacementCard';
 import { statsService } from './statsService';
 import { profileService } from './profileService';
 
@@ -1175,8 +1173,8 @@ export const firebaseService = {
       const isCorrect = canPlaceCard(cardToPlace, game.timeline, timelineIndex);
       const nextHand = currentHand.filter(card => card.id !== cardId);
       const nextTimeline = [...game.timeline];
-      const nextDeck = [...game.deck];
-      const nextDiscardPile = [...game.discardPile];
+      let nextDeck = [...game.deck];
+      let nextDiscardPile = [...game.discardPile];
       let winnerId: string | null = null;
       let nextStatus: TurnBasedGame['status'] = 'active';
 
@@ -1184,13 +1182,18 @@ export const firebaseService = {
         nextTimeline.splice(timelineIndex, 0, cardToPlace);
       } else {
         nextDiscardPile.unshift(cardToPlace);
-        const drawnCard = nextDeck.pop();
-        if (drawnCard) {
-          nextHand.push(drawnCard);
+        const replacementDraw = drawReplacementCard(nextDeck, nextDiscardPile);
+        nextDeck = replacementDraw.deck;
+        nextDiscardPile = replacementDraw.discardPile;
+        if (replacementDraw.drawnCard) {
+          nextHand.push(replacementDraw.drawnCard);
+        } else {
+          // Defensive fallback: preserve the card instead of awarding a false win.
+          nextHand.push(cardToPlace);
         }
       }
 
-      if (nextHand.length === 0) {
+      if (isCorrect && nextHand.length === 0) {
         winnerId = userId;
         nextStatus = 'finished';
       }
