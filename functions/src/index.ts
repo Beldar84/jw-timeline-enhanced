@@ -31,6 +31,7 @@ const REGION = 'europe-west1';
 const TURN_LIMIT_MS = 24 * 60 * 60 * 1000;
 const PRESENCE_TIMEOUT_MS = 45_000;
 const GAME_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const MAX_SOCIAL_CONNECTIONS = 200;
 const cards = CARD_DATA as GameCard[];
 
 interface RealtimeGameDocument extends RealtimeGameState {
@@ -150,6 +151,35 @@ function buildSearchPrefixes(name: string): string[] {
   addPrefixes(name);
   normalizeSearchText(name).split(/[^a-z0-9]+/).filter(Boolean).forEach(addPrefixes);
   return Array.from(prefixes);
+}
+
+interface SocialProfile {
+  id: string;
+  name: string;
+  avatar: string | null;
+}
+
+function socialIds(data: DocumentData, field: 'friends' | 'friendRequests'): string[] {
+  const values = data[field];
+  if (!Array.isArray(values)) return [];
+  return Array.from(new Set(values.filter((value): value is string => typeof value === 'string' && value.length > 0)))
+    .slice(0, MAX_SOCIAL_CONNECTIONS);
+}
+
+function socialProfile(data: DocumentData, fallbackId: string): SocialProfile {
+  return {
+    id: typeof data.id === 'string' && data.id ? data.id : fallbackId,
+    name: typeof data.name === 'string' && data.name.trim() ? data.name.trim() : 'Jugador',
+    avatar: typeof data.avatar === 'string' && data.avatar ? data.avatar : null,
+  };
+}
+
+async function loadSocialProfiles(ids: string[]): Promise<SocialProfile[]> {
+  if (ids.length === 0) return [];
+  const snapshots = await db.getAll(...ids.map(id => db.collection('users').doc(id)));
+  return snapshots
+    .filter(snapshot => snapshot.exists)
+    .map(snapshot => socialProfile(snapshot.data() || {}, snapshot.id));
 }
 
 function emptyBucket(periodKey: string): ScoreBucket {
@@ -635,6 +665,51 @@ export const leaveRealtimeGame = onCall(callableOptions, async request => {
     });
   });
   return { success: true };
+});
+
+export const getSocialConnections = onCall(callableOptions, async request => {
+  const uid = requireRegisteredUser(request);
+  const userSnapshot = await db.collection('users').doc(uid).get();
+  if (!userSnapshot.exists) throw new HttpsError('not-found', 'No existe el perfil.');
+
+  const user = userSnapshot.data() || {};
+  const friendIds = socialIds(user, 'friends');
+  const requestIds = socialIds(user, 'friendRequests');
+  const [friends, requests] = await Promise.all([
+    loadSocialProfiles(friendIds),
+    loadSocialProfiles(requestIds),
+  ]);
+
+  return { friends, requests };
+});
+
+export const searchUsers = onCall(callableOptions, async request => {
+  const uid = requireRegisteredUser(request);
+  const searchTerm = normalizeSearchText(text(request.data?.searchTerm, 'La búsqueda', 80));
+  if (searchTerm.length < 2) {
+    throw new HttpsError('invalid-argument', 'Escribe al menos 2 caracteres.');
+  }
+
+  const prefix = searchTerm.slice(0, 24);
+  // The prefix-array query supports searching by any word in the display name.
+  // nameLower also covers older profiles that have not regenerated that array.
+  const [prefixSnapshot, nameSnapshot] = await Promise.all([
+    db.collection('users').where('searchPrefixes', 'array-contains', prefix).limit(11).get(),
+    db.collection('users')
+      .where('nameLower', '>=', searchTerm)
+      .where('nameLower', '<=', `${searchTerm}\uf8ff`)
+      .limit(11)
+      .get(),
+  ]);
+
+  const users = new Map<string, SocialProfile>();
+  [...prefixSnapshot.docs, ...nameSnapshot.docs].forEach(snapshot => {
+    if (snapshot.id !== uid && users.size < 10) {
+      users.set(snapshot.id, socialProfile(snapshot.data(), snapshot.id));
+    }
+  });
+
+  return { users: Array.from(users.values()) };
 });
 
 export const sendFriendRequest = onCall(callableOptions, async request => {

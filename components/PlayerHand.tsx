@@ -7,7 +7,7 @@ import Card from './Card';
 // Sustituye components/PlayerHand.tsx. Misma API de props.
 // Mano en abanico siempre (también en móvil):
 //  · Escritorio: hover eleva la carta; clic la selecciona.
-//  · Móvil (≤767px): abanico compacto (±10°, solape -22px);
+//  · Móvil (≤767px): abanico compacto (±10°, solape -18px);
 //    cada toque alterna la carta entre su tamaño normal y ampliado.
 // Título en EB Garamond itálica.
 // ============================================================
@@ -47,23 +47,13 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const [isMobile, setIsMobile] = React.useState(
     typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
   );
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [wrapW, setWrapW] = React.useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
     const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
-  }, []);
-
-  // Mide el ancho disponible para calcular el solape del abanico en móvil
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(entries => setWrapW(entries[0].contentRect.width));
-    ro.observe(el);
-    return () => ro.disconnect();
   }, []);
 
   // Precalienta imágenes de la mano (el SW las cachea)
@@ -83,21 +73,31 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   // Al cambiar la mano (carta jugada/robada), colapsa la ampliada
   useEffect(() => { setExpandedId(null); }, [player.hand.length]);
 
-  // Un toque fuera de la carta ampliada la devuelve a su tamaño normal.
-  // Se escucha pointerdown para que tocar otra carta pueda contraer la actual
-  // y ampliar la nueva en el click que se dispara justo después.
+  // Al ampliar o cambiar de carta, conserva la mano al final de la página y
+  // centra únicamente el carrusel horizontal. No se usa scrollIntoView porque
+  // también movería el documento en vertical.
   useEffect(() => {
     if (!isMobile || expandedId === null) return;
 
-    const handleOutsidePointer = (event: PointerEvent) => {
-      const expandedCard = cardRefs.current.get(expandedId)?.current;
-      if (!expandedCard || !expandedCard.contains(event.target as Node)) {
-        setExpandedId(null);
+    const keepCardVisible = () => {
+      const scroller = scrollRef.current;
+      const card = cardRefs.current.get(expandedId)?.current;
+      if (scroller && card) {
+        const scrollerRect = scroller.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        const horizontalDelta = cardRect.left + cardRect.width / 2
+          - (scrollerRect.left + scrollerRect.width / 2);
+        scroller.scrollBy({ left: horizontalDelta, behavior: 'smooth' });
       }
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' });
     };
 
-    document.addEventListener('pointerdown', handleOutsidePointer, true);
-    return () => document.removeEventListener('pointerdown', handleOutsidePointer, true);
+    const frame = requestAnimationFrame(keepCardVisible);
+    const settleTimer = window.setTimeout(keepCardVisible, 230);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(settleTimer);
+    };
   }, [expandedId, isMobile]);
 
   const titleText = placementMode
@@ -107,21 +107,8 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
   const n = player.hand.length;
 
-  // Solape dinámico en móvil: el abanico se comprime lo justo para
-  // que las cartas de los extremos no queden cortadas por los bordes.
-  const CARD_W = isMobile && window.matchMedia('(orientation: landscape)').matches
-    ? 120
-    : 140;
-  let mobileOverlap = 22;
-  if (isMobile && n > 1 && wrapW > 0) {
-    const usable = wrapW - 48; // px-6 a cada lado
-    const needed = Math.ceil((CARD_W - (usable - CARD_W) / (n - 1)) / 2);
-    mobileOverlap = Math.min(58, Math.max(22, needed));
-  }
-
   return (
     <div
-      ref={wrapRef}
       className={`player-hand-wrap ${isMobile && expandedId !== null ? 'player-hand-expanded-space' : ''}`}
     >
       <div className="relative z-20 flex items-center justify-center gap-2 mb-2 landscape:mb-1">
@@ -141,8 +128,14 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
           </span>
         )}
       </div>
-      <div className="overflow-x-auto pb-2" style={{ ...(disabled ? { opacity: 0.7 } : {}), overflow: isMobile ? 'visible' : undefined }}>
-        <div className={`flex items-end px-6 ${isMobile ? 'justify-center pt-5' : 'justify-center min-w-max pt-4'}`}>
+      <div
+        ref={scrollRef}
+        className="player-hand-scroll pb-2"
+        style={disabled ? { opacity: 0.7 } : undefined}
+        role="region"
+        aria-label="Cartas de tu mano"
+      >
+        <div className={`player-hand-row flex items-end ${isMobile ? 'w-max min-w-max justify-start px-10 pt-5' : 'justify-center min-w-max px-6 pt-4'}`}>
           {n > 0 ? (
             player.hand.map((card, i) => {
               const cardRef = cardRefs.current.get(card.id)!;
@@ -152,7 +145,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                 <div
                   key={card.id}
                   style={{
-                    margin: isMobile ? `0 -${mobileOverlap}px` : '0 -8px',
+                    margin: isMobile ? '0 -18px' : '0 -8px',
                     transform: fanTransform(i, n, lifted, isMobile, expanded),
                     transformOrigin: 'bottom center',
                     transition: 'transform .2s',

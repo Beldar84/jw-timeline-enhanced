@@ -48,6 +48,7 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
   const [searching, setSearching] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -55,15 +56,14 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
 
   const loadData = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const [friendsList, requestsList] = await Promise.all([
-        firebaseService.getFriends(),
-        firebaseService.getFriendRequests()
-      ]);
-      setFriends(friendsList);
-      setRequests(requestsList);
+      const social = await firebaseService.getSocialConnections();
+      setFriends(social.friends);
+      setRequests(social.requests);
     } catch (error) {
       console.error('Error loading friends data:', error);
+      setLoadError('No se pudieron cargar tus amigos. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -233,6 +233,11 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
         <div className="flex-1 overflow-y-auto py-4 pr-1" style={{ minHeight: 180 }}>
           {loading ? (
             <p className="font-body italic text-center py-10 m-0" style={{ color: '#a08a5c' }}>Cargando…</p>
+          ) : loadError ? (
+            <div className="text-center py-7">
+              <p className="font-body italic text-[15px] m-0 mb-4" style={{ color: '#8a3b2a' }}>{loadError}</p>
+              <button onClick={loadData} className="btn-gold px-4 py-2 text-[12px]">REINTENTAR</button>
+            </div>
           ) : (
             <>
               {tab === 'friends' && (
@@ -303,7 +308,7 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
                     <div className="flex gap-2">
                       <input id="friend-search" type="text" value={searchUsername} disabled={searching}
                         onChange={(e) => setSearchUsername(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                         placeholder="Nombre del jugador..."
                         style={{ ...inputStyle, width: 'auto' }} className="flex-1 min-w-0" />
                       <button onClick={handleSearch} disabled={searching || searchUsername.trim().length < 2}

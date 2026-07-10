@@ -18,6 +18,8 @@
     <style>
       html, body, #root {
         min-height: 100%;
+        width: 100%;
+        max-width: 100%;
         margin: 0;
         padding: 0;
       }
@@ -50,6 +52,7 @@
         z-index: 1;
         min-height: 100vh;
         min-height: 100dvh;
+        overflow-x: clip;
       }
       /* El documento es el único contenedor de scroll: evita el
          «scroll bloqueado» en móvil (doble gesto) que provocaba

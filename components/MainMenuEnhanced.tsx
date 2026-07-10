@@ -133,12 +133,12 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
 
   return (
     <>
-      <div className="flex flex-col items-center relative">
+      <div className="flex flex-col items-center relative w-full max-w-md px-1 sm:px-0">
         <p className="font-body italic text-lg mb-8 tracking-wide" style={{ color: '#c9b891' }}>
           Cronología bíblica · un juego de cartas
         </p>
 
-        <div className="parchment-panel w-full max-w-md px-10 pt-9 pb-8 flex flex-col">
+        <div className="parchment-panel w-full max-w-full px-6 sm:px-10 pt-9 pb-8 flex flex-col">
 
           {/* Jugador / sesión */}
           <div className="flex items-center gap-3.5 pb-5 cursor-pointer" style={{ borderBottom: '1px solid rgba(120,94,48,.3)' }}
@@ -156,7 +156,7 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
               </p>
             </div>
             {isLoggedIn ? (
-              <span className="font-body italic text-sm truncate max-w-[130px]" style={{ color: '#a08a5c' }}
+              <span className="font-body italic text-sm truncate max-w-[100px] sm:max-w-[130px]" style={{ color: '#a08a5c' }}
                 onClick={(e) => { e.stopPropagation(); click(onShowFriends)(); }}>
                 {userEmail}
               </span>
@@ -204,10 +204,10 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
           <div className="grid grid-cols-4 gap-2">
             {secondary.map(s => (
               <button key={s.label} onClick={click(s.fn)}
-                className="flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-sm cursor-pointer transition-colors hover:bg-[rgba(201,162,39,.12)]"
+                className="min-w-0 flex flex-col items-center gap-1.5 py-2.5 px-0.5 rounded-sm cursor-pointer transition-colors hover:bg-[rgba(201,162,39,.12)]"
                 style={{ background: 'none', border: '1px solid rgba(120,94,48,.25)' }}>
                 {s.icon}
-                <span className="font-body text-[13px]" style={{ color: '#5c4a28' }}>{s.label}</span>
+                <span className="font-body text-[11.5px] sm:text-[13px] leading-tight text-center break-words max-w-full" style={{ color: '#5c4a28' }}>{s.label}</span>
               </button>
             ))}
           </div>

@@ -918,7 +918,7 @@ const AppEnhanced: React.FC = () => {
   const showLogo = [GamePhase.MENU, GamePhase.SETUP, GamePhase.LOBBY].includes(gamePhase) && !selectedTurnBasedGameId;
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-start md:justify-center p-2 md:p-4 pt-4 pb-8 text-white font-sans">
+    <div className="w-full max-w-full min-h-screen overflow-x-clip flex flex-col items-center justify-start md:justify-center p-2 md:p-4 pt-4 pb-8 text-white font-sans">
       {showPlayerStatus && currentPlayer && (
         <PlayerStatus
           players={players}

@@ -183,7 +183,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       )}
 
       {/* ── Timeline (eje dorado) ── */}
-      <div className="max-md:order-4 overflow-x-auto flex-grow flex flex-col justify-center px-4 md:px-10 min-h-[240px] md:min-h-[340px]">
+      <div className="timeline-scroll max-md:order-4 overflow-x-auto overflow-y-hidden flex-grow flex flex-col justify-center px-4 md:px-10 min-h-[240px] md:min-h-[340px]">
         <Timeline
           cards={timeline}
           onSelectSlot={handleSelectSlot}

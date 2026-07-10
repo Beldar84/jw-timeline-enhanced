@@ -7,6 +7,9 @@ import { callCloudFunction, firebaseAuth as auth, firestoreDb as db, googleProvi
 
 const MIN_SEARCH_LENGTH = 2;
 const MAX_SEARCH_PREFIX_LENGTH = 24;
+// Cloud Functions requiere el plan Blaze. Se activará al desplegar el backend;
+// mientras tanto, la ruta Spark conserva las funciones sociales existentes.
+const SOCIAL_FUNCTIONS_ENABLED = false;
 
 function normalizeSearchText(value: string): string {
   return value
@@ -111,6 +114,38 @@ export interface FriendInfo {
   email?: string;
   avatar?: string;
   online?: boolean;
+}
+
+export interface SocialConnections {
+  friends: FriendInfo[];
+  requests: FriendInfo[];
+}
+
+async function loadLegacySocialProfile(userId: string): Promise<FriendInfo> {
+  const publicSnapshot = await getDoc(doc(db, 'publicProfiles', userId));
+  if (publicSnapshot.exists()) {
+    const data = publicSnapshot.data();
+    return {
+      id: data.id || publicSnapshot.id,
+      name: data.name || 'Amigo',
+      avatar: data.avatar,
+    };
+  }
+
+  // Antes de publicProfiles, la clasificación ya guardaba una copia pública
+  // del nombre. Sirve para recuperar la identidad visual de amistades antiguas.
+  const leaderboardSnapshot = await getDoc(doc(db, 'leaderboard', userId));
+  if (leaderboardSnapshot.exists()) {
+    const data = leaderboardSnapshot.data();
+    return {
+      id: data.id || leaderboardSnapshot.id,
+      name: data.name || 'Amigo',
+      avatar: data.avatar,
+    };
+  }
+
+  // Nunca ocultar una amistad que sigue presente en la lista privada.
+  return { id: userId, name: 'Amigo' };
 }
 
 export interface GameInvitation {
@@ -421,41 +456,43 @@ export const firebaseService = {
 
   // ==================== FRIENDS METHODS ====================
 
-  // Search the public projection by display-name prefix. Email addresses and
-  // friend lists remain in the private users collection.
+  // Uses the validated server search when available and the public projection
+  // on Spark, without exposing private account documents.
   async searchUserByUsername(username: string): Promise<FriendInfo[]> {
-    try {
-      const searchTerm = normalizeSearchText(username);
-      if (searchTerm.length < MIN_SEARCH_LENGTH) return [];
+    const searchTerm = normalizeSearchText(username);
+    if (searchTerm.length < MIN_SEARCH_LENGTH) return [];
 
-      const usersRef = collection(db, 'publicProfiles');
-      const usersQuery = query(
-        usersRef,
-        where('searchPrefixes', 'array-contains', searchTerm.slice(0, MAX_SEARCH_PREFIX_LENGTH)),
-        limit(10)
-      );
-      const snapshot = await getDocs(usersQuery);
-
-      const results: FriendInfo[] = [];
-      const currentUserId = this.getCurrentUserId();
-
-      snapshot.docs.forEach(doc => {
-        const userData = doc.data();
-
-        if (userData.id !== currentUserId) {
-          results.push({
-            id: userData.id,
-            name: userData.name,
-            avatar: userData.avatar
-          });
-        }
-      });
-
-      return results;
-    } catch (error) {
-      console.error('[Firebase] Search user error:', error);
-      return [];
+    if (SOCIAL_FUNCTIONS_ENABLED) {
+      try {
+        const result = await callCloudFunction<
+          { searchTerm: string },
+          { users: FriendInfo[] }
+        >('searchUsers', { searchTerm });
+        return result.users;
+      } catch (error) {
+        console.warn('[Firebase] Secure search unavailable, using public profiles:', error);
+      }
     }
+
+    // Compatibilidad con proyectos Spark: hasta que Cloud Functions esté
+    // disponible, conserva la búsqueda mediante la proyección pública.
+    const usersQuery = query(
+      collection(db, 'publicProfiles'),
+      where('searchPrefixes', 'array-contains', searchTerm.slice(0, MAX_SEARCH_PREFIX_LENGTH)),
+      limit(10)
+    );
+    const snapshot = await getDocs(usersQuery);
+    const currentUserId = this.getCurrentUserId();
+    return snapshot.docs
+      .filter(snapshot => snapshot.id !== currentUserId)
+      .map(snapshot => {
+        const data = snapshot.data();
+        return {
+          id: data.id || snapshot.id,
+          name: data.name || 'Jugador',
+          avatar: data.avatar,
+        };
+      });
   },
 
   // Send friend request
@@ -526,64 +563,42 @@ export const firebaseService = {
     }
   },
 
+  // Load both social lists in one secure server call. Reading the referenced
+  // private profiles on the server restores legacy friendships whose public
+  // profile projection has not been created yet.
+  async getSocialConnections(): Promise<SocialConnections> {
+    const userId = this.getCurrentUserId();
+    if (!userId) return { friends: [], requests: [] };
+
+    if (SOCIAL_FUNCTIONS_ENABLED) {
+      try {
+        return await callCloudFunction<Record<string, never>, SocialConnections>('getSocialConnections', {});
+      } catch (error) {
+        console.warn('[Firebase] Secure social data unavailable, using account list:', error);
+      }
+    }
+
+    // La aplicación sigue funcionando en Spark mientras las nuevas funciones
+    // esperan despliegue. Las listas se leen solo desde el perfil propio.
+    const profile = await this.getProfile();
+    if (!profile) throw new Error('No se pudo cargar el perfil social.');
+    const [friends, requests] = await Promise.all([
+      Promise.all((profile.friends || []).map(loadLegacySocialProfile)),
+      Promise.all((profile.friendRequests || []).map(loadLegacySocialProfile)),
+    ]);
+    return { friends, requests };
+  },
+
   // Get friends list
   async getFriends(): Promise<FriendInfo[]> {
-    const userId = this.getCurrentUserId();
-    if (!userId) return [];
-
-    try {
-      const profile = await this.getProfile();
-      if (!profile || !profile.friends || profile.friends.length === 0) return [];
-
-      const friends: FriendInfo[] = [];
-      for (const friendId of profile.friends) {
-        const friendRef = doc(db, 'publicProfiles', friendId);
-        const friendSnap = await getDoc(friendRef);
-        if (friendSnap.exists()) {
-          const data = friendSnap.data();
-          friends.push({
-            id: data.id,
-            name: data.name,
-            avatar: data.avatar
-          });
-        }
-      }
-
-      return friends;
-    } catch (error) {
-      console.error('[Firebase] Get friends error:', error);
-      return [];
-    }
+    const social = await this.getSocialConnections();
+    return social.friends;
   },
 
   // Get pending friend requests
   async getFriendRequests(): Promise<FriendInfo[]> {
-    const userId = this.getCurrentUserId();
-    if (!userId) return [];
-
-    try {
-      const profile = await this.getProfile();
-      if (!profile || !profile.friendRequests || profile.friendRequests.length === 0) return [];
-
-      const requests: FriendInfo[] = [];
-      for (const requesterId of profile.friendRequests) {
-        const requesterRef = doc(db, 'publicProfiles', requesterId);
-        const requesterSnap = await getDoc(requesterRef);
-        if (requesterSnap.exists()) {
-          const data = requesterSnap.data();
-          requests.push({
-            id: data.id,
-            name: data.name,
-            avatar: data.avatar
-          });
-        }
-      }
-
-      return requests;
-    } catch (error) {
-      console.error('[Firebase] Get friend requests error:', error);
-      return [];
-    }
+    const social = await this.getSocialConnections();
+    return social.requests;
   },
 
   // ==================== GAME INVITATIONS ====================
