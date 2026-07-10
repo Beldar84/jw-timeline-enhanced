@@ -22,13 +22,13 @@ interface PlayerHandProps {
 }
 
 // Rotación del abanico según posición relativa al centro.
-// En móvil el abanico es más compacto y la carta ampliada
-// (expanded) crece hacia arriba desde su base.
+// En móvil el abanico es más compacto. La carta ampliada se
+// endereza aquí y crece hacia abajo en su envoltorio interior.
 const fanTransform = (i: number, n: number, lifted: boolean, isMobile: boolean, expanded: boolean) => {
   const center = (n - 1) / 2;
   const offset = n > 1 ? (i - center) / center : 0; // -1..1
   if (isMobile) {
-    if (expanded) return 'translateY(-34px) scale(1.32)';
+    if (expanded) return 'translateY(0)';
     const rot = offset * 10; // máx ±10°
     return `rotate(${rot}deg) translateY(${Math.abs(offset) * 16}px)`;
   }
@@ -122,7 +122,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
         )}
       </div>
       <div className="overflow-x-auto pb-2" style={{ ...(disabled ? { opacity: 0.7 } : {}), overflow: isMobile ? 'visible' : undefined }}>
-        <div className={`flex items-end px-6 ${isMobile ? 'justify-center pt-28' : 'justify-center min-w-max pt-4'}`}>
+        <div className={`flex items-end px-6 ${isMobile ? 'justify-center pt-5' : 'justify-center min-w-max pt-4'}`}>
           {n > 0 ? (
             player.hand.map((card, i) => {
               const cardRef = cardRefs.current.get(card.id)!;
@@ -142,30 +142,32 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                   onMouseEnter={() => { hovered.current = card.id; force(); }}
                   onMouseLeave={() => { hovered.current = null; force(); }}
                 >
-                  <Card
-                    ref={cardRef}
-                    card={card}
-                    className={expanded ? 'card-expanded-ring' : ''}
-                    showYear={false}
-                    isStudyMode={isStudyMode}
-                    onClick={() => {
-                      if (isMobile) {
-                        // Tras elegir una posición del eje, la carta se coloca
-                        // directamente para conservar el flujo de la partida.
-                        if (placementMode && !disabled && cardRef.current) {
-                          onSelectCard(card, cardRef.current);
-                          setExpandedId(null);
+                  <div className={`hand-card-zoom-shell ${expanded ? 'hand-card-zoom-expanded' : ''}`}>
+                    <Card
+                      ref={cardRef}
+                      card={card}
+                      className={expanded ? 'card-expanded-ring' : ''}
+                      showYear={false}
+                      isStudyMode={isStudyMode}
+                      onClick={() => {
+                        if (isMobile) {
+                          // Tras elegir una posición del eje, la carta se coloca
+                          // directamente para conservar el flujo de la partida.
+                          if (placementMode && !disabled && cardRef.current) {
+                            onSelectCard(card, cardRef.current);
+                            setExpandedId(null);
+                            return;
+                          }
+
+                          setExpandedId(currentId => currentId === card.id ? null : card.id);
                           return;
                         }
 
-                        setExpandedId(currentId => currentId === card.id ? null : card.id);
-                        return;
-                      }
-
-                      if (cardRef.current) onSelectCard(card, cardRef.current);
-                    }}
-                    isHidden={hidingCardId === card.id}
-                  />
+                        if (cardRef.current) onSelectCard(card, cardRef.current);
+                      }}
+                      isHidden={hidingCardId === card.id}
+                    />
+                  </div>
                 </div>
               );
             })

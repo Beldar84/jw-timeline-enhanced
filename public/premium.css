@@ -215,6 +215,17 @@
   box-shadow: 0 0 0 2.5px #e5c96a, 0 0 26px rgba(201,162,39,.45), 0 12px 28px rgba(0,0,0,.55) !important;
 }
 
+/* La ampliación de la mano crece hacia abajo: conserva el título
+   cerca de las cartas sin que la carta llegue a cubrirlo. */
+.hand-card-zoom-shell {
+  transform: scale(1);
+  transform-origin: top center;
+  transition: transform .2s ease;
+}
+.hand-card-zoom-shell.hand-card-zoom-expanded {
+  transform: scale(1.32);
+}
+
 /* Las cartas ya colocadas se amplían dentro del eje, sin abrir
    el visor a pantalla completa. El origen inferior mantiene la
    fecha estable y la elevación evita que ambas se superpongan. */

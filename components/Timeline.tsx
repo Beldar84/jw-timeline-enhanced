@@ -63,7 +63,7 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
   };
 
   return (
-    <div className="relative py-12 md:py-10">
+    <div className="relative pt-12 pb-2 md:py-10">
       {/* Eje temporal dorado detrás de cartas y ranuras */}
       <div className="gold-axis" aria-hidden="true"></div>
 
