@@ -1,4 +1,4 @@
-import React, { createRef, useRef, forwardRef } from 'react';
+import React, { createRef, useRef, useState, forwardRef } from 'react';
 import { Card as CardType } from '../types';
 import Card, { formatYearPremium } from './Card';
 
@@ -14,7 +14,6 @@ interface TimelineProps {
   cards: CardType[];
   onSelectSlot: (timelineIndex: number, element: HTMLButtonElement) => void;
   selectedSlotIndex: number | null;
-  onCardClick: (card: CardType) => void;
   disabled?: boolean;
 }
 
@@ -49,20 +48,22 @@ const PlacementSlot = forwardRef<HTMLButtonElement, PlacementSlotProps>(({ id, o
   </button>
 ));
 
-const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIndex, onCardClick, disabled = false }) => {
+const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIndex, disabled = false }) => {
   const slotRefs = useRef<React.RefObject<HTMLButtonElement>[]>([]);
+  const [expandedCardId, setExpandedCardId] = useState<number | null>(null);
   slotRefs.current = [...Array(cards.length + 1)].map(
     (_, i) => slotRefs.current[i] ?? createRef<HTMLButtonElement>()
   );
 
   const handleSelect = (index: number) => {
+    setExpandedCardId(null);
     if (slotRefs.current[index]?.current) {
       onSelectSlot(index, slotRefs.current[index].current!);
     }
   };
 
   return (
-    <div className="relative">
+    <div className="relative py-12 md:py-10">
       {/* Eje temporal dorado detrás de cartas y ranuras */}
       <div className="gold-axis" aria-hidden="true"></div>
 
@@ -77,13 +78,15 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
 
         {cards.map((card, index) => (
           <React.Fragment key={card.id}>
-            <div className="flex flex-col items-center gap-2 md:gap-3 flex-shrink-0">
-              <Card
-                card={card}
-                showYear={false}
-                onClick={() => onCardClick(card)}
-                className="card-responsive"
-              />
+            <div className="relative flex flex-col items-center gap-2 md:gap-3 flex-shrink-0">
+              <div className={`timeline-card-shell ${expandedCardId === card.id ? 'timeline-card-expanded' : ''}`}>
+                <Card
+                  card={card}
+                  showYear={false}
+                  onClick={() => setExpandedCardId(currentId => currentId === card.id ? null : card.id)}
+                  className={`card-responsive ${expandedCardId === card.id ? 'card-expanded-ring' : ''}`}
+                />
+              </div>
               <span className="year-chip text-sm md:text-base">{formatYearPremium(card.year)}</span>
             </div>
             <PlacementSlot

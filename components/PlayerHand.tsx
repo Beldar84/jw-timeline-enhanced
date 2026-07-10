@@ -122,7 +122,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
         )}
       </div>
       <div className="overflow-x-auto pb-2" style={{ ...(disabled ? { opacity: 0.7 } : {}), overflow: isMobile ? 'visible' : undefined }}>
-        <div className={`flex items-end px-6 ${isMobile ? 'justify-center pt-11' : 'justify-center min-w-max pt-4'}`}>
+        <div className={`flex items-end px-6 ${isMobile ? 'justify-center pt-28' : 'justify-center min-w-max pt-4'}`}>
           {n > 0 ? (
             player.hand.map((card, i) => {
               const cardRef = cardRefs.current.get(card.id)!;

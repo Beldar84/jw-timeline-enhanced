@@ -188,7 +188,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
           cards={timeline}
           onSelectSlot={handleSelectSlot}
           selectedSlotIndex={selectedTimelineIndex}
-          onCardClick={handleZoomCard}
           disabled={!canInteract}
         />
       </div>
@@ -241,7 +240,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         </div>
 
         {/* Mano en abanico */}
-        <div ref={handRef} id={handPlayer?.isAI ? 'ai-hand-container' : 'player-hand-container'} className="max-md:order-5 max-md:w-full max-md:pb-3 md:order-2 md:flex-1 min-w-0">
+        <div ref={handRef} id={handPlayer?.isAI ? 'ai-hand-container' : 'player-hand-container'} className="max-md:order-5 max-md:w-full max-md:pt-5 max-md:pb-3 md:order-2 md:flex-1 min-w-0">
           {handPlayer ? (
             handPlayer.isAI ? (
               <AIHand player={handPlayer} showTitle={true} />

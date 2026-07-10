@@ -215,6 +215,27 @@
   box-shadow: 0 0 0 2.5px #e5c96a, 0 0 26px rgba(201,162,39,.45), 0 12px 28px rgba(0,0,0,.55) !important;
 }
 
+/* Las cartas ya colocadas se amplían dentro del eje, sin abrir
+   el visor a pantalla completa. El origen inferior mantiene la
+   fecha estable y la elevación evita que ambas se superpongan. */
+.timeline-card-shell {
+  position: relative;
+  z-index: 1;
+  transform-origin: bottom center;
+  transition: transform .22s ease, filter .22s ease;
+}
+.timeline-card-shell.timeline-card-expanded {
+  z-index: 20;
+  transform: translateY(-10px) scale(1.18);
+  filter: drop-shadow(0 16px 22px rgba(0,0,0,.48));
+}
+
+@media (min-width: 768px) {
+  .timeline-card-shell.timeline-card-expanded {
+    transform: translateY(-8px) scale(1.12);
+  }
+}
+
 /* En pantallas táctiles el hover «pegajoso» desplazaba la carta
    dentro de su marco; se desactiva la elevación por hover. */
 @media (hover: none) {
