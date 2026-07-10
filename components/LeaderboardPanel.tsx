@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { leaderboardService } from '../services/leaderboardService';
 import { firebaseService, OnlineLeaderboardEntry } from '../services/firebaseService';
-import { statsService } from '../services/statsService';
 import { profileService } from '../services/profileService';
 import { soundService } from '../services/soundService';
 import { LeaderboardEntry } from '../types';
@@ -64,62 +63,42 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ onClose }) => {
 
   const playerName = profileService.getName();
 
+  const loadGlobalLeaderboard = useCallback(async (): Promise<boolean> => {
+    setGlobalLoading(true);
+    setGlobalError(null);
+    try {
+      const list = await firebaseService.getLeaderboard(50, period);
+      setGlobalEntries(list);
+      if (firebaseService.isSignedIn()) {
+        setMyRank(await firebaseService.getMyRank(period));
+      }
+      return true;
+    } catch (err) {
+      setGlobalError('Error al cargar la clasificación global');
+      console.error(err);
+      return false;
+    } finally {
+      setGlobalLoading(false);
+    }
+  }, [period]);
+
   useEffect(() => {
     if (tab === 'local') {
       leaderboardService.updateLeaderboard();
       setEntries(leaderboardService.getTopPlayers(period, 20));
     } else {
-      loadGlobalLeaderboard();
+      void loadGlobalLeaderboard();
     }
-  }, [tab, period]);
+  }, [tab, period, loadGlobalLeaderboard]);
 
-  const loadGlobalLeaderboard = async () => {
-    setGlobalLoading(true);
-    setGlobalError(null);
-    try {
-      const list = await firebaseService.getLeaderboard(50);
-      setGlobalEntries(list);
-      if (firebaseService.isSignedIn()) {
-        setMyRank(await firebaseService.getMyRank());
-      }
-    } catch (err) {
-      setGlobalError('Error al cargar la clasificación global');
-      console.error(err);
-    } finally {
-      setGlobalLoading(false);
-    }
-  };
-
-  const handleSync = async () => {
+  const handleRefresh = async () => {
     setSyncing(true);
     setGlobalError(null);
     soundService.playClick();
-    try {
-      const profile = profileService.getProfile();
-      const stats = statsService.loadStats();
-      const onlineStats = {
-        totalWins: stats.gamesWon,
-        totalGames: stats.gamesPlayed,
-        totalPlacements: stats.totalCardsPlaced,
-        correctPlacements: stats.correctPlacements,
-        bestStreak: stats.longestWinStreak,
-        currentStreak: stats.currentWinStreak,
-      };
-      const success = await firebaseService.syncStats(onlineStats, profile.name);
-      if (success) {
-        await loadGlobalLeaderboard();
-        soundService.playCorrect();
-      } else {
-        setGlobalError('Error al sincronizar');
-        soundService.playIncorrect();
-      }
-    } catch (err) {
-      setGlobalError('Error al sincronizar estadísticas');
-      console.error(err);
-      soundService.playIncorrect();
-    } finally {
-      setSyncing(false);
-    }
+    const refreshed = await loadGlobalLeaderboard();
+    if (refreshed) soundService.playCorrect();
+    else soundService.playIncorrect();
+    setSyncing(false);
   };
 
   const handleTabChange = (newTab: Tab) => { soundService.playClick(); setTab(newTab); };
@@ -141,7 +120,7 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ onClose }) => {
               Victorias ×100 · Precisión ×10 · Racha ×50
             </p>
           </div>
-          <button onClick={onClose}
+          <button onClick={onClose} aria-label="Cerrar clasificación"
             className="w-8 h-8 rounded-full cursor-pointer text-[17px] leading-none transition-colors hover:bg-[rgba(201,162,39,.15)]"
             style={{ background: 'none', border: '1px solid rgba(120,94,48,.35)', color: '#5c4a28' }}>×</button>
         </div>
@@ -162,20 +141,17 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ onClose }) => {
           ))}
         </div>
 
-        {/* Periodos (solo local) */}
-        {tab === 'local' && (
-          <div className="flex gap-2 px-8 pt-3.5">
-            {(Object.keys(PERIOD_LABELS) as Period[]).map(p => (
-              <button key={p} onClick={() => handlePeriodChange(p)}
-                className="px-3.5 py-1.5 rounded-sm cursor-pointer font-display text-[11px] tracking-widest"
-                style={period === p
-                  ? { background: 'rgba(201,162,39,.14)', border: '1px solid #a8853c', color: '#5c4a28', fontWeight: 600 }
-                  : { background: 'none', border: '1px solid rgba(120,94,48,.3)', color: '#a08a5c' }}>
-                {PERIOD_LABELS[p]}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex gap-2 px-8 pt-3.5">
+          {(Object.keys(PERIOD_LABELS) as Period[]).map(p => (
+            <button key={p} onClick={() => handlePeriodChange(p)}
+              className="px-3.5 py-1.5 rounded-sm cursor-pointer font-display text-[11px] tracking-widest"
+              style={period === p
+                ? { background: 'rgba(201,162,39,.14)', border: '1px solid #a8853c', color: '#5c4a28', fontWeight: 600 }
+                : { background: 'none', border: '1px solid rgba(120,94,48,.3)', color: '#a08a5c' }}>
+              {PERIOD_LABELS[p]}
+            </button>
+          ))}
+        </div>
 
         {/* Reinicio de periodo */}
         {tab === 'local' && period !== 'allTime' && (
@@ -184,14 +160,17 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ onClose }) => {
           </p>
         )}
 
-        {/* Sincronizar (solo global) */}
+        {/* La clasificación global solo contiene resultados validados por servidor. */}
         {tab === 'global' && (
           <div className="px-8 pt-3.5">
-            <button onClick={handleSync} disabled={syncing}
+            <button onClick={handleRefresh} disabled={syncing}
               className="w-full py-2.5 font-display text-[12px] font-semibold tracking-wider rounded-sm cursor-pointer disabled:opacity-50"
               style={{ background: 'rgba(201,162,39,.14)', border: '1px solid #a8853c', color: '#5c4a28' }}>
-              {syncing ? 'SINCRONIZANDO…' : 'SUBIR MIS ESTADÍSTICAS'}
+              {syncing ? 'ACTUALIZANDO…' : 'ACTUALIZAR CLASIFICACIÓN'}
             </button>
+            <p className="font-body italic text-xs text-center m-0 mt-2" style={{ color: '#a08a5c' }}>
+              Solo cuentan partidas online verificadas por el servidor
+            </p>
             {myRank && (
               <p className="font-body italic text-sm text-center m-0 mt-2" style={{ color: 'var(--gold-dark)' }}>
                 Tu posición global: #{myRank}
@@ -224,7 +203,7 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ onClose }) => {
             <p className="font-body italic text-center text-base py-10 m-0" style={{ color: '#a08a5c' }}>Cargando…</p>
           ) : globalEntries.length === 0 ? (
             <p className="font-body italic text-center text-base py-10 m-0" style={{ color: '#a08a5c' }}>
-              No hay datos en la clasificación global. ¡Sé el primero en sincronizar!
+              No hay datos todavía. Juega una partida online para estrenar la clasificación.
             </p>
           ) : (
             globalEntries.map((entry, index) => (

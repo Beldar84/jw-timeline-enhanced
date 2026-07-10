@@ -14,11 +14,15 @@ export default defineConfig(({ mode }) => {
       build: {
         outDir: 'dist',
         sourcemap: false,
+        chunkSizeWarningLimit: 600,
         rollupOptions: {
           output: {
             manualChunks: {
               vendor: ['react', 'react-dom'],
-              firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+              'firebase-core': ['firebase/app'],
+              'firebase-auth': ['firebase/auth'],
+              'firebase-firestore': ['firebase/firestore'],
+              'firebase-functions': ['firebase/functions'],
             }
           }
         }

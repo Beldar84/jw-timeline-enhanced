@@ -20,7 +20,7 @@ interface OnlineSetupProps {
 }
 
 const normalizeGameCodeSuffix = (value: string): string =>
-  value.trim().toUpperCase().replace(/\s+/g, '').replace(/^JW-?/, '').replace(/[^0-9]/g, '').slice(0, 4);
+  value.trim().toUpperCase().replace(/\s+/g, '').replace(/^JW-?/, '').replace(/[^A-Z0-9]/g, '').slice(0, 6);
 
 const stroke = '#8a6a2a';
 const Chevron = () => (
@@ -155,7 +155,7 @@ const OnlineSetup: React.FC<OnlineSetupProps> = ({ onJoinLobby, onStartTurnBased
         </span>
         <input id="game-id" type="text" value={gameIdSuffix}
           onChange={(e) => setGameIdSuffix(normalizeGameCodeSuffix(e.target.value))}
-          placeholder="1234" disabled={isLoading}
+          placeholder="A7K9Q2" disabled={isLoading} maxLength={6}
           style={{ ...inputStyle, borderRadius: '0 3px 3px 0', letterSpacing: '.15em' }} />
       </div>
       <p className="font-body italic text-[13px] m-0 mb-6" style={{ color: '#a08a5c' }}>Si lo dejas vacío se creará un código nuevo.</p>

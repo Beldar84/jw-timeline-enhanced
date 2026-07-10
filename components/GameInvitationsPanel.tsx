@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { firebaseService, GameInvitation } from '../services/firebaseService';
 import { soundService } from '../services/soundService';
 
@@ -11,6 +11,7 @@ const GameInvitationsPanel: React.FC<GameInvitationsPanelProps> = ({ onAcceptInv
   const [invitations, setInvitations] = useState<GameInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const previousInvitationIds = useRef(new Set<string>());
 
   useEffect(() => {
     // Subscribe to real-time invitations
@@ -18,8 +19,9 @@ const GameInvitationsPanel: React.FC<GameInvitationsPanelProps> = ({ onAcceptInv
       setInvitations(newInvitations);
       setLoading(false);
 
-      // Play sound if new invitation arrives
-      if (newInvitations.length > invitations.length) {
+      const hasNewInvitation = newInvitations.some(invitation => !previousInvitationIds.current.has(invitation.id));
+      previousInvitationIds.current = new Set(newInvitations.map(invitation => invitation.id));
+      if (hasNewInvitation) {
         soundService.playClick();
       }
     });

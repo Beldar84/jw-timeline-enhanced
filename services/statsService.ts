@@ -44,6 +44,7 @@ export interface GameSession {
 }
 
 const STORAGE_KEY = 'jw_timeline_stats';
+const SYNC_BASE_KEY = 'jw_timeline_stats_sync_base';
 
 const DEFAULT_STATS: PlayerStats = {
   gamesPlayed: 0,
@@ -117,6 +118,23 @@ class StatsService {
     };
   }
 
+  private loadSyncBase(): PlayerStats | null {
+    try {
+      const stored = localStorage.getItem(SYNC_BASE_KEY);
+      return stored ? this.normalizeStats(JSON.parse(stored)) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private saveSyncBase(stats: PlayerStats): void {
+    try {
+      localStorage.setItem(SYNC_BASE_KEY, JSON.stringify(stats));
+    } catch (error) {
+      console.error('Error saving stats sync base:', error);
+    }
+  }
+
   // Combina las estadísticas locales con las guardadas en la nube.
   // El lado con más partidas jugadas manda en los contadores; logros,
   // rachas y récords se combinan tomando siempre el mejor de los dos.
@@ -126,17 +144,49 @@ class StatsService {
     if (!cloudRaw) return { stats: local, localChanged: false };
 
     const cloud = this.normalizeStats(cloudRaw);
-    const base = cloud.gamesPlayed > local.gamesPlayed ? cloud : local;
-    const other = base === cloud ? local : cloud;
+    const syncBase = this.loadSyncBase();
+
+    // The first sync cannot distinguish duplicated history from independent
+    // history, so it keeps the most complete side. Subsequent syncs add only
+    // the local delta since that shared base, preserving games from two devices
+    // without counting the same snapshot twice.
+    const additive = (localValue: number, baseValue: number) => Math.max(0, localValue - baseValue);
+    const firstSyncBase = cloud.gamesPlayed > local.gamesPlayed ? cloud : local;
+    const mergedCounters = syncBase
+      ? {
+          gamesPlayed: cloud.gamesPlayed + additive(local.gamesPlayed, syncBase.gamesPlayed),
+          gamesWon: cloud.gamesWon + additive(local.gamesWon, syncBase.gamesWon),
+          gamesLost: cloud.gamesLost + additive(local.gamesLost, syncBase.gamesLost),
+          totalCardsPlaced: cloud.totalCardsPlaced + additive(local.totalCardsPlaced, syncBase.totalCardsPlaced),
+          correctPlacements: cloud.correctPlacements + additive(local.correctPlacements, syncBase.correctPlacements),
+          incorrectPlacements: cloud.incorrectPlacements + additive(local.incorrectPlacements, syncBase.incorrectPlacements),
+          totalPlayTime: cloud.totalPlayTime + additive(local.totalPlayTime, syncBase.totalPlayTime),
+        }
+      : {
+          gamesPlayed: firstSyncBase.gamesPlayed,
+          gamesWon: firstSyncBase.gamesWon,
+          gamesLost: firstSyncBase.gamesLost,
+          totalCardsPlaced: firstSyncBase.totalCardsPlaced,
+          correctPlacements: firstSyncBase.correctPlacements,
+          incorrectPlacements: firstSyncBase.incorrectPlacements,
+          totalPlayTime: firstSyncBase.totalPlayTime,
+        };
 
     const bestFastestWin = [local.fastestWin, cloud.fastestWin]
       .filter((v): v is number => typeof v === 'number')
       .sort((a, b) => a - b)[0] ?? null;
 
     const merged: PlayerStats = {
-      ...base,
+      ...firstSyncBase,
+      ...mergedCounters,
       longestWinStreak: Math.max(local.longestWinStreak, cloud.longestWinStreak),
+      currentWinStreak: syncBase && local.gamesPlayed > syncBase.gamesPlayed
+        ? local.currentWinStreak
+        : cloud.currentWinStreak,
       fastestWin: bestFastestWin,
+      averageGameDuration: mergedCounters.gamesPlayed > 0
+        ? mergedCounters.totalPlayTime / mergedCounters.gamesPlayed
+        : 0,
       achievements: DEFAULT_STATS.achievements.map(def => {
         const localAch = local.achievements.find(a => a.id === def.id);
         const cloudAch = cloud.achievements.find(a => a.id === def.id);
@@ -145,13 +195,27 @@ class StatsService {
           .sort((a, b) => a - b)[0] ?? null;
         return { ...def, unlockedAt };
       }),
-      deckStats: Object.keys(base.deckStats).length >= Object.keys(other.deckStats).length
-        ? base.deckStats
-        : other.deckStats,
+      deckStats: Object.fromEntries(
+        Array.from(new Set([...Object.keys(local.deckStats), ...Object.keys(cloud.deckStats)])).map(deckId => {
+          const localDeck = local.deckStats[deckId] || { gamesPlayed: 0, gamesWon: 0, cardsPlaced: 0, correctPlacements: 0 };
+          const cloudDeck = cloud.deckStats[deckId] || { gamesPlayed: 0, gamesWon: 0, cardsPlaced: 0, correctPlacements: 0 };
+          const baseDeck = syncBase?.deckStats[deckId] || { gamesPlayed: 0, gamesWon: 0, cardsPlaced: 0, correctPlacements: 0 };
+          const mergedDeck = syncBase
+            ? {
+                gamesPlayed: cloudDeck.gamesPlayed + additive(localDeck.gamesPlayed, baseDeck.gamesPlayed),
+                gamesWon: cloudDeck.gamesWon + additive(localDeck.gamesWon, baseDeck.gamesWon),
+                cardsPlaced: cloudDeck.cardsPlaced + additive(localDeck.cardsPlaced, baseDeck.cardsPlaced),
+                correctPlacements: cloudDeck.correctPlacements + additive(localDeck.correctPlacements, baseDeck.correctPlacements),
+              }
+            : (cloudDeck.gamesPlayed > localDeck.gamesPlayed ? cloudDeck : localDeck);
+          return [deckId, mergedDeck];
+        })
+      ),
     };
 
     const localChanged = JSON.stringify(merged) !== JSON.stringify(local);
     if (localChanged) this.saveStats(merged);
+    this.saveSyncBase(merged);
     return { stats: merged, localChanged };
   }
 
@@ -167,6 +231,7 @@ class StatsService {
   // Reset all stats
   resetStats(): void {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(SYNC_BASE_KEY);
     this.currentSession = null;
     this.lastCompletedSession = null;
   }

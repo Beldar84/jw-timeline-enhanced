@@ -3,12 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --exclude 'functions/**' --exclude 'firestore.rules.test.ts'",
+    "test:rules": "npx --yes firebase-tools@15.23.0 emulators:exec --project jw-timeline-test --only firestore \"vitest run firestore.rules.test.ts\"",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -17,6 +21,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@tailwindcss/vite": "^4.3.2",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",

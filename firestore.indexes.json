@@ -17,11 +17,35 @@
       ]
     },
     {
+      "collectionGroup": "turnBasedGames",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "expiresAt", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "gameInvitations",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "toUserId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "leaderboard",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "weekly.periodKey", "order": "ASCENDING" },
+        { "fieldPath": "weekly.score", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "leaderboard",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "monthly.periodKey", "order": "ASCENDING" },
+        { "fieldPath": "monthly.score", "order": "DESCENDING" }
       ]
     }
   ],

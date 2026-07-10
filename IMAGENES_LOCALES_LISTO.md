@@ -21,9 +21,9 @@ Todas tus imágenes ahora están en:
 
 ## 🔧 Cambios Realizados
 
-### 1. ✅ Imágenes Copiadas
-- ✅ Copiadas desde `components/Images/` a `public/images/cards/`
-- ✅ Estructura de carpetas creada correctamente
+### 1. ✅ Imágenes Consolidadas
+- ✅ La única copia mantenida está en `public/images/cards/`
+- ✅ Eliminada la antigua carpeta duplicada para reducir el repositorio
 
 ### 2. ✅ Código Actualizado
 - ✅ `data/cards.ts` - Todas las 112 rutas actualizadas

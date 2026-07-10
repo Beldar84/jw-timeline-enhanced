@@ -1,38 +1,9 @@
-import { initializeApp } from 'firebase/app';
-import { initializeFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, serverTimestamp, Timestamp, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
-import { getAuth, signInAnonymously, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, browserLocalPersistence, setPersistence } from 'firebase/auth';
+import { doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, serverTimestamp, Timestamp, where, updateDoc, onSnapshot } from 'firebase/firestore';
+import { signInAnonymously, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { Card } from '../types';
-import { CARD_DATA } from '../data/cards';
-import { shuffleArray } from '../utils/shuffle';
-import { canPlaceCard } from '../utils/timelineRules';
-import { drawReplacementCard } from '../utils/drawReplacementCard';
 import { statsService } from './statsService';
 import { profileService } from './profileService';
-
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyCTSSEhZV4LSEiNb4R7E9bRYhchZBs9974",
-  authDomain: "jwtimeline-d2eb1.firebaseapp.com",
-  projectId: "jwtimeline-d2eb1",
-  storageBucket: "jwtimeline-d2eb1.firebasestorage.app",
-  messagingSenderId: "102921617939",
-  appId: "1:102921617939:web:a5e6af3924fd2d0b71b5e6",
-  measurementId: "G-Y3R4EB51PN"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-// experimentalAutoDetectLongPolling: detecta redes que bloquean WebChannel/streaming
-// (algunas operadoras móviles, wifis públicas, proxies corporativos) y cambia a
-// long-polling automáticamente. Sin esto, la sincronización en tiempo real puede
-// colgarse indefinidamente en esos dispositivos/redes.
-const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true,
-});
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
-
-export const firestoreDb = db;
+import { callCloudFunction, firebaseAuth as auth, firestoreDb as db, googleProvider } from './firebaseClient';
 
 const MIN_SEARCH_LENGTH = 2;
 const MAX_SEARCH_PREFIX_LENGTH = 24;
@@ -46,7 +17,7 @@ function normalizeSearchText(value: string): string {
     .replace(/\s+/g, ' ');
 }
 
-function buildSearchPrefixes(name: string, email?: string | null): string[] {
+function buildSearchPrefixes(name: string): string[] {
   const prefixes = new Set<string>();
   const addTokenPrefixes = (value: string) => {
     const normalized = normalizeSearchText(value);
@@ -63,12 +34,6 @@ function buildSearchPrefixes(name: string, email?: string | null): string[] {
     .split(/[^a-z0-9]+/)
     .filter(Boolean)
     .forEach(addTokenPrefixes);
-
-  if (email) {
-    const normalizedEmail = normalizeSearchText(email);
-    addTokenPrefixes(normalizedEmail);
-    addTokenPrefixes(normalizedEmail.split('@')[0] || '');
-  }
 
   return Array.from(prefixes);
 }
@@ -100,6 +65,26 @@ export interface OnlineLeaderboardEntry {
   winRate: number;
   bestStreak: number;
   updatedAt: Timestamp;
+}
+
+export type LeaderboardPeriod = 'weekly' | 'monthly' | 'allTime';
+
+function getLeaderboardPeriodKey(period: LeaderboardPeriod, date: Date = new Date()): string {
+  if (period === 'allTime') return 'all';
+  if (period === 'monthly') return date.toISOString().slice(0, 7);
+  const monday = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const day = monday.getUTCDay() || 7;
+  monday.setUTCDate(monday.getUTCDate() - day + 1);
+  return monday.toISOString().slice(0, 10);
+}
+
+function createHiddenCards(count: number): Card[] {
+  return Array.from({ length: Math.max(0, count) }, (_, index) => ({
+    id: -(index + 1),
+    name: 'Carta oculta',
+    year: 0,
+    imageUrl: '',
+  }));
 }
 
 export interface OnlineStats {
@@ -173,10 +158,6 @@ export type GameHistoryInput = Omit<GameHistoryEntry, 'id' | 'userId' | 'created
 let currentUser: User | null = null;
 let authStateListeners: ((user: User | null) => void)[] = [];
 
-// Partidas por turnos cuyas estadísticas ya procesó ESTE cliente en esta sesión
-// (evita doble conteo cuando el mismo evento llega por varias vías)
-const processedTurnBasedStats = new Set<string>();
-
 // Initialize auth listener
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
@@ -193,7 +174,7 @@ export const firebaseService = {
   onAuthStateChange(callback: (user: User | null) => void): () => void {
     authStateListeners.push(callback);
     // Call immediately with current state
-    callback(currentUser);
+    callback(currentUser || auth.currentUser);
     // Return unsubscribe function
     return () => {
       authStateListeners = authStateListeners.filter(l => l !== callback);
@@ -305,6 +286,8 @@ export const firebaseService = {
   // Sign in anonymously (for guests)
   async signInAnonymous(): Promise<string | null> {
     try {
+      const existingUser = currentUser || auth.currentUser;
+      if (existingUser) return existingUser.uid;
       const result = await signInAnonymously(auth);
       currentUser = result.user;
       console.log('[Firebase] Signed in anonymously:', result.user.uid);
@@ -327,19 +310,20 @@ export const firebaseService = {
   },
 
   getCurrentUserId(): string | null {
-    return currentUser?.uid || null;
+    return (currentUser || auth.currentUser)?.uid || null;
   },
 
   getCurrentUserEmail(): string | null {
-    return currentUser?.email || null;
+    return (currentUser || auth.currentUser)?.email || null;
   },
 
   isSignedIn(): boolean {
-    return currentUser !== null;
+    return Boolean(currentUser || auth.currentUser);
   },
 
   isRegisteredUser(): boolean {
-    return currentUser !== null && !currentUser.isAnonymous;
+    const user = currentUser || auth.currentUser;
+    return Boolean(user && !user.isAnonymous);
   },
 
   // ==================== PROFILE METHODS ====================
@@ -351,7 +335,7 @@ export const firebaseService = {
         id: userId,
         name,
         nameLower: normalizeSearchText(name),
-        searchPrefixes: buildSearchPrefixes(name, email),
+        searchPrefixes: buildSearchPrefixes(name),
         email: email || null,
         avatar: null,
         friends: [],
@@ -383,7 +367,7 @@ export const firebaseService = {
         await setDoc(userRef, {
           name,
           nameLower: normalizeSearchText(name),
-          searchPrefixes: buildSearchPrefixes(name, email),
+          searchPrefixes: buildSearchPrefixes(name),
           avatar: avatar || null,
           updatedAt: serverTimestamp()
         }, { merge: true });
@@ -412,7 +396,7 @@ export const firebaseService = {
         if (!Array.isArray(profile.searchPrefixes)) {
           await setDoc(userRef, {
             nameLower: normalizeSearchText(profile.name || 'Jugador'),
-            searchPrefixes: buildSearchPrefixes(profile.name || 'Jugador', profile.email)
+            searchPrefixes: buildSearchPrefixes(profile.name || 'Jugador')
           }, { merge: true });
         }
         return profile;
@@ -424,15 +408,27 @@ export const firebaseService = {
     }
   },
 
+  async refreshPublicProfile(): Promise<boolean> {
+    if (!this.isRegisteredUser()) return false;
+    try {
+      const result = await callCloudFunction<Record<string, never>, { success: boolean }>('refreshPublicProfile', {});
+      return result.success;
+    } catch (error) {
+      console.error('[Firebase] Refresh public profile error:', error);
+      return false;
+    }
+  },
+
   // ==================== FRIENDS METHODS ====================
 
-  // Search users by username or email prefix using Firestore indexes.
+  // Search the public projection by display-name prefix. Email addresses and
+  // friend lists remain in the private users collection.
   async searchUserByUsername(username: string): Promise<FriendInfo[]> {
     try {
       const searchTerm = normalizeSearchText(username);
       if (searchTerm.length < MIN_SEARCH_LENGTH) return [];
 
-      const usersRef = collection(db, 'users');
+      const usersRef = collection(db, 'publicProfiles');
       const usersQuery = query(
         usersRef,
         where('searchPrefixes', 'array-contains', searchTerm.slice(0, MAX_SEARCH_PREFIX_LENGTH)),
@@ -450,7 +446,6 @@ export const firebaseService = {
           results.push({
             id: userData.id,
             name: userData.name,
-            email: userData.email,
             avatar: userData.avatar
           });
         }
@@ -469,12 +464,11 @@ export const firebaseService = {
     if (!userId || userId === friendId) return false;
 
     try {
-      const friendRef = doc(db, 'users', friendId);
-      await updateDoc(friendRef, {
-        friendRequests: arrayUnion(userId)
-      });
-      console.log('[Firebase] Friend request sent');
-      return true;
+      const result = await callCloudFunction<{ friendId: string }, { success: boolean }>(
+        'sendFriendRequest',
+        { friendId }
+      );
+      return result.success;
     } catch (error) {
       console.error('[Firebase] Send friend request error:', error);
       return false;
@@ -487,21 +481,11 @@ export const firebaseService = {
     if (!userId) return false;
 
     try {
-      // Add each other as friends
-      const userRef = doc(db, 'users', userId);
-      const friendRef = doc(db, 'users', friendId);
-
-      await updateDoc(friendRef, {
-        friends: arrayUnion(userId)
-      });
-
-      await updateDoc(userRef, {
-        friends: arrayUnion(friendId),
-        friendRequests: arrayRemove(friendId)
-      });
-
-      console.log('[Firebase] Friend request accepted');
-      return true;
+      const result = await callCloudFunction<
+        { friendId: string; accept: boolean },
+        { success: boolean }
+      >('respondFriendRequest', { friendId, accept: true });
+      return result.success;
     } catch (error) {
       console.error('[Firebase] Accept friend request error:', error);
       return false;
@@ -514,12 +498,11 @@ export const firebaseService = {
     if (!userId) return false;
 
     try {
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        friendRequests: arrayRemove(friendId)
-      });
-      console.log('[Firebase] Friend request rejected');
-      return true;
+      const result = await callCloudFunction<
+        { friendId: string; accept: boolean },
+        { success: boolean }
+      >('respondFriendRequest', { friendId, accept: false });
+      return result.success;
     } catch (error) {
       console.error('[Firebase] Reject friend request error:', error);
       return false;
@@ -532,19 +515,11 @@ export const firebaseService = {
     if (!userId) return false;
 
     try {
-      const userRef = doc(db, 'users', userId);
-      const friendRef = doc(db, 'users', friendId);
-
-      await updateDoc(userRef, {
-        friends: arrayRemove(friendId)
-      });
-
-      await updateDoc(friendRef, {
-        friends: arrayRemove(userId)
-      });
-
-      console.log('[Firebase] Friend removed');
-      return true;
+      const result = await callCloudFunction<{ friendId: string }, { success: boolean }>(
+        'removeFriend',
+        { friendId }
+      );
+      return result.success;
     } catch (error) {
       console.error('[Firebase] Remove friend error:', error);
       return false;
@@ -562,14 +537,13 @@ export const firebaseService = {
 
       const friends: FriendInfo[] = [];
       for (const friendId of profile.friends) {
-        const friendRef = doc(db, 'users', friendId);
+        const friendRef = doc(db, 'publicProfiles', friendId);
         const friendSnap = await getDoc(friendRef);
         if (friendSnap.exists()) {
           const data = friendSnap.data();
           friends.push({
             id: data.id,
             name: data.name,
-            email: data.email,
             avatar: data.avatar
           });
         }
@@ -593,14 +567,13 @@ export const firebaseService = {
 
       const requests: FriendInfo[] = [];
       for (const requesterId of profile.friendRequests) {
-        const requesterRef = doc(db, 'users', requesterId);
+        const requesterRef = doc(db, 'publicProfiles', requesterId);
         const requesterSnap = await getDoc(requesterRef);
         if (requesterSnap.exists()) {
           const data = requesterSnap.data();
           requests.push({
             id: data.id,
             name: data.name,
-            email: data.email,
             avatar: data.avatar
           });
         }
@@ -621,23 +594,11 @@ export const firebaseService = {
     if (!userId) return false;
 
     try {
-      const profile = await this.getProfile();
-      const inviteRef = doc(collection(db, 'gameInvitations'));
-
-      await setDoc(inviteRef, {
-        id: inviteRef.id,
-        fromUserId: userId,
-        fromUserName: profile?.name || 'Jugador',
-        toUserId: friendId,
-        gameId: gameId,
-        gameMode: gameMode,
-        status: 'pending', // pending, accepted, declined, expired
-        createdAt: serverTimestamp(),
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutos para tiempo real
-      });
-
-      console.log('[Firebase] Game invitation sent');
-      return true;
+      const result = await callCloudFunction<
+        { friendId: string; gameId: string; gameMode: 'realtime' | 'turnbased' },
+        { success: boolean }
+      >('sendGameInvitation', { friendId, gameId, gameMode });
+      return result.success;
     } catch (error) {
       console.error('[Firebase] Send game invitation error:', error);
       return false;
@@ -732,21 +693,11 @@ export const firebaseService = {
   // Accept game invitation
   async acceptGameInvitation(invitationId: string): Promise<{ success: boolean; gameId?: string; gameMode?: 'realtime' | 'turnbased' }> {
     try {
-      const inviteRef = doc(db, 'gameInvitations', invitationId);
-      const inviteSnap = await getDoc(inviteRef);
-
-      if (!inviteSnap.exists()) {
-        return { success: false };
-      }
-
-      const data = inviteSnap.data();
-
-      await updateDoc(inviteRef, {
-        status: 'accepted'
-      });
-
-      console.log('[Firebase] Game invitation accepted');
-      return { success: true, gameId: data.gameId, gameMode: data.gameMode };
+      const result = await callCloudFunction<
+        { invitationId: string; response: 'accepted' },
+        { success: boolean; gameId?: string; gameMode?: 'realtime' | 'turnbased' }
+      >('respondGameInvitation', { invitationId, response: 'accepted' });
+      return result;
     } catch (error) {
       console.error('[Firebase] Accept game invitation error:', error);
       return { success: false };
@@ -756,13 +707,11 @@ export const firebaseService = {
   // Decline game invitation
   async declineGameInvitation(invitationId: string): Promise<boolean> {
     try {
-      const inviteRef = doc(db, 'gameInvitations', invitationId);
-      await updateDoc(inviteRef, {
-        status: 'declined'
-      });
-
-      console.log('[Firebase] Game invitation declined');
-      return true;
+      const result = await callCloudFunction<
+        { invitationId: string; response: 'declined' },
+        { success: boolean }
+      >('respondGameInvitation', { invitationId, response: 'declined' });
+      return result.success;
     } catch (error) {
       console.error('[Firebase] Decline game invitation error:', error);
       return false;
@@ -803,59 +752,45 @@ export const firebaseService = {
     }
   },
 
-  async updateLeaderboard(stats: OnlineStats, name: string, avatar?: string): Promise<boolean> {
-    const userId = this.getCurrentUserId();
-    if (!userId) {
-      console.error('[Firebase] No user signed in');
-      return false;
-    }
-
-    try {
-      const winRate = stats.totalGames > 0 ? (stats.totalWins / stats.totalGames) * 100 : 0;
-      const accuracy = stats.totalPlacements > 0 ? (stats.correctPlacements / stats.totalPlacements) * 100 : 0;
-      const score = Math.round((stats.totalWins * 100) + (accuracy * 10) + (stats.bestStreak * 50));
-
-      const leaderboardRef = doc(db, 'leaderboard', userId);
-      await setDoc(leaderboardRef, {
-        id: userId,
-        name,
-        avatar: avatar || null,
-        score,
-        wins: stats.totalWins,
-        gamesPlayed: stats.totalGames,
-        winRate: Math.round(winRate * 10) / 10,
-        bestStreak: stats.bestStreak,
-        updatedAt: serverTimestamp()
-      });
-
-      console.log('[Firebase] Leaderboard updated, score:', score);
-      return true;
-    } catch (error) {
-      console.error('[Firebase] Update leaderboard error:', error);
-      return false;
-    }
-  },
-
-  async getLeaderboard(maxResults: number = 50): Promise<OnlineLeaderboardEntry[]> {
+  async getLeaderboard(maxResults: number = 50, period: LeaderboardPeriod = 'allTime'): Promise<OnlineLeaderboardEntry[]> {
     try {
       const leaderboardRef = collection(db, 'leaderboard');
-      const q = query(leaderboardRef, orderBy('score', 'desc'), limit(maxResults));
+      const periodKey = getLeaderboardPeriodKey(period);
+      const q = period === 'allTime'
+        ? query(leaderboardRef, orderBy(`${period}.score`, 'desc'), limit(maxResults))
+        : query(
+            leaderboardRef,
+            where(`${period}.periodKey`, '==', periodKey),
+            orderBy(`${period}.score`, 'desc'),
+            limit(maxResults)
+          );
       const snapshot = await getDocs(q);
 
-      const entries: OnlineLeaderboardEntry[] = [];
-      snapshot.forEach((doc) => {
-        entries.push(doc.data() as OnlineLeaderboardEntry);
+      const entries = snapshot.docs.map(snapshot => {
+        const data = snapshot.data();
+        const bucket = data[period] || {};
+        return {
+          id: data.id || snapshot.id,
+          name: data.name || 'Jugador',
+          avatar: data.avatar,
+          score: bucket.score || 0,
+          wins: bucket.wins || 0,
+          gamesPlayed: bucket.gamesPlayed || 0,
+          winRate: bucket.winRate || 0,
+          bestStreak: bucket.bestStreak || 0,
+          updatedAt: data.updatedAt,
+        } as OnlineLeaderboardEntry;
       });
 
       console.log('[Firebase] Leaderboard loaded:', entries.length, 'entries');
       return entries;
     } catch (error) {
       console.error('[Firebase] Get leaderboard error:', error);
-      return [];
+      throw error;
     }
   },
 
-  async getMyRank(): Promise<number | null> {
+  async getMyRank(period: LeaderboardPeriod = 'allTime'): Promise<number | null> {
     const userId = this.getCurrentUserId();
     if (!userId) return null;
 
@@ -864,9 +799,17 @@ export const firebaseService = {
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) return null;
+      const periodKey = getLeaderboardPeriodKey(period);
+      if (userSnap.data()?.[period]?.periodKey !== periodKey) return null;
 
       const leaderboardRef = collection(db, 'leaderboard');
-      const q = query(leaderboardRef, orderBy('score', 'desc'));
+      const q = period === 'allTime'
+        ? query(leaderboardRef, orderBy(`${period}.score`, 'desc'))
+        : query(
+            leaderboardRef,
+            where(`${period}.periodKey`, '==', periodKey),
+            orderBy(`${period}.score`, 'desc')
+          );
       const snapshot = await getDocs(q);
 
       let rank = 1;
@@ -890,14 +833,11 @@ export const firebaseService = {
     }
 
     await this.saveProfile(name, avatar);
-    const [statsSynced, leaderboardSynced] = await Promise.all([
-      this.updateUserStats(localStats, name, avatar),
-      this.updateLeaderboard(localStats, name, avatar)
-    ]);
+    const statsSynced = await this.updateUserStats(localStats, name, avatar);
     // Guardar también la copia completa (logros, mazos, récords...) para que
     // las estadísticas acompañen a la cuenta en cualquier dispositivo.
     await this.pushPlayerDataToCloud();
-    return statsSynced && leaderboardSynced;
+    return statsSynced;
   },
 
   // ==================== SINCRONIZACIÓN PERFIL + ESTADÍSTICAS ====================
@@ -912,7 +852,11 @@ export const firebaseService = {
     if (!userId || !this.isRegisteredUser()) return false;
 
     try {
-      const stats = statsService.loadStats();
+      const existingCloud = await getDoc(doc(db, 'userStats', userId));
+      const cloudStats = existingCloud.exists() ? existingCloud.data()?.fullStats : null;
+      const { stats } = cloudStats
+        ? statsService.mergeWithCloudStats(cloudStats)
+        : { stats: statsService.loadStats() };
       const profile = profileService.getProfile();
       await setDoc(doc(db, 'userStats', userId), {
         id: userId,
@@ -964,6 +908,7 @@ export const firebaseService = {
       if (shouldPushName) {
         await this.saveProfile(profileService.getName(), userData?.avatar || undefined);
       }
+      await this.refreshPublicProfile();
 
       console.log('[Firebase] Player data synced from cloud');
       return statsChanged || profileChanged;
@@ -998,31 +943,6 @@ export const firebaseService = {
     }
   },
 
-  async recordGameHistoryForPlayers(entry: Omit<GameHistoryInput, 'result'>): Promise<boolean> {
-    const currentUserId = this.getCurrentUserId();
-    if (!currentUserId || !entry.playerIds.includes(currentUserId)) return false;
-
-    try {
-      await Promise.all(entry.playerIds.map(async (playerId) => {
-        const historyRef = doc(collection(db, 'gameHistory'));
-        await setDoc(historyRef, {
-          ...entry,
-          id: historyRef.id,
-          userId: playerId,
-          result: entry.winnerId === playerId ? 'win' : 'loss',
-          finishedAt: entry.finishedAt || serverTimestamp(),
-          createdAt: serverTimestamp()
-        });
-      }));
-
-      console.log('[Firebase] Game history recorded for players');
-      return true;
-    } catch (error) {
-      console.error('[Firebase] Record players history error:', error);
-      return false;
-    }
-  },
-
   async getGameHistory(maxResults: number = 20): Promise<GameHistoryEntry[]> {
     const userId = this.getCurrentUserId();
     if (!userId) return [];
@@ -1048,66 +968,11 @@ export const firebaseService = {
 
   // Create a turn-based game
   async createTurnBasedGame(opponentId: string): Promise<{ success: boolean; gameId?: string }> {
-    const userId = this.getCurrentUserId();
-    if (!userId) return { success: false };
-
     try {
-      const profile = await this.getProfile();
-      const opponentRef = doc(db, 'users', opponentId);
-      const opponentSnap = await getDoc(opponentRef);
-
-      if (!opponentSnap.exists()) return { success: false };
-
-      const opponentData = opponentSnap.data();
-      const gameRef = doc(collection(db, 'turnBasedGames'));
-      const shuffledDeck = shuffleArray(CARD_DATA);
-      const initialTimelineCard = shuffledDeck.pop();
-      if (!initialTimelineCard) return { success: false };
-
-      const playerHands: { [playerId: string]: Card[] } = {
-        [userId]: [],
-        [opponentId]: [],
-      };
-
-      for (let i = 0; i < 4; i++) {
-        const userCard = shuffledDeck.pop();
-        const opponentCard = shuffledDeck.pop();
-        if (userCard) playerHands[userId].push(userCard);
-        if (opponentCard) playerHands[opponentId].push(opponentCard);
-      }
-
-      const gameData: TurnBasedGame = {
-        id: gameRef.id,
-        playerIds: [userId, opponentId],
-        players: [
-          { id: userId, name: profile?.name || 'Jugador 1' },
-          { id: opponentId, name: opponentData.name || 'Jugador 2' }
-        ],
-        currentTurnPlayerId: userId, // Creator goes first
-        timeline: [initialTimelineCard],
-        deck: shuffledDeck,
-        playerHands,
-        discardPile: [],
-        status: 'active',
-        winnerId: null,
-        lastMoveAt: serverTimestamp(),
-        createdAt: serverTimestamp(),
-        turnTimeLimit: 24 * 60 * 60 * 1000, // 24 horas por turno
-        moveCount: 0,
-        moveStats: {
-          [userId]: { placed: 0, correct: 0, incorrect: 0 },
-          [opponentId]: { placed: 0, correct: 0, incorrect: 0 },
-        },
-        statsRecordedBy: []
-      };
-
-      await setDoc(gameRef, gameData);
-
-      // Send notification to opponent
-      await this.sendGameInvitation(opponentId, gameRef.id, 'turnbased');
-
-      console.log('[Firebase] Turn-based game created');
-      return { success: true, gameId: gameRef.id };
+      return await callCloudFunction<{ opponentId: string }, { success: boolean; gameId?: string }>(
+        'createTurnBasedGame',
+        { opponentId }
+      );
     } catch (error) {
       console.error('[Firebase] Create turn-based game error:', error);
       return { success: false };
@@ -1138,218 +1003,74 @@ export const firebaseService = {
   // Subscribe to a turn-based game
   subscribeToTurnBasedGame(gameId: string, callback: (game: TurnBasedGame | null) => void): () => void {
     const gameRef = doc(db, 'turnBasedGames', gameId);
-
-    const unsubscribe = onSnapshot(gameRef, (snapshot) => {
-      if (snapshot.exists()) {
-        callback(snapshot.data() as TurnBasedGame);
-      } else {
+    const userId = this.getCurrentUserId();
+    let latestGame: TurnBasedGame | null = null;
+    let ownHand: Card[] = [];
+    const emit = () => {
+      if (!latestGame) {
         callback(null);
+        return;
       }
-    });
+      const game = latestGame;
+      callback({
+        ...game,
+        playerHands: Object.fromEntries(
+          game.players.map(player => [
+            player.id,
+            player.id === userId
+              ? ownHand
+              : createHiddenCards(game.handCounts?.[player.id] || 0),
+          ])
+        ),
+        deck: createHiddenCards(game.deckCount ?? game.deck?.length ?? 0),
+      });
+    };
 
-    return unsubscribe;
+    const unsubscribeGame = onSnapshot(gameRef, (snapshot) => {
+      if (snapshot.exists()) {
+        latestGame = snapshot.data() as TurnBasedGame;
+      } else {
+        latestGame = null;
+      }
+      emit();
+    });
+    const unsubscribeHand = userId
+      ? onSnapshot(doc(db, 'turnBasedGames', gameId, 'hands', userId), snapshot => {
+          ownHand = snapshot.exists() ? (snapshot.data().cards || []) as Card[] : [];
+          emit();
+        })
+      : () => {};
+
+    return () => {
+      unsubscribeGame();
+      unsubscribeHand();
+    };
   },
 
   // Make a move in turn-based game
   async makeTurnBasedMove(gameId: string, cardId: number, timelineIndex: number): Promise<boolean> {
-    const userId = this.getCurrentUserId();
-    if (!userId) return false;
-
     try {
-      const gameRef = doc(db, 'turnBasedGames', gameId);
-      const gameSnap = await getDoc(gameRef);
-
-      if (!gameSnap.exists()) return false;
-
-      const game = gameSnap.data() as TurnBasedGame;
-
-      if (game.status !== 'active' || game.currentTurnPlayerId !== userId) return false;
-      if (!Number.isInteger(timelineIndex) || timelineIndex < 0 || timelineIndex > game.timeline.length) return false;
-
-      const currentHand = [...(game.playerHands[userId] || [])];
-      const cardToPlace = currentHand.find(card => card.id === cardId);
-      if (!cardToPlace) return false;
-
-      const isCorrect = canPlaceCard(cardToPlace, game.timeline, timelineIndex);
-      const nextHand = currentHand.filter(card => card.id !== cardId);
-      const nextTimeline = [...game.timeline];
-      let nextDeck = [...game.deck];
-      let nextDiscardPile = [...game.discardPile];
-      let winnerId: string | null = null;
-      let nextStatus: TurnBasedGame['status'] = 'active';
-
-      if (isCorrect) {
-        nextTimeline.splice(timelineIndex, 0, cardToPlace);
-      } else {
-        nextDiscardPile.unshift(cardToPlace);
-        const replacementDraw = drawReplacementCard(nextDeck, nextDiscardPile);
-        nextDeck = replacementDraw.deck;
-        nextDiscardPile = replacementDraw.discardPile;
-        if (replacementDraw.drawnCard) {
-          nextHand.push(replacementDraw.drawnCard);
-        } else {
-          // Defensive fallback: preserve the card instead of awarding a false win.
-          nextHand.push(cardToPlace);
-        }
-      }
-
-      if (isCorrect && nextHand.length === 0) {
-        winnerId = userId;
-        nextStatus = 'finished';
-      }
-
-      const otherPlayerId = game.players.find(p => p.id !== userId)?.id || userId;
-      const nextPlayerHands = {
-        ...game.playerHands,
-        [userId]: nextHand,
-      };
-      const nextMoveCount = (game.moveCount || 0) + 1;
-
-      // Contabilizar la jugada del jugador actual (para precisión en estadísticas)
-      const currentMoveStats = game.moveStats || {};
-      const myMoveStats = currentMoveStats[userId] || { placed: 0, correct: 0, incorrect: 0 };
-      const nextMoveStats = {
-        ...currentMoveStats,
-        [userId]: {
-          placed: myMoveStats.placed + 1,
-          correct: myMoveStats.correct + (isCorrect ? 1 : 0),
-          incorrect: myMoveStats.incorrect + (isCorrect ? 0 : 1),
-        },
-      };
-
-      await updateDoc(gameRef, {
-        currentTurnPlayerId: nextStatus === 'finished' ? userId : otherPlayerId,
-        timeline: nextTimeline,
-        deck: nextDeck,
-        playerHands: nextPlayerHands,
-        discardPile: nextDiscardPile,
-        status: nextStatus,
-        winnerId,
-        lastMoveAt: serverTimestamp(),
-        moveCount: nextMoveCount,
-        moveStats: nextMoveStats
-      });
-
-      if (nextStatus === 'finished') {
-        await this.recordGameHistoryForPlayers({
-          playerIds: game.playerIds || game.players.map(player => player.id),
-          players: game.players,
-          mode: 'turnbased',
-          winnerId,
-          winnerName: game.players.find(player => player.id === winnerId)?.name || null,
-          deckId: 'complete',
-          durationSeconds: null,
-          cardsPlaced: nextMoveCount,
-          correctPlacements: Math.max(0, nextTimeline.length - 1),
-          incorrectPlacements: nextDiscardPile.length,
-          timelineLength: nextTimeline.length,
-          moveCount: nextMoveCount
-        });
-
-        // Registrar las estadísticas del jugador que cierra la partida.
-        // El rival las registrará al ver la partida terminada (o al abrir la app).
-        void this.recordTurnBasedGameStats({
-          ...game,
-          status: 'finished',
-          winnerId,
-          moveStats: nextMoveStats,
-        });
-      }
-
-      console.log('[Firebase] Turn-based move made');
-      return true;
+      const result = await callCloudFunction<
+        { gameId: string; cardId: number; timelineIndex: number },
+        { success: boolean; expired?: boolean }
+      >('makeTurnBasedMove', { gameId, cardId, timelineIndex });
+      return result.success;
     } catch (error) {
       console.error('[Firebase] Make turn-based move error:', error);
       return false;
     }
   },
 
-  // Contabiliza una partida por turnos terminada en las estadísticas del usuario
-  // actual (locales + online). La marca statsRecordedBy en el documento garantiza
-  // que cada jugador la cuente exactamente una vez, aunque cambie de dispositivo.
-  async recordTurnBasedGameStats(game: TurnBasedGame): Promise<boolean> {
-    const userId = this.getCurrentUserId();
-    if (!userId || !this.isRegisteredUser()) return false;
-    if (game.status !== 'finished') return false;
-    if (!(game.playerIds || []).includes(userId)) return false;
-    if ((game.statsRecordedBy || []).includes(userId)) return false;
-    if (processedTurnBasedStats.has(game.id)) return false;
-    processedTurnBasedStats.add(game.id);
-
+  async claimTurnBasedTimeout(gameId: string): Promise<boolean> {
     try {
-      // Marcar primero en el documento para bloquear otros clientes/pestañas
-      await updateDoc(doc(db, 'turnBasedGames', game.id), {
-        statsRecordedBy: arrayUnion(userId)
-      });
-
-      const playerWon = game.winnerId === userId;
-      const myMoves = game.moveStats?.[userId];
-      const updatedStats = statsService.recordCompletedGame(
-        playerWon,
-        myMoves
-          ? {
-              deckId: 'complete',
-              cardsPlaced: myMoves.placed,
-              correctPlacements: myMoves.correct,
-              incorrectPlacements: myMoves.incorrect,
-            }
-          : { deckId: 'complete' }
+      const result = await callCloudFunction<{ gameId: string }, { success: boolean }>(
+        'claimTurnBasedTimeout',
+        { gameId }
       );
-
-      const profile = await this.getProfile();
-      const name = profile?.name || 'Jugador';
-      await this.syncStats(
-        {
-          totalWins: updatedStats.gamesWon,
-          totalGames: updatedStats.gamesPlayed,
-          totalPlacements: updatedStats.totalCardsPlaced,
-          correctPlacements: updatedStats.correctPlacements,
-          bestStreak: updatedStats.longestWinStreak,
-          currentStreak: updatedStats.currentWinStreak,
-        },
-        name,
-        profile?.avatar
-      );
-
-      console.log('[Firebase] Turn-based game stats recorded:', game.id);
-      return true;
+      return result.success;
     } catch (error) {
-      processedTurnBasedStats.delete(game.id);
-      console.error('[Firebase] Record turn-based stats error:', error);
+      console.error('[Firebase] Claim timeout error:', error);
       return false;
-    }
-  },
-
-  // Recupera partidas por turnos terminadas que este usuario aún no ha
-  // contabilizado (p. ej. terminaron mientras estaba desconectado) y las registra.
-  async syncPendingTurnBasedStats(): Promise<number> {
-    const userId = this.getCurrentUserId();
-    if (!userId || !this.isRegisteredUser()) return 0;
-
-    try {
-      const gamesRef = collection(db, 'turnBasedGames');
-      const gamesQuery = query(
-        gamesRef,
-        where('playerIds', 'array-contains', userId),
-        where('status', '==', 'finished')
-      );
-      const snapshot = await getDocs(gamesQuery);
-
-      let recorded = 0;
-      for (const docSnap of snapshot.docs) {
-        const game = docSnap.data() as TurnBasedGame;
-        if ((game.statsRecordedBy || []).includes(userId)) continue;
-        const ok = await this.recordTurnBasedGameStats(game);
-        if (ok) recorded++;
-      }
-
-      if (recorded > 0) {
-        console.log('[Firebase] Pending turn-based stats synced:', recorded);
-      }
-      return recorded;
-    } catch (error) {
-      console.error('[Firebase] Sync pending turn-based stats error:', error);
-      return 0;
     }
   },
 
@@ -1449,18 +1170,20 @@ export interface TurnBasedGame {
   currentTurnPlayerId: string;
   timeline: Card[];
   deck: Card[];
+  deckCount?: number;
   playerHands: { [playerId: string]: Card[] };
+  handCounts?: { [playerId: string]: number };
   discardPile: Card[];
-  status: 'active' | 'finished';
+  status: 'pending' | 'active' | 'finished' | 'declined';
   winnerId: string | null;
   lastMoveAt: any;
+  expiresAt: any;
   createdAt: any;
   turnTimeLimit: number;
   moveCount: number;
-  // Jugadas por jugador (para estadísticas de precisión)
   moveStats?: { [playerId: string]: { placed: number; correct: number; incorrect: number } };
-  // Jugadores que ya contabilizaron esta partida en sus estadísticas
-  statsRecordedBy?: string[];
+  resultsRecorded?: boolean;
+  finishedReason?: 'cards' | 'timeout';
 }
 
 export default firebaseService;

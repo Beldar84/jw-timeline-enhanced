@@ -5,6 +5,31 @@ import { profileService } from './profileService';
 const STORAGE_KEY = 'jw_timeline_leaderboard';
 const MAX_ENTRIES = 50;
 
+interface PeriodStats {
+  gamesPlayed: number;
+  gamesWon: number;
+  cardsPlaced: number;
+  correctPlacements: number;
+  currentStreak: number;
+  bestStreak: number;
+}
+
+interface StoredLeaderboard extends Leaderboard {
+  periodStats: {
+    weekly: PeriodStats;
+    monthly: PeriodStats;
+  };
+}
+
+const emptyPeriodStats = (): PeriodStats => ({
+  gamesPlayed: 0,
+  gamesWon: 0,
+  cardsPlaced: 0,
+  correctPlacements: 0,
+  currentStreak: 0,
+  bestStreak: 0,
+});
+
 // Helper to get start of week (Monday)
 const getWeekStart = (date: Date): number => {
   const d = new Date(date);
@@ -24,14 +49,14 @@ const getMonthStart = (date: Date): number => {
 };
 
 class LeaderboardService {
-  private leaderboard: Leaderboard;
+  private leaderboard: StoredLeaderboard;
 
   constructor() {
     this.leaderboard = this.loadLeaderboard();
     this.checkAndResetPeriods();
   }
 
-  private getDefaultLeaderboard(): Leaderboard {
+  private getDefaultLeaderboard(): StoredLeaderboard {
     return {
       weekly: [],
       monthly: [],
@@ -40,18 +65,34 @@ class LeaderboardService {
         weekly: getWeekStart(new Date()),
         monthly: getMonthStart(new Date()),
       },
+      periodStats: {
+        weekly: emptyPeriodStats(),
+        monthly: emptyPeriodStats(),
+      },
     };
   }
 
-  private loadLeaderboard(): Leaderboard {
+  private loadLeaderboard(): StoredLeaderboard {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
+        const defaults = this.getDefaultLeaderboard();
+        const hasPeriodStats = parsed.periodStats?.weekly && parsed.periodStats?.monthly;
         return {
-          ...this.getDefaultLeaderboard(),
+          ...defaults,
           ...parsed,
-        };
+          // Previous versions populated periods with lifetime totals. Clearing
+          // them once is safer than carrying incorrect rankings forward.
+          weekly: hasPeriodStats ? parsed.weekly || [] : [],
+          monthly: hasPeriodStats ? parsed.monthly || [] : [],
+          periodStats: hasPeriodStats
+            ? {
+                weekly: { ...emptyPeriodStats(), ...parsed.periodStats.weekly },
+                monthly: { ...emptyPeriodStats(), ...parsed.periodStats.monthly },
+              }
+            : defaults.periodStats,
+        } as StoredLeaderboard;
       }
     } catch (e) {
       console.error('Error loading leaderboard:', e);
@@ -76,12 +117,14 @@ class LeaderboardService {
     // Reset weekly if we're in a new week
     if (currentWeekStart > this.leaderboard.lastReset.weekly) {
       this.leaderboard.weekly = [];
+      this.leaderboard.periodStats.weekly = emptyPeriodStats();
       this.leaderboard.lastReset.weekly = currentWeekStart;
     }
 
     // Reset monthly if we're in a new month
     if (currentMonthStart > this.leaderboard.lastReset.monthly) {
       this.leaderboard.monthly = [];
+      this.leaderboard.periodStats.monthly = emptyPeriodStats();
       this.leaderboard.lastReset.monthly = currentMonthStart;
     }
 
@@ -89,14 +132,12 @@ class LeaderboardService {
   }
 
   // Calculate score based on stats
-  private calculateScore(gamesWon: number, gamesPlayed: number, accuracy: number): number {
+  private calculateScore(gamesWon: number, gamesPlayed: number, accuracy: number, bestStreak: number = 0): number {
     if (gamesPlayed === 0) return 0;
-    const winRate = (gamesWon / gamesPlayed) * 100;
-    // Score formula: wins * 100 + bonus for win rate + bonus for accuracy
-    return Math.round(gamesWon * 100 + winRate * 5 + accuracy * 2);
+    return Math.round(gamesWon * 100 + accuracy * 10 + bestStreak * 50);
   }
 
-  // Update leaderboard with current player stats
+  // Refresh lifetime values without changing weekly/monthly counters.
   updateLeaderboard(): void {
     const stats = statsService.loadStats();
     const name = profileService.getName();
@@ -108,7 +149,7 @@ class LeaderboardService {
 
     const entry: Omit<LeaderboardEntry, 'rank'> = {
       name,
-      score: this.calculateScore(stats.gamesWon, stats.gamesPlayed, accuracy),
+      score: this.calculateScore(stats.gamesWon, stats.gamesPlayed, accuracy, stats.longestWinStreak),
       gamesPlayed: stats.gamesPlayed,
       winRate,
       lastUpdated: Date.now(),
@@ -117,49 +158,31 @@ class LeaderboardService {
     // Update all time
     this.updateEntryInList(this.leaderboard.allTime, entry);
 
-    // Update weekly (only if game was played this week)
-    const weeklyStats = this.getWeeklyStats();
-    if (weeklyStats.gamesPlayed > 0) {
-      const weeklyEntry: Omit<LeaderboardEntry, 'rank'> = {
-        ...entry,
-        gamesPlayed: weeklyStats.gamesPlayed,
-        score: this.calculateScore(weeklyStats.gamesWon, weeklyStats.gamesPlayed, accuracy),
-      };
-      this.updateEntryInList(this.leaderboard.weekly, weeklyEntry);
-    }
-
-    // Update monthly (only if game was played this month)
-    const monthlyStats = this.getMonthlyStats();
-    if (monthlyStats.gamesPlayed > 0) {
-      const monthlyEntry: Omit<LeaderboardEntry, 'rank'> = {
-        ...entry,
-        gamesPlayed: monthlyStats.gamesPlayed,
-        score: this.calculateScore(monthlyStats.gamesWon, monthlyStats.gamesPlayed, accuracy),
-      };
-      this.updateEntryInList(this.leaderboard.monthly, monthlyEntry);
-    }
-
     this.saveLeaderboard();
   }
 
-  // Get weekly stats (simplified - in a real app, this would track per-period stats)
-  private getWeeklyStats(): { gamesPlayed: number; gamesWon: number } {
-    // For local storage, we'll use a simplified approach
-    // In a real implementation, you'd track game history with timestamps
-    const stats = statsService.loadStats();
-    return {
-      gamesPlayed: stats.gamesPlayed,
-      gamesWon: stats.gamesWon,
-    };
-  }
-
-  // Get monthly stats
-  private getMonthlyStats(): { gamesPlayed: number; gamesWon: number } {
-    const stats = statsService.loadStats();
-    return {
-      gamesPlayed: stats.gamesPlayed,
-      gamesWon: stats.gamesWon,
-    };
+  recordGameResult(won: boolean, cardsPlaced: number, correctPlacements: number): void {
+    this.checkAndResetPeriods();
+    for (const period of ['weekly', 'monthly'] as const) {
+      const periodStats = this.leaderboard.periodStats[period];
+      periodStats.gamesPlayed++;
+      periodStats.gamesWon += won ? 1 : 0;
+      periodStats.cardsPlaced += Math.max(0, cardsPlaced);
+      periodStats.correctPlacements += Math.max(0, correctPlacements);
+      periodStats.currentStreak = won ? periodStats.currentStreak + 1 : 0;
+      periodStats.bestStreak = Math.max(periodStats.bestStreak, periodStats.currentStreak);
+      const accuracy = periodStats.cardsPlaced > 0
+        ? (periodStats.correctPlacements / periodStats.cardsPlaced) * 100
+        : 0;
+      this.updateEntryInList(this.leaderboard[period], {
+        name: profileService.getName(),
+        score: this.calculateScore(periodStats.gamesWon, periodStats.gamesPlayed, accuracy, periodStats.bestStreak),
+        gamesPlayed: periodStats.gamesPlayed,
+        winRate: (periodStats.gamesWon / periodStats.gamesPlayed) * 100,
+        lastUpdated: Date.now(),
+      });
+    }
+    this.updateLeaderboard();
   }
 
   // Update or add entry to list
@@ -167,10 +190,9 @@ class LeaderboardService {
     const existingIndex = list.findIndex(e => e.name === entry.name);
 
     if (existingIndex !== -1) {
-      // Update existing entry if new score is higher
-      if (entry.score >= list[existingIndex].score) {
-        list[existingIndex] = { ...entry, rank: 0 };
-      }
+      // Rankings represent the current totals, so a lower accuracy after a
+      // new game must also replace the previous score.
+      list[existingIndex] = { ...entry, rank: 0 };
     } else {
       // Add new entry
       list.push({ ...entry, rank: 0 });

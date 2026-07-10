@@ -167,6 +167,12 @@ class DeckService {
     return shuffleArray(deck.cards);
   }
 
+  getInitialHandSize(deckId: string, playerCount: number, preferredSize: number = 4): number {
+    const deck = this.getDeckById(deckId);
+    if (!deck || !Number.isInteger(playerCount) || playerCount < 1) return 0;
+    return Math.max(0, Math.min(preferredSize, Math.floor((deck.cards.length - 1) / playerCount)));
+  }
+
   // Get color classes for Tailwind
   getColorClasses(color: string): { bg: string; hover: string; text: string; border: string } {
     const colorMap: Record<string, { bg: string; hover: string; text: string; border: string }> = {

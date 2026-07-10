@@ -223,7 +223,11 @@ const AppEnhanced: React.FC = () => {
     setStats(updatedStats);
 
     if (!isStudyMode) {
-      leaderboardService.updateLeaderboard();
+      leaderboardService.recordGameResult(
+        playerWon,
+        completedSession?.cardsPlaced || 0,
+        completedSession?.correctPlacements || 0
+      );
 
       if (firebaseService.isSignedIn()) {
         const profile = profileService.getProfile();
@@ -503,7 +507,10 @@ const AppEnhanced: React.FC = () => {
       isAI: withAI && index > 0,
     }));
 
-    for (let i = 0; i < 4; i++) {
+    const initialHandSize = deckService.getInitialHandSize(selectedDeckId, newPlayers.length);
+    if (initialHandSize === 0) return;
+
+    for (let i = 0; i < initialHandSize; i++) {
       for (const player of newPlayers) {
         const card = shuffledDeck.pop();
         if (card) player.hand.push(card);
@@ -681,7 +688,6 @@ const AppEnhanced: React.FC = () => {
 
     const playerWon = onlineWinner.id === localPlayerId;
     const updatedStats = statsService.endSession(playerWon);
-    const completedSession = statsService.getLastCompletedSession();
     setStats(updatedStats);
 
     // Solo sincronizar online las cuentas registradas (no invitados anónimos)
@@ -696,28 +702,7 @@ const AppEnhanced: React.FC = () => {
         bestStreak: updatedStats.longestWinStreak,
         currentStreak: updatedStats.currentWinStreak,
       };
-      const durationSeconds = completedSession?.startTime && completedSession?.endTime
-        ? Math.round((completedSession.endTime - completedSession.startTime) / 1000)
-        : null;
-
-      void Promise.all([
-        firebaseService.syncStats(onlineStats, playerName),
-        firebaseService.recordGameHistory({
-          playerIds: onlineGameState.players.filter(p => !p.isAI).map(p => p.id),
-          players: onlineGameState.players.map(p => ({ id: p.id, name: p.name })),
-          mode: 'realtime',
-          result: playerWon ? 'win' : 'loss',
-          winnerId: onlineWinner.id,
-          winnerName: onlineWinner.name,
-          deckId: 'complete',
-          durationSeconds,
-          cardsPlaced: completedSession?.cardsPlaced || 0,
-          correctPlacements: completedSession?.correctPlacements || 0,
-          incorrectPlacements: completedSession?.incorrectPlacements || 0,
-          timelineLength: onlineGameState.timeline.length,
-          moveCount: completedSession?.cardsPlaced || 0,
-        }),
-      ]).catch(error => {
+      void firebaseService.syncStats(onlineStats, playerName).catch(error => {
         console.error('[Firebase] Sync online game error:', error);
       });
     }
@@ -739,28 +724,28 @@ const AppEnhanced: React.FC = () => {
     return firebaseService.subscribeToTurnBasedGame(selectedTurnBasedGameId, setTurnBasedGame);
   }, [selectedTurnBasedGameId]);
 
-  // Registrar estadísticas al ver una partida por turnos terminada
   useEffect(() => {
-    if (!turnBasedGame || turnBasedGame.status !== 'finished') return;
-    void firebaseService.recordTurnBasedGameStats(turnBasedGame).then(recorded => {
-      if (recorded) setStats(statsService.loadStats());
-    });
-  }, [turnBasedGame?.status, turnBasedGame?.id]);
+    if (!turnBasedGame || turnBasedGame.status !== 'active') return;
+    const expiresAt = typeof turnBasedGame.expiresAt?.toMillis === 'function'
+      ? turnBasedGame.expiresAt.toMillis()
+      : typeof turnBasedGame.expiresAt?.toDate === 'function'
+        ? turnBasedGame.expiresAt.toDate().getTime()
+        : new Date(turnBasedGame.expiresAt).getTime();
+    const currentUserId = firebaseService.getCurrentUserId();
+    if (expiresAt <= Date.now() && turnBasedGame.currentTurnPlayerId !== currentUserId) {
+      void firebaseService.claimTurnBasedTimeout(turnBasedGame.id);
+    }
+  }, [turnBasedGame?.id, turnBasedGame?.status, turnBasedGame?.currentTurnPlayerId, turnBasedGame?.expiresAt]);
 
   // Al iniciar sesión con una cuenta registrada:
-  // 1) descargar perfil y estadísticas de la nube y combinarlos con lo local
-  //    (así la cuenta "viaja" entre navegadores y dispositivos), y
-  // 2) contabilizar partidas por turnos que terminaron mientras el usuario
-  //    estaba desconectado.
+  // descargar perfil y progreso privado de la nube y combinarlos con lo local.
+  // Los resultados competitivos se registran atómicamente en Cloud Functions.
   useEffect(() => {
     const unsubscribe = firebaseService.onAuthStateChange((user) => {
       if (user && !user.isAnonymous) {
         void (async () => {
           const cloudChanged = await firebaseService.syncPlayerDataFromCloud();
-          const pendingCount = await firebaseService.syncPendingTurnBasedStats();
-          if (cloudChanged || pendingCount > 0) {
-            setStats(statsService.loadStats());
-          }
+          if (cloudChanged) setStats(statsService.loadStats());
         })();
       }
     });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { firebaseService, TurnBasedGame } from '../services/firebaseService';
 import { soundService } from '../services/soundService';
 
@@ -7,25 +7,46 @@ interface TurnBasedGamesPanelProps {
   onClose: () => void;
 }
 
+const getExpirationMillis = (game: TurnBasedGame): number => {
+  if (typeof game.expiresAt?.toMillis === 'function') return game.expiresAt.toMillis();
+  if (typeof game.expiresAt?.toDate === 'function') return game.expiresAt.toDate().getTime();
+  const parsed = new Date(game.expiresAt).getTime();
+  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+};
+
 const TurnBasedGamesPanel: React.FC<TurnBasedGamesPanelProps> = ({ onSelectGame, onClose }) => {
   const [games, setGames] = useState<TurnBasedGame[]>([]);
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(Date.now());
 
-  useEffect(() => {
-    loadGames();
-  }, []);
-
-  const loadGames = async () => {
+  const loadGames = useCallback(async () => {
     setLoading(true);
     try {
-      const turnBasedGames = await firebaseService.getTurnBasedGames();
+      let turnBasedGames = await firebaseService.getTurnBasedGames();
+      const currentUserId = firebaseService.getCurrentUserId();
+      const expiredToClaim = turnBasedGames.filter(game =>
+        game.currentTurnPlayerId !== currentUserId && getExpirationMillis(game) <= Date.now()
+      );
+      if (expiredToClaim.length > 0) {
+        await Promise.all(expiredToClaim.map(game => firebaseService.claimTurnBasedTimeout(game.id)));
+        turnBasedGames = await firebaseService.getTurnBasedGames();
+      }
       setGames(turnBasedGames);
     } catch (error) {
       console.error('Error loading turn-based games:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void loadGames();
+  }, [loadGames]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const isMyTurn = (game: TurnBasedGame): boolean => {
     return game.currentTurnPlayerId === firebaseService.getCurrentUserId();
@@ -34,6 +55,14 @@ const TurnBasedGamesPanel: React.FC<TurnBasedGamesPanelProps> = ({ onSelectGame,
   const getOpponentName = (game: TurnBasedGame): string => {
     const opponent = game.players.find(p => p.id !== firebaseService.getCurrentUserId());
     return opponent?.name || 'Oponente';
+  };
+
+  const formatTimeRemaining = (game: TurnBasedGame): string => {
+    const remaining = getExpirationMillis(game) - now;
+    if (remaining <= 0) return 'Tiempo agotado';
+    const hours = Math.floor(remaining / 3_600_000);
+    const minutes = Math.ceil((remaining % 3_600_000) / 60_000);
+    return hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`;
   };
 
   const formatLastMove = (lastMoveAt: any): string => {
@@ -64,6 +93,7 @@ const TurnBasedGamesPanel: React.FC<TurnBasedGamesPanelProps> = ({ onSelectGame,
           </h2>
           <button
             onClick={() => { soundService.playClick(); onClose(); }}
+            aria-label="Cerrar partidas por turnos"
             className="text-white/80 hover:text-white text-2xl font-bold"
           >
             ×
@@ -85,10 +115,11 @@ const TurnBasedGamesPanel: React.FC<TurnBasedGamesPanelProps> = ({ onSelectGame,
           ) : (
             <div className="space-y-3">
               {games.map((game) => (
-                <div
+                <button
+                  type="button"
                   key={game.id}
                   onClick={() => handleSelectGame(game)}
-                  className={`p-4 rounded-lg cursor-pointer transition-all ${
+                  className={`w-full p-4 rounded-lg cursor-pointer transition-all text-left ${
                     isMyTurn(game)
                       ? 'bg-green-600/20 border-2 border-green-500/50 hover:border-green-400'
                       : 'bg-gray-700/50 border-2 border-gray-600 hover:border-gray-500'
@@ -112,6 +143,9 @@ const TurnBasedGamesPanel: React.FC<TurnBasedGamesPanelProps> = ({ onSelectGame,
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-500">{formatLastMove(game.lastMoveAt)}</p>
+                      <p className={`text-xs ${getExpirationMillis(game) <= now ? 'text-red-400' : 'text-amber-300'}`}>
+                        {formatTimeRemaining(game)}
+                      </p>
                       {isMyTurn(game) && (
                         <span className="inline-block mt-1 px-2 py-0.5 bg-green-500 text-white text-xs rounded-full animate-pulse">
                           JUGAR
@@ -119,7 +153,7 @@ const TurnBasedGamesPanel: React.FC<TurnBasedGamesPanelProps> = ({ onSelectGame,
                       )}
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}

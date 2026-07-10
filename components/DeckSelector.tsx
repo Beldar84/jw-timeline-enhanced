@@ -5,7 +5,7 @@ import { soundService } from '../services/soundService';
 // ============================================================
 // JW Timeline — DeckSelector premium (diseño 4a)
 // Sustituye components/DeckSelector.tsx. Misma API y lógica
-// (solo "Biblia Completa" seleccionable). Tarjetas de pergamino
+// Mazos temáticos disponibles con reparto adaptativo según su tamaño.
 // con estrellas de dificultad; iconos de línea en vez de emojis.
 // Requiere public/premium.css.
 // ============================================================
@@ -76,7 +76,6 @@ const DeckSelector: React.FC<DeckSelectorProps> = ({ onSelectDeck, onBack }) => 
   const decks = deckService.getAllDecks();
 
   const handleDeckClick = (deck: Deck) => {
-    if (deck.id !== 'complete') return; // Solo Biblia Completa disponible
     soundService.playClick();
     setSelectedDeck(deck);
   };
@@ -99,24 +98,20 @@ const DeckSelector: React.FC<DeckSelectorProps> = ({ onSelectDeck, onBack }) => 
         Selecciona un mazo
       </h2>
       <p className="font-body italic text-base text-center m-0 mb-6" style={{ color: 'var(--gold-dark)' }}>
-        Los mazos temáticos se irán desbloqueando próximamente
+        El reparto se adapta automáticamente al tamaño de cada mazo
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
         {decks.map((deck) => {
           const isSelected = selectedDeck?.id === deck.id;
-          const isDisabled = deck.id !== 'complete';
           return (
             <button
               key={deck.id}
               onClick={() => handleDeckClick(deck)}
-              disabled={isDisabled}
-              className="relative p-4 pb-3.5 rounded-sm text-left transition-all cursor-pointer disabled:cursor-not-allowed font-body"
-              style={isDisabled
-                ? { background: 'none', border: '1px dashed rgba(120,94,48,.4)', opacity: .5 }
-                : isSelected
-                  ? { background: 'rgba(201,162,39,.12)', border: '2px solid #a8853c', boxShadow: '0 0 18px rgba(201,162,39,.25)' }
-                  : { background: 'none', border: '1px solid rgba(120,94,48,.3)' }}
+              className="relative p-4 pb-3.5 rounded-sm text-left transition-all cursor-pointer font-body"
+              style={isSelected
+                ? { background: 'rgba(201,162,39,.12)', border: '2px solid #a8853c', boxShadow: '0 0 18px rgba(201,162,39,.25)' }
+                : { background: 'none', border: '1px solid rgba(120,94,48,.3)' }}
             >
               <span className="absolute top-2.5 right-2.5 font-display text-[10px] tracking-widest" style={{ color: 'var(--gold-dark)' }}>
                 {difficultyStars(deck.difficulty)}
@@ -127,8 +122,8 @@ const DeckSelector: React.FC<DeckSelectorProps> = ({ onSelectDeck, onBack }) => 
                 {deck.description} · {deck.cards.length} cartas
               </p>
               <p className="font-display text-[11px] tracking-widest m-0 mt-2"
-                style={{ color: isDisabled ? '#a08a5c' : 'var(--gold-dark)' }}>
-                {isDisabled ? 'PRÓXIMAMENTE' : isSelected ? '✓ SELECCIONADO' : 'DISPONIBLE'}
+                style={{ color: 'var(--gold-dark)' }}>
+                {isSelected ? '✓ SELECCIONADO' : 'DISPONIBLE'}
               </p>
             </button>
           );
