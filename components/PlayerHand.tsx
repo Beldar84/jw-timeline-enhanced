@@ -8,8 +8,7 @@ import Card from './Card';
 // Mano en abanico siempre (también en móvil):
 //  · Escritorio: hover eleva la carta; clic la selecciona.
 //  · Móvil (≤767px): abanico compacto (±10°, solape -22px);
-//    un toque AMPLÍA la carta (scale 1.32 + glow dorado),
-//    un segundo toque sobre la ampliada la coloca/selecciona.
+//    cada toque alterna la carta entre su tamaño normal y ampliado.
 // Título en EB Garamond itálica.
 // ============================================================
 
@@ -87,12 +86,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const titleText = placementMode
     ? 'Elige una carta para colocar'
     : `Tu mano · ${player.hand.length} ${player.hand.length === 1 ? 'carta' : 'cartas'}`;
-  const mobileHint = expandedId !== null
-    ? (placementMode
-        ? 'Toca de nuevo la carta para colocarla'
-        : 'Toca un + del eje y luego la carta')
-    : titleText;
-  const title = disabled ? 'Esperando tu turno…' : (isMobile ? mobileHint : titleText);
+  const title = disabled ? 'Esperando tu turno…' : titleText;
 
   const n = player.hand.length;
 
@@ -155,12 +149,19 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                     showYear={false}
                     isStudyMode={isStudyMode}
                     onClick={() => {
-                      if (isMobile && expandedId !== card.id) {
-                        // Primer toque: amplía la carta para verla bien
-                        setExpandedId(card.id);
+                      if (isMobile) {
+                        // Tras elegir una posición del eje, la carta se coloca
+                        // directamente para conservar el flujo de la partida.
+                        if (placementMode && !disabled && cardRef.current) {
+                          onSelectCard(card, cardRef.current);
+                          setExpandedId(null);
+                          return;
+                        }
+
+                        setExpandedId(currentId => currentId === card.id ? null : card.id);
                         return;
                       }
-                      // Escritorio, o segundo toque en móvil: seleccionar
+
                       if (cardRef.current) onSelectCard(card, cardRef.current);
                     }}
                     isHidden={hidingCardId === card.id}
