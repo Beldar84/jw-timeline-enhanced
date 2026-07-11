@@ -28,7 +28,12 @@ const fanTransform = (i: number, n: number, lifted: boolean, isMobile: boolean, 
   const center = (n - 1) / 2;
   const offset = n > 1 ? (i - center) / center : 0; // -1..1
   if (isMobile) {
-    if (expanded) return 'translateY(0)';
+    // Solo se desplaza la carta activa hacia el centro; el resto del abanico
+    // permanece inmóvil mientras se navega mediante gestos laterales.
+    if (expanded) {
+      const horizontalShift = -offset * Math.min(90, Math.max(0, n - 1) * 29);
+      return `translateX(${horizontalShift}px) translateY(0)`;
+    }
     const rot = offset * 10; // máx ±10°
     return `rotate(${rot}deg) translateY(${Math.abs(offset) * 16}px)`;
   }
@@ -47,13 +52,29 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const [isMobile, setIsMobile] = React.useState(
     typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
   );
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [wrapW, setWrapW] = React.useState(0);
+  const swipeStartX = useRef<number | null>(null);
+  const suppressClick = useRef(false);
+  const suppressClickTimer = useRef<number | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
     const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  useEffect(() => {
+    const element = wrapRef.current;
+    if (!element || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(entries => setWrapW(entries[0].contentRect.width));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => () => {
+    if (suppressClickTimer.current !== null) window.clearTimeout(suppressClickTimer.current);
   }, []);
 
   // Precalienta imágenes de la mano (el SW las cachea)
@@ -73,22 +94,11 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   // Al cambiar la mano (carta jugada/robada), colapsa la ampliada
   useEffect(() => { setExpandedId(null); }, [player.hand.length]);
 
-  // Al ampliar o cambiar de carta, conserva la mano al final de la página y
-  // centra únicamente el carrusel horizontal. No se usa scrollIntoView porque
-  // también movería el documento en vertical.
+  // Al ampliar o cambiar de carta, conserva la mano al final de la página.
   useEffect(() => {
     if (!isMobile || expandedId === null) return;
 
     const keepCardVisible = () => {
-      const scroller = scrollRef.current;
-      const card = cardRefs.current.get(expandedId)?.current;
-      if (scroller && card) {
-        const scrollerRect = scroller.getBoundingClientRect();
-        const cardRect = card.getBoundingClientRect();
-        const horizontalDelta = cardRect.left + cardRect.width / 2
-          - (scrollerRect.left + scrollerRect.width / 2);
-        scroller.scrollBy({ left: horizontalDelta, behavior: 'smooth' });
-      }
       window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' });
     };
 
@@ -107,8 +117,47 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
   const n = player.hand.length;
 
+  // Solape dinámico: todas las cartas permanecen fijas dentro de la pantalla.
+  // El gesto lateral cambia únicamente cuál se desplaza y amplía al frente.
+  const cardWidth = isMobile && window.matchMedia('(orientation: landscape)').matches ? 120 : 140;
+  let mobileOverlap = 22;
+  if (isMobile && n > 1 && wrapW > 0) {
+    const usableWidth = wrapW - 48;
+    const neededOverlap = Math.ceil((cardWidth - (usableWidth - cardWidth) / (n - 1)) / 2);
+    mobileOverlap = Math.min(58, Math.max(22, neededOverlap));
+  }
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isMobile) return;
+    swipeStartX.current = event.clientX;
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isMobile || swipeStartX.current === null || n === 0) return;
+    const deltaX = event.clientX - swipeStartX.current;
+    swipeStartX.current = null;
+    if (Math.abs(deltaX) < 42) return;
+
+    suppressClick.current = true;
+    if (suppressClickTimer.current !== null) window.clearTimeout(suppressClickTimer.current);
+    suppressClickTimer.current = window.setTimeout(() => {
+      suppressClick.current = false;
+      suppressClickTimer.current = null;
+    }, 350);
+
+    setExpandedId(currentId => {
+      const currentIndex = player.hand.findIndex(card => card.id === currentId);
+      if (currentIndex < 0) {
+        return player.hand[deltaX < 0 ? 0 : n - 1].id;
+      }
+      const direction = deltaX < 0 ? 1 : -1;
+      return player.hand[(currentIndex + direction + n) % n].id;
+    });
+  };
+
   return (
     <div
+      ref={wrapRef}
       className={`player-hand-wrap ${isMobile && expandedId !== null ? 'player-hand-expanded-space' : ''}`}
     >
       <div className="relative z-20 flex items-center justify-center gap-2 mb-2 landscape:mb-1">
@@ -129,13 +178,15 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
         )}
       </div>
       <div
-        ref={scrollRef}
-        className="player-hand-scroll pb-2"
+        className="player-hand-stage pb-2"
         style={disabled ? { opacity: 0.7 } : undefined}
         role="region"
         aria-label="Cartas de tu mano"
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={() => { swipeStartX.current = null; }}
       >
-        <div className={`player-hand-row flex items-end ${isMobile ? 'w-max min-w-max justify-start px-10 pt-5' : 'justify-center min-w-max px-6 pt-4'}`}>
+        <div className={`player-hand-row flex items-end px-6 ${isMobile ? 'justify-center pt-5' : 'justify-center min-w-max pt-4'}`}>
           {n > 0 ? (
             player.hand.map((card, i) => {
               const cardRef = cardRefs.current.get(card.id)!;
@@ -145,7 +196,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                 <div
                   key={card.id}
                   style={{
-                    margin: isMobile ? '0 -18px' : '0 -8px',
+                    margin: isMobile ? `0 -${mobileOverlap}px` : '0 -8px',
                     transform: fanTransform(i, n, lifted, isMobile, expanded),
                     transformOrigin: 'bottom center',
                     transition: 'transform .2s',
@@ -163,6 +214,14 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                       showYear={false}
                       isStudyMode={isStudyMode}
                       onClick={() => {
+                        if (suppressClick.current) {
+                          suppressClick.current = false;
+                          if (suppressClickTimer.current !== null) {
+                            window.clearTimeout(suppressClickTimer.current);
+                            suppressClickTimer.current = null;
+                          }
+                          return;
+                        }
                         if (isMobile) {
                           // Tras elegir una posición del eje, la carta se coloca
                           // directamente para conservar el flujo de la partida.

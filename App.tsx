@@ -932,7 +932,7 @@ const AppEnhanced: React.FC = () => {
         <img
           src={LOGO_URL}
           alt="JW Timeline Logo"
-          className="w-56 md:w-72 mb-4 md:mb-8"
+          className="w-28 md:w-72 mb-4 md:mb-8"
         />
       )}
 

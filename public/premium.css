@@ -226,26 +226,19 @@
   transform: scale(1.32);
 }
 
-/* Carrusel táctil de la mano. La barra queda oculta, pero conserva el gesto
-   horizontal y espacio lateral suficiente para centrar cartas ampliadas. */
-.player-hand-scroll {
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  overscroll-behavior-inline: contain;
-  -webkit-overflow-scrolling: touch;
+/* El abanico no se desplaza como un carrusel. El gesto lateral se interpreta
+   en React y lleva una sola carta al frente, manteniendo el conjunto fijo. */
+.player-hand-wrap {
+  overflow: visible;
+  transition: padding-bottom .2s ease;
 }
-.player-hand-scroll::-webkit-scrollbar { display: none; }
+.player-hand-stage { overflow: visible; }
 
 @media (max-width: 767px) {
-  .player-hand-scroll {
-    touch-action: pan-x pan-y;
-    scroll-padding-inline: 40px;
-    transition: padding-bottom .2s ease;
-  }
+  .player-hand-stage { touch-action: pan-y; }
   /* Las transformaciones no aumentan el alto de su contenedor. Esta reserva
      permite ver la carta entera y aumenta también el final del documento. */
-  .player-hand-wrap.player-hand-expanded-space .player-hand-scroll {
+  .player-hand-wrap.player-hand-expanded-space {
     padding-bottom: 96px;
   }
 }
