@@ -143,6 +143,19 @@
   transform: scale(1.1);
   color: #f2e8d5;
 }
+.slot-circle.drag-target {
+  border: 2px solid var(--gold-bright);
+  background: rgba(201,162,39,.3);
+  color: #fff5cf;
+  box-shadow: 0 0 0 8px rgba(201,162,39,.12), 0 0 34px rgba(229,201,106,.65);
+  transform: scale(1.18);
+  animation: drag-slot-pulse .7s ease-in-out infinite alternate;
+}
+
+@keyframes drag-slot-pulse {
+  from { box-shadow: 0 0 0 5px rgba(201,162,39,.1), 0 0 24px rgba(229,201,106,.42); }
+  to { box-shadow: 0 0 0 10px rgba(201,162,39,.16), 0 0 40px rgba(229,201,106,.72); }
+}
 
 /* Eje temporal dorado (línea horizontal detrás de las cartas) */
 .gold-axis {
@@ -226,6 +239,32 @@
   transform: scale(1.32);
 }
 
+.drag-card-preview {
+  position: fixed;
+  z-index: 90;
+  pointer-events: none;
+  transform: translateZ(0) rotate(1.5deg) scale(1.04);
+  filter: drop-shadow(0 22px 28px rgba(0,0,0,.58));
+  opacity: .96;
+  will-change: left, top, transform;
+  animation: drag-card-lift .14s ease-out both;
+}
+
+@keyframes drag-card-lift {
+  from { transform: translateZ(0) rotate(0) scale(.94); opacity: .7; }
+  to { transform: translateZ(0) rotate(1.5deg) scale(1.04); opacity: .96; }
+}
+
+.ai-card-reveal {
+  filter: drop-shadow(0 22px 34px rgba(0,0,0,.65));
+  animation: ai-card-reveal .24s cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes ai-card-reveal {
+  from { transform: translateY(18px) scale(.88); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
 /* El abanico no se desplaza como un carrusel. El gesto lateral se interpreta
    en React y lleva una sola carta al frente, manteniendo el conjunto fijo. */
 .player-hand-wrap {
@@ -273,4 +312,155 @@
    dentro de su marco; se desactiva la elevación por hover. */
 @media (hover: none) {
   .parchment-card:hover { transform: none !important; }
+}
+
+/* ================== TUTORIAL VISUAL ================== */
+.tutorial-panel { scrollbar-width: none; }
+.tutorial-panel::-webkit-scrollbar { display: none; }
+.tutorial-visual-frame {
+  min-height: 250px;
+  height: min(46vh, 390px);
+  overflow: hidden;
+  border: 1px solid rgba(138,106,42,.38);
+  border-radius: 6px;
+  background: linear-gradient(145deg, rgba(31,20,9,.96), rgba(10,7,3,.98));
+  box-shadow: inset 0 0 34px rgba(0,0,0,.42), 0 10px 26px rgba(61,39,13,.16);
+}
+.tutorial-drawing {
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  color: #e5c96a;
+}
+.tutorial-mode-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid rgba(229,201,106,.42);
+  border-radius: 5px;
+  background: rgba(201,162,39,.1);
+}
+.tutorial-mode-card strong {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(20px, 5vw, 34px);
+}
+.tutorial-mode-card span {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: .12em;
+  color: #c9b891;
+}
+.tutorial-count-card,
+.tutorial-zero-card,
+.tutorial-hand-card,
+.tutorial-event-demo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  color: #5c4a28;
+  background: #eee2c4;
+  border: 2px solid #cfb76f;
+  box-shadow: 0 8px 18px rgba(0,0,0,.42);
+}
+.tutorial-count-card {
+  width: 38px;
+  height: 54px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.tutorial-zero-card {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: #e5c96a;
+  background: rgba(201,162,39,.16);
+}
+.tutorial-hand-card {
+  position: absolute;
+  bottom: 0;
+  width: 60px;
+  height: 88px;
+  border-radius: 5px;
+  font-weight: 700;
+}
+.tutorial-arrow {
+  align-self: center;
+  font-family: 'Cinzel', serif;
+  color: #d4af37;
+}
+.tutorial-victory-seal {
+  display: flex;
+  width: 76px;
+  height: 76px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e5c96a;
+  border-radius: 50%;
+  color: #fff1b0;
+  background: rgba(201,162,39,.2);
+  box-shadow: 0 0 32px rgba(229,201,106,.4);
+  font-size: 42px;
+}
+.tutorial-axis-demo {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 350px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tutorial-axis-demo::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: rgba(201,162,39,.65);
+}
+.tutorial-axis-demo.compact { width: 180px; }
+.tutorial-event-demo {
+  position: relative;
+  z-index: 1;
+  width: 58px;
+  height: 82px;
+  border-radius: 4px;
+}
+.tutorial-slot-demo {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed rgba(229,201,106,.65);
+  border-radius: 50%;
+  color: #e5c96a;
+  background: #1a1007;
+  font-size: 24px;
+}
+.tutorial-slot-demo.emphasized {
+  border-style: solid;
+  box-shadow: 0 0 24px rgba(229,201,106,.58);
+  transform: scale(1.13);
+}
+
+@media (max-width: 767px) {
+  .tutorial-visual-frame {
+    min-height: 205px;
+    height: min(37vh, 300px);
+  }
+  .tutorial-drawing { padding: 17px; }
+  .tutorial-count-card { width: 30px; height: 44px; font-size: 12px; }
+  .tutorial-arrow { font-size: 13px; }
+  .tutorial-axis-demo.compact { width: 150px; }
+  .tutorial-event-demo { width: 48px; height: 70px; }
+  .tutorial-slot-demo { width: 34px; height: 34px; }
 }

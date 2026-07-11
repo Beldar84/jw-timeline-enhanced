@@ -15,6 +15,9 @@ import Card from './Card';
 interface PlayerHandProps {
   player: Player;
   onSelectCard: (card: CardType, element: HTMLDivElement) => void;
+  onCardDragStart?: (card: CardType, element: HTMLDivElement, clientX: number, clientY: number) => void;
+  onCardDragMove?: (clientX: number, clientY: number) => void;
+  onCardDragEnd?: (card: CardType, element: HTMLDivElement, clientX: number, clientY: number) => void;
   placementMode?: boolean;
   disabled?: boolean;
   hidingCardId?: number | null;
@@ -50,7 +53,8 @@ const fanTransform = (
 };
 
 const PlayerHand: React.FC<PlayerHandProps> = ({
-  player, onSelectCard, placementMode = false, disabled = false, hidingCardId, isStudyMode = false,
+  player, onSelectCard, onCardDragStart, onCardDragMove, onCardDragEnd,
+  placementMode = false, disabled = false, hidingCardId, isStudyMode = false,
 }) => {
   const cardRefs = useRef(new Map<number, React.RefObject<HTMLDivElement>>());
   const hovered = useRef<number | null>(null);
@@ -64,6 +68,16 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const swipeStartX = useRef<number | null>(null);
   const suppressClick = useRef(false);
   const suppressClickTimer = useRef<number | null>(null);
+  const dragCandidate = useRef<{
+    card: CardType;
+    element: HTMLDivElement;
+    pointerId: number;
+    startX: number;
+    startY: number;
+    active: boolean;
+  } | null>(null);
+  const dragCallbacks = useRef({ onCardDragStart, onCardDragMove, onCardDragEnd });
+  dragCallbacks.current = { onCardDragStart, onCardDragMove, onCardDragEnd };
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
@@ -83,6 +97,66 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   useEffect(() => () => {
     if (suppressClickTimer.current !== null) window.clearTimeout(suppressClickTimer.current);
   }, []);
+
+  useEffect(() => {
+    const handleWindowPointerMove = (event: PointerEvent) => {
+      const candidate = dragCandidate.current;
+      const callbacks = dragCallbacks.current;
+      if (!candidate || candidate.pointerId !== event.pointerId || disabled) return;
+      if (!callbacks.onCardDragStart || !callbacks.onCardDragMove || !callbacks.onCardDragEnd) return;
+
+      const deltaX = event.clientX - candidate.startX;
+      const deltaY = event.clientY - candidate.startY;
+      const distance = Math.hypot(deltaX, deltaY);
+      const shouldStart = isMobile
+        ? deltaY < -14 && Math.abs(deltaY) > Math.abs(deltaX) * 0.8
+        : distance > 8;
+
+      if (!candidate.active && shouldStart) {
+        candidate.active = true;
+        suppressClick.current = true;
+        if (suppressClickTimer.current !== null) window.clearTimeout(suppressClickTimer.current);
+        suppressClickTimer.current = window.setTimeout(() => {
+          suppressClick.current = false;
+          suppressClickTimer.current = null;
+        }, 350);
+        swipeStartX.current = null;
+        callbacks.onCardDragStart(candidate.card, candidate.element, event.clientX, event.clientY);
+      }
+
+      if (candidate.active) {
+        event.preventDefault();
+        callbacks.onCardDragMove(event.clientX, event.clientY);
+      }
+    };
+
+    const finishWindowDrag = (event: PointerEvent, cancelled = false) => {
+      const candidate = dragCandidate.current;
+      if (!candidate || candidate.pointerId !== event.pointerId) return;
+      if (candidate.active) {
+        event.preventDefault();
+        swipeStartX.current = null;
+        dragCallbacks.current.onCardDragEnd?.(
+          candidate.card,
+          candidate.element,
+          cancelled ? -1 : event.clientX,
+          cancelled ? -1 : event.clientY,
+        );
+      }
+      dragCandidate.current = null;
+    };
+
+    const handlePointerUp = (event: PointerEvent) => finishWindowDrag(event);
+    const handlePointerCancel = (event: PointerEvent) => finishWindowDrag(event, true);
+    window.addEventListener('pointermove', handleWindowPointerMove, { passive: false });
+    window.addEventListener('pointerup', handlePointerUp, { passive: false });
+    window.addEventListener('pointercancel', handlePointerCancel, { passive: false });
+    return () => {
+      window.removeEventListener('pointermove', handleWindowPointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerCancel);
+    };
+  }, [disabled, isMobile]);
 
   // Precalienta imágenes de la mano (el SW las cachea)
   useEffect(() => {
@@ -178,6 +252,23 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     });
   };
 
+  const startCardDragCandidate = (
+    event: React.PointerEvent<HTMLDivElement>,
+    card: CardType,
+    element: HTMLDivElement | null,
+  ) => {
+    if (disabled || !element || !onCardDragStart || !onCardDragMove || !onCardDragEnd) return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    dragCandidate.current = {
+      card,
+      element,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      active: false,
+    };
+  };
+
   return (
     <div ref={wrapRef} className="player-hand-wrap">
       <div className="relative z-20 flex items-center justify-center gap-2 mb-2 landscape:mb-1">
@@ -237,7 +328,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                         ? n - Math.abs(i - expandedIndex)
                         : i + 1,
                     borderRadius: 4,
+                    touchAction: !disabled && onCardDragStart ? 'none' : undefined,
                   }}
+                  onPointerDown={(event) => startCardDragCandidate(event, card, cardRef.current)}
                   onMouseEnter={() => { hovered.current = card.id; force(); }}
                   onMouseLeave={() => { hovered.current = null; force(); }}
                 >

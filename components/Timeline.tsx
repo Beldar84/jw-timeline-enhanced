@@ -14,6 +14,7 @@ interface TimelineProps {
   cards: CardType[];
   onSelectSlot: (timelineIndex: number, element: HTMLButtonElement) => void;
   selectedSlotIndex: number | null;
+  dragTargetIndex?: number | null;
   disabled?: boolean;
 }
 
@@ -21,6 +22,7 @@ interface PlacementSlotProps {
   id: string;
   onClick: () => void;
   isSelected: boolean;
+  isDragTarget?: boolean;
   disabled?: boolean;
 }
 
@@ -33,14 +35,14 @@ const PlusIcon: React.FC<{ selected: boolean }> = ({ selected }) => (
   </svg>
 );
 
-const PlacementSlot = forwardRef<HTMLButtonElement, PlacementSlotProps>(({ id, onClick, isSelected, disabled }, ref) => (
+const PlacementSlot = forwardRef<HTMLButtonElement, PlacementSlotProps>(({ id, onClick, isSelected, isDragTarget = false, disabled }, ref) => (
   <button
     type="button"
     id={id}
     ref={ref}
     onClick={onClick}
     disabled={disabled}
-    className={`slot-circle ${isSelected ? 'selected' : ''} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+    className={`slot-circle ${isSelected ? 'selected' : ''} ${isDragTarget ? 'drag-target' : ''} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
     aria-label={isSelected ? 'Ranura de colocación seleccionada' : 'Seleccionar esta ranura para colocar una carta'}
     aria-pressed={isSelected}
   >
@@ -48,7 +50,7 @@ const PlacementSlot = forwardRef<HTMLButtonElement, PlacementSlotProps>(({ id, o
   </button>
 ));
 
-const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIndex, disabled = false }) => {
+const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIndex, dragTargetIndex = null, disabled = false }) => {
   const slotRefs = useRef<React.RefObject<HTMLButtonElement>[]>([]);
   const [expandedCardId, setExpandedCardId] = useState<number | null>(null);
   slotRefs.current = [...Array(cards.length + 1)].map(
@@ -73,6 +75,7 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
           ref={slotRefs.current[0]}
           onClick={() => handleSelect(0)}
           isSelected={selectedSlotIndex === 0}
+          isDragTarget={dragTargetIndex === 0}
           disabled={disabled}
         />
 
@@ -94,6 +97,7 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
               ref={slotRefs.current[index + 1]}
               onClick={() => handleSelect(index + 1)}
               isSelected={selectedSlotIndex === index + 1}
+              isDragTarget={dragTargetIndex === index + 1}
               disabled={disabled}
             />
           </React.Fragment>

@@ -38,6 +38,14 @@ interface GameBoardProps {
   isStudyMode?: boolean;
 }
 
+interface DragPreview {
+  card: CardType;
+  clientX: number;
+  clientY: number;
+  width: number;
+  height: number;
+}
+
 const GameBoard: React.FC<GameBoardProps> = ({
   players, currentPlayer, timeline, onAttemptPlaceCard, deckSize, topOfDeck,
   discardPile, message, revealedAICard, gameMode, localPlayer, hidingCardId,
@@ -47,10 +55,13 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const [selectedSlotElement, setSelectedSlotElement] = useState<HTMLElement | null>(null);
   const [selectedCard, setSelectedCard] = useState<{ card: CardType, element: HTMLElement } | null>(null);
   const [zoomedCard, setZoomedCard] = useState<CardType | null>(null);
+  const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
+  const [dragTargetIndex, setDragTargetIndex] = useState<number | null>(null);
 
   const discardRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<HTMLDivElement>(null);
   const handRef = useRef<HTMLDivElement>(null);
+  const dragPreviewRef = useRef<HTMLDivElement>(null);
 
   const isTurnOfHumanOnThisDevice =
     gameMode === 'local' ||
@@ -97,6 +108,68 @@ const GameBoard: React.FC<GameBoardProps> = ({
       soundService.playCardFlip();
       setZoomedCard(card);
     }
+  };
+
+  const findDropSlot = (clientX: number, clientY: number) => {
+    if (clientX < 0 || clientY < 0) return null;
+    const slot = document.elementFromPoint(clientX, clientY)?.closest<HTMLButtonElement>('.slot-circle');
+    if (!slot || slot.disabled || !slot.id.startsWith('timeline-slot-')) return null;
+    const index = Number(slot.id.replace('timeline-slot-', ''));
+    return Number.isInteger(index) && index >= 0 && index <= timeline.length
+      ? { index, element: slot }
+      : null;
+  };
+
+  const handleCardDragStart = (
+    card: CardType,
+    element: HTMLDivElement,
+    clientX: number,
+    clientY: number,
+  ) => {
+    if (!canInteract) return;
+    const rect = element.getBoundingClientRect();
+    setSelectedTimelineIndex(null);
+    setSelectedSlotElement(null);
+    setDragPreview({
+      card,
+      clientX,
+      clientY,
+      width: rect.width,
+      height: rect.height,
+    });
+  };
+
+  const handleCardDragMove = (clientX: number, clientY: number) => {
+    if (!canInteract) return;
+    const preview = dragPreviewRef.current;
+    if (preview) {
+      preview.style.left = `${clientX - preview.offsetWidth / 2}px`;
+      preview.style.top = `${clientY - preview.offsetHeight / 2}px`;
+    }
+    const targetIndex = findDropSlot(clientX, clientY)?.index ?? null;
+    setDragTargetIndex(current => current === targetIndex ? current : targetIndex);
+  };
+
+  const handleCardDragEnd = (
+    card: CardType,
+    element: HTMLDivElement,
+    clientX: number,
+    clientY: number,
+  ) => {
+    const target = canInteract ? findDropSlot(clientX, clientY) : null;
+    const animationOrigin = dragPreviewRef.current ?? element;
+
+    if (target) {
+      soundService.playClick();
+      if (gameMode === 'online' && onPlaceCardOnline) {
+        onPlaceCardOnline(card, target.index);
+      } else if (discardRef.current) {
+        onAttemptPlaceCard(card, target.index, animationOrigin, target.element, discardRef.current);
+      }
+    }
+
+    setDragPreview(null);
+    setDragTargetIndex(null);
   };
 
   const handleCloseZoom = () => setZoomedCard(null);
@@ -188,6 +261,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           cards={timeline}
           onSelectSlot={handleSelectSlot}
           selectedSlotIndex={selectedTimelineIndex}
+          dragTargetIndex={dragTargetIndex}
           disabled={!canInteract}
         />
       </div>
@@ -248,6 +322,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
               <PlayerHand
                 player={handPlayer}
                 onSelectCard={handleCardClick}
+                onCardDragStart={handleCardDragStart}
+                onCardDragMove={handleCardDragMove}
+                onCardDragEnd={handleCardDragEnd}
                 placementMode={selectedTimelineIndex !== null}
                 disabled={!canInteract}
                 hidingCardId={hidingCardId}
@@ -258,6 +335,22 @@ const GameBoard: React.FC<GameBoardProps> = ({
         </div>
 
       </div>
+
+      {dragPreview && (
+        <div
+          ref={dragPreviewRef}
+          className="drag-card-preview"
+          style={{
+            left: dragPreview.clientX - dragPreview.width / 2,
+            top: dragPreview.clientY - dragPreview.height / 2,
+            width: dragPreview.width,
+            height: dragPreview.height,
+          }}
+          aria-hidden="true"
+        >
+          <Card card={dragPreview.card} showYear={false} className="w-full h-full card-expanded-ring" />
+        </div>
+      )}
 
       {/* ── Zoom ── */}
       {zoomedCard && (
@@ -270,9 +363,10 @@ const GameBoard: React.FC<GameBoardProps> = ({
         </div>
       )}
       {revealedAICard && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(10,7,3,.85)', backdropFilter: 'blur(4px)' }}
-          role="dialog" aria-modal="true">
-          <Card card={revealedAICard} showYear={false} isZoomed={true} />
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none" role="status" aria-live="polite">
+          <div className="ai-card-reveal">
+            <Card card={revealedAICard} showYear={false} className="w-[185px] md:w-[220px] !h-auto card-expanded-ring" />
+          </div>
         </div>
       )}
     </div>

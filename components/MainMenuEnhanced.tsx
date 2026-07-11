@@ -98,7 +98,6 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
   onShowSoundSettings, onShowAuth, onShowFriends, onShowTurnBasedGames,
 }) => {
   const [showRules, setShowRules] = useState(false);
-  const [isMuted, setIsMuted] = useState(soundService.isMuted());
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [pendingTurnGames, setPendingTurnGames] = useState(0);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -118,11 +117,6 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
   }, []);
 
   const click = (fn?: () => void) => () => { soundService.playClick(); fn && fn(); };
-  const handleQuickMute = () => {
-    const muted = soundService.toggleMute();
-    setIsMuted(muted);
-    if (!muted) soundService.playClick();
-  };
 
   const secondary = [
     { icon: <IconChart />,  label: 'Estadísticas',  fn: onShowStats },
@@ -222,17 +216,6 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
           </p>
         </div>
 
-        {/* Silencio rápido */}
-        <button onClick={handleQuickMute} title={isMuted ? 'Activar sonido' : 'Silenciar'}
-          className="absolute -bottom-14 right-0 w-11 h-11 rounded-full flex items-center justify-center cursor-pointer"
-          style={{ background: 'rgba(0,0,0,.35)', border: `1px solid ${isMuted ? 'rgba(220,80,60,.6)' : 'rgba(201,162,39,.4)'}` }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isMuted ? '#d0604a' : '#c9b891'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 10v4h4l5 4V6l-5 4H4z" />
-            {isMuted
-              ? <><line x1="16" y1="9" x2="21" y2="14" /><line x1="21" y1="9" x2="16" y2="14" /></>
-              : <path d="M16.5 9.5a4 4 0 0 1 0 5" />}
-          </svg>
-        </button>
       </div>
 
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}
