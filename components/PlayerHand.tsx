@@ -7,7 +7,7 @@ import Card from './Card';
 // Sustituye components/PlayerHand.tsx. Misma API de props.
 // Mano en abanico siempre (también en móvil):
 //  · Escritorio: hover eleva la carta; clic la selecciona.
-//  · Móvil (≤767px): abanico compacto (±10°, solape -18px);
+//  · Móvil (≤767px): abanico abierto (±10°, solape dinámico);
 //    cada toque alterna la carta entre su tamaño normal y ampliado.
 // Título en EB Garamond itálica.
 // ============================================================
@@ -24,18 +24,25 @@ interface PlayerHandProps {
 // Rotación del abanico según posición relativa al centro.
 // En móvil el abanico es más compacto. La carta ampliada se
 // endereza aquí y crece hacia abajo en su envoltorio interior.
-const fanTransform = (i: number, n: number, lifted: boolean, isMobile: boolean, expanded: boolean) => {
+const fanTransform = (
+  i: number,
+  n: number,
+  lifted: boolean,
+  isMobile: boolean,
+  expanded: boolean,
+  expandedIndex: number,
+  mobileHorizontalShift: number,
+) => {
   const center = (n - 1) / 2;
   const offset = n > 1 ? (i - center) / center : 0; // -1..1
   if (isMobile) {
     // Solo se desplaza la carta activa hacia el centro; el resto del abanico
     // permanece inmóvil mientras se navega mediante gestos laterales.
     if (expanded) {
-      const horizontalShift = -offset * Math.min(90, Math.max(0, n - 1) * 29);
-      return `translateX(${horizontalShift}px) translateY(0)`;
+      return `translateX(${mobileHorizontalShift}px) translateY(0)`;
     }
     const rot = offset * 10; // máx ±10°
-    return `rotate(${rot}deg) translateY(${Math.abs(offset) * 16}px)`;
+    return `translateX(${mobileHorizontalShift}px) rotate(${rot}deg) translateY(${Math.abs(offset) * 16}px)`;
   }
   const rot = offset * 7; // máx ±7°
   const y = lifted ? -16 : Math.abs(offset) * 14; // extremos más bajos
@@ -116,16 +123,48 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const title = disabled ? 'Esperando tu turno…' : titleText;
 
   const n = player.hand.length;
+  const expandedIndex = player.hand.findIndex(card => card.id === expandedId);
 
   // Solape dinámico: todas las cartas permanecen fijas dentro de la pantalla.
   // El gesto lateral cambia únicamente cuál se desplaza y amplía al frente.
   const cardWidth = isMobile && window.matchMedia('(orientation: landscape)').matches ? 120 : 140;
-  let mobileOverlap = 22;
+  let mobileOverlap = 18;
   if (isMobile && n > 1 && wrapW > 0) {
-    const usableWidth = wrapW - 48;
+    // Reservamos solo 8 px por lado: así las cuatro cartas ocupan casi todo el
+    // ancho disponible y cada una conserva una franja amplia para tocarla.
+    const usableWidth = wrapW - 16;
     const neededOverlap = Math.ceil((cardWidth - (usableWidth - cardWidth) / (n - 1)) / 2);
-    mobileOverlap = Math.min(58, Math.max(22, neededOverlap));
+    mobileOverlap = Math.min(48, Math.max(16, neededOverlap));
   }
+
+  const mobileHorizontalShift = (index: number): number => {
+    if (!isMobile || expandedIndex < 0) return 0;
+
+    const layoutWidth = wrapW || window.innerWidth;
+    const spacing = cardWidth - mobileOverlap * 2;
+    const groupWidth = cardWidth + Math.max(0, n - 1) * spacing;
+    const baseCenter = (layoutWidth - groupWidth) / 2 + cardWidth / 2 + index * spacing;
+
+    if (index === expandedIndex) return layoutWidth / 2 - baseCenter;
+
+    const expandedHalfWidth = cardWidth * 1.32 / 2;
+    const selectedLeft = layoutWidth / 2 - expandedHalfWidth;
+    const selectedRight = layoutWidth / 2 + expandedHalfWidth;
+
+    if (index < expandedIndex) {
+      const cardsOnLeft = expandedIndex;
+      const tabWidth = Math.min(42, selectedLeft / cardsOnLeft);
+      const distance = expandedIndex - index;
+      const targetRight = selectedLeft - (distance - 1) * tabWidth;
+      return targetRight - cardWidth / 2 - baseCenter;
+    }
+
+    const cardsOnRight = n - expandedIndex - 1;
+    const tabWidth = Math.min(42, (layoutWidth - selectedRight) / cardsOnRight);
+    const distance = index - expandedIndex;
+    const targetRight = selectedRight + distance * tabWidth;
+    return targetRight - cardWidth / 2 - baseCenter;
+  };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!isMobile) return;
@@ -186,7 +225,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
         onPointerUp={handlePointerUp}
         onPointerCancel={() => { swipeStartX.current = null; }}
       >
-        <div className={`player-hand-row flex items-end px-6 ${isMobile ? 'justify-center pt-5' : 'justify-center min-w-max pt-4'}`}>
+        <div className={`player-hand-row flex items-end ${isMobile ? 'justify-center px-2 pt-5' : 'justify-center min-w-max px-6 pt-4'}`}>
           {n > 0 ? (
             player.hand.map((card, i) => {
               const cardRef = cardRefs.current.get(card.id)!;
@@ -197,10 +236,22 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                   key={card.id}
                   style={{
                     margin: isMobile ? `0 -${mobileOverlap}px` : '0 -8px',
-                    transform: fanTransform(i, n, lifted, isMobile, expanded),
+                    transform: fanTransform(
+                      i,
+                      n,
+                      lifted,
+                      isMobile,
+                      expanded,
+                      expandedIndex,
+                      mobileHorizontalShift(i),
+                    ),
                     transformOrigin: 'bottom center',
                     transition: 'transform .2s',
-                    zIndex: expanded || lifted ? 10 : i + 1,
+                    zIndex: expanded || lifted
+                      ? 10
+                      : expandedIndex >= 0
+                        ? n - Math.abs(i - expandedIndex)
+                        : i + 1,
                     borderRadius: 4,
                   }}
                   onMouseEnter={() => { hovered.current = card.id; force(); }}
