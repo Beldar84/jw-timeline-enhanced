@@ -11,7 +11,7 @@ import { soundService } from '../services/soundService';
 
 interface FriendsPanelProps {
   onClose: () => void;
-  onInviteFriend?: (friendId: string, friendName: string) => void;
+  onInviteFriend?: (friendId: string, friendName: string) => Promise<boolean>;
 }
 
 type Tab = 'friends' | 'requests' | 'add';
@@ -173,10 +173,25 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
     }
   };
 
-  const handleInvite = (friend: FriendInfo) => {
+  const handleInvite = async (friend: FriendInfo) => {
     soundService.playClick();
-    if (onInviteFriend) {
-      onInviteFriend(friend.id, friend.name);
+    if (!onInviteFriend) return;
+
+    const actionId = `invite:${friend.id}`;
+    setActionLoading(actionId);
+    setMessage(null);
+    try {
+      const success = await onInviteFriend(friend.id, friend.name);
+      if (!success) {
+        setMessage({ type: 'error', text: 'No se pudo enviar la invitación. Inténtalo de nuevo.' });
+        soundService.playIncorrect();
+      }
+    } catch (error) {
+      console.error('Error inviting friend:', error);
+      setMessage({ type: 'error', text: 'No se pudo crear la sala o enviar la invitación.' });
+      soundService.playIncorrect();
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -229,6 +244,17 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
           {tabButton('add', '+ AÑADIR')}
         </div>
 
+        {message && tab !== 'add' && (
+          <p className="font-body italic text-[13.5px] m-0 mt-4 px-3.5 py-2.5"
+            style={{
+              border: `1px solid ${message.type === 'success' ? 'rgba(109,122,63,.5)' : 'rgba(138,59,42,.4)'}`,
+              background: message.type === 'success' ? 'rgba(109,122,63,.1)' : 'rgba(138,59,42,.08)',
+              color: message.type === 'success' ? '#5c6a33' : '#8a3b2a',
+            }}>
+            {message.text}
+          </p>
+        )}
+
         {/* Contenido */}
         <div className="flex-1 overflow-y-auto py-4 pr-1" style={{ minHeight: 180 }}>
           {loading ? (
@@ -255,9 +281,11 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ onClose, onInviteFriend }) 
                         </div>
                         <div className="flex gap-1.5">
                           {onInviteFriend && (
-                            <button onClick={() => handleInvite(friend)} className="btn-gold"
+                            <button onClick={() => handleInvite(friend)}
+                              disabled={actionLoading === `invite:${friend.id}`}
+                              className="btn-gold disabled:opacity-50 disabled:cursor-not-allowed"
                               style={{ ...smallBtnBase, border: 'none' }}>
-                              INVITAR
+                              {actionLoading === `invite:${friend.id}` ? '…' : 'INVITAR'}
                             </button>
                           )}
                           <button onClick={() => handleRemoveFriend(friend.id)} disabled={actionLoading === friend.id}

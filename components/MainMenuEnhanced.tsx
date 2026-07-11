@@ -100,17 +100,17 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
   const [showRules, setShowRules] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [pendingTurnGames, setPendingTurnGames] = useState(0);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const profile = profileService.getProfileSummary();
 
   useEffect(() => {
     const unsubscribe = firebaseService.onAuthStateChange(async (user) => {
       setIsLoggedIn(user !== null && !user.isAnonymous);
-      setUserEmail(user?.email || null);
       if (user && !user.isAnonymous) {
         const games = await firebaseService.getTurnBasedGames();
         setPendingTurnGames(games.filter(g => g.currentTurnPlayerId === user.uid).length);
+      } else {
+        setPendingTurnGames(0);
       }
     });
     return () => unsubscribe();
@@ -150,15 +150,18 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
               </p>
             </div>
             {isLoggedIn ? (
-              <span className="font-body italic text-sm truncate max-w-[100px] sm:max-w-[130px]" style={{ color: '#a08a5c' }}
+              <button type="button"
+                className="font-body italic text-sm truncate max-w-[100px] sm:max-w-[130px] cursor-pointer"
+                style={{ color: '#a08a5c', background: 'none', border: 'none', padding: 0 }}
                 onClick={(e) => { e.stopPropagation(); click(onShowFriends)(); }}>
-                {userEmail}
-              </span>
+                Amigos
+              </button>
             ) : (
-              <span className="font-body italic text-sm" style={{ color: '#a08a5c' }}
+              <button type="button" className="font-body italic text-sm cursor-pointer"
+                style={{ color: '#a08a5c', background: 'none', border: 'none', padding: 0 }}
                 onClick={(e) => { e.stopPropagation(); click(onShowAuth)(); }}>
                 iniciar sesión
-              </span>
+              </button>
             )}
           </div>
 

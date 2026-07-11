@@ -648,8 +648,7 @@ export const firebaseService = {
       const invitesRef = collection(db, 'gameInvitations');
       const q = query(
         invitesRef,
-        where('toUserId', '==', userId),
-        where('status', '==', 'pending')
+        where('toUserId', '==', userId)
       );
       const snapshot = await getDocs(q);
 
@@ -661,7 +660,7 @@ export const firebaseService = {
         const expiresAt = data.expiresAt?.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
 
         // Solo incluir invitaciones no expiradas
-        if (expiresAt > now) {
+        if (data.status === 'pending' && expiresAt > now) {
           invitations.push({
             id: data.id,
             fromUserId: data.fromUserId,
@@ -691,8 +690,7 @@ export const firebaseService = {
     const invitesRef = collection(db, 'gameInvitations');
     const q = query(
       invitesRef,
-      where('toUserId', '==', userId),
-      where('status', '==', 'pending')
+      where('toUserId', '==', userId)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -703,7 +701,7 @@ export const firebaseService = {
         const data = doc.data();
         const expiresAt = data.expiresAt?.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
 
-        if (expiresAt > now) {
+        if (data.status === 'pending' && expiresAt > now) {
           invitations.push({
             id: data.id,
             fromUserId: data.fromUserId,
@@ -719,6 +717,9 @@ export const firebaseService = {
       });
 
       callback(invitations);
+    }, (error) => {
+      console.error('[Firebase] Game invitations subscription error:', error);
+      callback([]);
     });
 
     return unsubscribe;

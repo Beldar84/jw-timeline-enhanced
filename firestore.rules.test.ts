@@ -91,6 +91,32 @@ describe('Firestore security rules', () => {
     await assertFails(updateDoc(doc(charlie, 'realtimeGames/JW-ABC123'), { phase: 'GAME_OVER' }));
   });
 
+  it('allows authenticated players to check a free code and join a lobby', async () => {
+    await seed('realtimeGames/JW-LOBBY', {
+      id: 'JW-LOBBY',
+      participantAuthIds: ['alice'],
+      createdBy: 'alice',
+      hostId: 'alice',
+      phase: 'LOBBY',
+      players: [{ id: 'alice', name: 'Alice', hand: [], isAI: false }],
+      message: 'Esperando a jugadores...',
+      updatedAt: 1,
+    });
+    const bob = testEnvironment.authenticatedContext('bob').firestore();
+
+    await assertSucceeds(getDoc(doc(bob, 'realtimeGames/JW-FREE')));
+    await assertSucceeds(getDoc(doc(bob, 'realtimeGames/JW-LOBBY')));
+    await assertSucceeds(updateDoc(doc(bob, 'realtimeGames/JW-LOBBY'), {
+      participantAuthIds: ['alice', 'bob'],
+      players: [
+        { id: 'alice', name: 'Alice', hand: [], isAI: false },
+        { id: 'bob', name: 'Bob', hand: [], isAI: false },
+      ],
+      message: 'Esperando a jugadores...',
+      updatedAt: 2,
+    }));
+  });
+
   it('validates direct friend requests, acceptance and invitations on Spark', async () => {
     await seed('users/alice', { id: 'alice', friends: [], friendRequests: [] });
     await seed('users/bob', { id: 'bob', friends: [], friendRequests: [] });

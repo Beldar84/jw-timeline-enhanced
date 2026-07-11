@@ -31,6 +31,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [hasProfile, setHasProfile] = useState(profileService.hasProfile());
+  const [isLoggedIn, setIsLoggedIn] = useState(firebaseService.isRegisteredUser());
 
   const summary = profileService.getProfileSummary();
   const stats = statsService.loadStats();
@@ -39,6 +40,13 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
   useEffect(() => {
     setEditName(summary.name);
   }, [summary.name]);
+
+  useEffect(() => {
+    const unsubscribe = firebaseService.onAuthStateChange((user) => {
+      setIsLoggedIn(Boolean(user && !user.isAnonymous));
+    });
+    return unsubscribe;
+  }, []);
 
   // El nombre debe guardarse también en la cuenta (Firestore): si solo se
   // cambia en localStorage, al entrar desde otro navegador vuelve "Jugador".
@@ -78,6 +86,12 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
         handleCreateProfile();
       }
     }
+  };
+
+  const handleSignOut = async () => {
+    soundService.playClick();
+    await firebaseService.signOutUser();
+    onClose();
   };
 
   const renderLevelBadge = (level: PlayerLevel & { unlocked: boolean }) => (
@@ -230,8 +244,16 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
           </div>
         </div>
 
+        {isLoggedIn && (
+          <button onClick={handleSignOut}
+            className="w-full py-3 text-[13px] mt-6 font-display tracking-wider rounded-sm cursor-pointer"
+            style={{ background: 'none', border: '1px solid rgba(138,59,42,.45)', color: '#8a3b2a' }}>
+            CERRAR SESIÓN
+          </button>
+        )}
+
         {/* Cerrar */}
-        <button onClick={onClose} className="btn-gold w-full py-3 text-[13px] mt-6">
+        <button onClick={onClose} className={`btn-gold w-full py-3 text-[13px] ${isLoggedIn ? 'mt-3' : 'mt-6'}`}>
           CERRAR
         </button>
       </div>

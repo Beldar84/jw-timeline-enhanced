@@ -127,6 +127,7 @@ const AppEnhanced: React.FC = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [showFriends, setShowFriends] = useState(false);
   const [showTurnBasedGames, setShowTurnBasedGames] = useState(false);
+  const [isRegisteredUser, setIsRegisteredUser] = useState(firebaseService.isRegisteredUser());
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [stats, setStats] = useState<PlayerStats>(statsService.loadStats());
   const pendingTimeoutsRef = useRef<Set<number>>(new Set());
@@ -730,6 +731,7 @@ const AppEnhanced: React.FC = () => {
   // Los resultados competitivos se registran atómicamente en Cloud Functions.
   useEffect(() => {
     const unsubscribe = firebaseService.onAuthStateChange((user) => {
+      setIsRegisteredUser(Boolean(user && !user.isAnonymous));
       if (user && !user.isAnonymous) {
         void (async () => {
           const cloudChanged = await firebaseService.syncPlayerDataFromCloud();
@@ -979,25 +981,32 @@ const AppEnhanced: React.FC = () => {
         <FriendsPanel
           onClose={() => setShowFriends(false)}
           onInviteFriend={async (friendId, friendName) => {
-            // Crear partida e invitar al amigo
-            const profile = profileService.getProfile();
-            const playerName = profile?.name || 'Jugador';
-            const result = await gameService.createGame(playerName);
+            try {
+              const profile = profileService.getProfile();
+              const playerName = profile?.name || 'Jugador';
+              const result = await gameService.createGame(playerName);
+              const invitationSent = await firebaseService.sendGameInvitation(friendId, result.gameId, 'realtime');
+              if (!invitationSent) {
+                gameService.disconnect();
+                return false;
+              }
 
-            if (result.gameId) {
-              // Enviar invitación
-              await firebaseService.sendGameInvitation(friendId, result.gameId, 'realtime');
               setLocalPlayerId(result.playerId);
               gameService.subscribeToGame(result.gameId, setOnlineGameState);
               setShowFriends(false);
               setGameMode('online');
               setGamePhase(GamePhase.LOBBY);
+              return true;
+            } catch (error) {
+              console.error('[App] Error al invitar a una partida:', error);
+              gameService.disconnect();
+              return false;
             }
           }}
         />
       )}
       {/* Game Invitations - siempre visible en el menú */}
-      {gamePhase === GamePhase.MENU && !selectedTurnBasedGameId && firebaseService.isRegisteredUser() && (
+      {gamePhase === GamePhase.MENU && !selectedTurnBasedGameId && isRegisteredUser && (
         <GameInvitationsPanel
           onAcceptInvitation={async (gameId, invitationMode) => {
             if (invitationMode === 'turnbased') {
