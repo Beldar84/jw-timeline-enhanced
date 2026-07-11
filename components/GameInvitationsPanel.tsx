@@ -92,7 +92,7 @@ const GameInvitationsPanel: React.FC<GameInvitationsPanelProps> = ({ onAcceptInv
         <div className="flex flex-col gap-2">
           {invitations.map((invitation) => (
             <div key={invitation.id} className="parchment-panel px-5 py-4"
-              style={{ boxShadow: '0 8px 30px rgba(0,0,0,.5), 0 0 20px rgba(201,162,39,.25)' }}>
+              style={{ border: '2px solid #a8853c', boxShadow: '0 8px 30px rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.4)' }}>
 
               {/* Cabecera */}
               <div className="flex items-center gap-3.5">
