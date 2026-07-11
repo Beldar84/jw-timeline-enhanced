@@ -785,6 +785,54 @@ export const firebaseService = {
     }
   },
 
+  // Registra el resultado de una partida online en la clasificación global.
+  // Sin Cloud Functions (plan Spark): cada cuenta escribe solo su documento
+  // leaderboard/{uid} y las reglas de Firestore validan la forma de los datos.
+  async submitLeaderboardResult(won: boolean, playerName?: string): Promise<boolean> {
+    const userId = this.getCurrentUserId();
+    if (!userId || !this.isRegisteredUser()) return false;
+
+    try {
+      const ref = doc(db, 'leaderboard', userId);
+      const snapshot = await getDoc(ref);
+      const previous = (snapshot.exists() ? snapshot.data() : {}) as Record<string, any>;
+
+      const buildBucket = (period: LeaderboardPeriod) => {
+        const periodKey = getLeaderboardPeriodKey(period);
+        const prev = previous[period] || {};
+        // Al cambiar de semana/mes, el periodo empieza de cero
+        const stale = period !== 'allTime' && prev.periodKey !== periodKey;
+        const gamesPlayed = (stale ? 0 : prev.gamesPlayed || 0) + 1;
+        const wins = (stale ? 0 : prev.wins || 0) + (won ? 1 : 0);
+        const currentStreak = won ? (stale ? 0 : prev.currentStreak || 0) + 1 : 0;
+        const bestStreak = Math.max(stale ? 0 : prev.bestStreak || 0, currentStreak);
+        return {
+          periodKey,
+          gamesPlayed,
+          wins,
+          winRate: Math.round((wins / gamesPlayed) * 100),
+          currentStreak,
+          bestStreak,
+          score: wins * 100 + bestStreak * 10,
+        };
+      };
+
+      await setDoc(ref, {
+        id: userId,
+        name: playerName || previous.name || 'Jugador',
+        updatedAt: serverTimestamp(),
+        allTime: buildBucket('allTime'),
+        weekly: buildBucket('weekly'),
+        monthly: buildBucket('monthly'),
+      });
+      console.log('[Firebase] Leaderboard result submitted');
+      return true;
+    } catch (error) {
+      console.error('[Firebase] Submit leaderboard error:', error);
+      return false;
+    }
+  },
+
   async getLeaderboard(maxResults: number = 50, period: LeaderboardPeriod = 'allTime'): Promise<OnlineLeaderboardEntry[]> {
     try {
       const leaderboardRef = collection(db, 'leaderboard');

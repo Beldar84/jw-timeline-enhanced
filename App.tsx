@@ -608,6 +608,50 @@ const AppEnhanced: React.FC = () => {
     handleRestart();
   };
 
+  // ==================== REVANCHA ====================
+  // Online: crea una sala nueva e invita a los demás jugadores humanos.
+  // Local/IA: repite la partida con la misma configuración.
+  const [rematchBusy, setRematchBusy] = useState(false);
+
+  const handleRematch = async () => {
+    if (gameMode === 'online' && onlineGameState) {
+      if (rematchBusy) return;
+      setRematchBusy(true);
+      const myId = firebaseService.getCurrentUserId();
+      const opponents = onlineGameState.players.filter(p => p.id !== myId && !p.isAI);
+      const playerName = profileService.getProfile()?.name || 'Jugador';
+      try {
+        gameService.disconnect();
+        const result = await gameService.createGame(playerName);
+        let sent = 0;
+        for (const opponent of opponents) {
+          const ok = await firebaseService.sendGameInvitation(opponent.id, result.gameId, 'realtime');
+          if (ok) sent++;
+        }
+        setLocalPlayerId(result.playerId);
+        gameService.subscribeToGame(result.gameId, setOnlineGameState);
+        setMessage(sent > 0
+          ? 'Invitación de revancha enviada. Esperando a los jugadores…'
+          : 'Sala creada. No se pudo invitar automáticamente (solo entre amigos); comparte el código.');
+        setGamePhase(GamePhase.LOBBY);
+      } catch (error) {
+        console.error('[App] Error al crear la revancha:', error);
+        handleRestart();
+      } finally {
+        setRematchBusy(false);
+      }
+      return;
+    }
+
+    // Local / IA: misma configuración, mazo nuevo barajado
+    const names = players.map(p => p.name);
+    if (gameMode === 'ai') {
+      handleStartAIGame(names, aiDifficulty, isStudyMode);
+    } else {
+      handleStartLocalGame(names);
+    }
+  };
+
   const handleJoinLobby = async (playerName: string, gameId?: string) => {
     setLocalPlayerId(null);
     if (gameId) {
@@ -694,6 +738,8 @@ const AppEnhanced: React.FC = () => {
       void firebaseService.syncStats(onlineStats, playerName).catch(error => {
         console.error('[Firebase] Sync online game error:', error);
       });
+      // Clasificación global (leaderboard/{uid}); requiere reglas actualizadas
+      void firebaseService.submitLeaderboardResult(playerWon, playerName);
     }
 
     const newlyUnlocked = updatedStats.achievements.find(
@@ -773,7 +819,7 @@ const AppEnhanced: React.FC = () => {
     if (turnBasedGame.status === 'finished') {
       const winningPlayer = turnPlayers.find(player => player.id === turnBasedGame.winnerId);
       return winningPlayer ? (
-        <GameOver winner={winningPlayer} onRestart={handleExitTurnBasedGame} />
+        <GameOver winner={winningPlayer} onRestart={handleExitTurnBasedGame} restartLabel="VOLVER AL INICIO" />
       ) : (
         <div className="flex flex-col items-center justify-center p-8 md:p-10 rounded-sm max-w-md text-center"
           style={{ border: '1px solid rgba(201,162,39,.35)', background: 'rgba(0,0,0,.35)', backdropFilter: 'blur(4px)' }}>
@@ -892,7 +938,16 @@ const AppEnhanced: React.FC = () => {
         const gameOverMessage = gameMode === 'online' ? onlineGameState?.message : null;
         // Si hay ganador, mostrar pantalla de victoria
         if (finalWinner) {
-          return <GameOver winner={finalWinner} onRestart={handleRestart} message={gameOverMessage} />;
+          return (
+            <GameOver
+              winner={finalWinner}
+              onRestart={handleRematch}
+              restartLabel={gameMode === 'online' ? 'SOLICITAR REVANCHA' : 'JUGAR DE NUEVO'}
+              restartBusy={rematchBusy}
+              onBackToMenu={handleRestart}
+              message={gameOverMessage}
+            />
+          );
         }
         // Si no hay ganador pero hay mensaje (desconexión), mostrar pantalla de partida cancelada
         if (gameOverMessage) {

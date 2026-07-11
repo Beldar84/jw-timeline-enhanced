@@ -25,27 +25,24 @@ interface PlayerHandProps {
 }
 
 // Rotación del abanico según posición relativa al centro.
-// En móvil el abanico es más compacto. La carta ampliada se
-// endereza aquí y crece hacia abajo en su envoltorio interior.
+// En móvil el abanico es fijo: cada carta conserva su posición
+// ordenada. La ampliada solo se endereza aquí y crece hacia
+// abajo en su envoltorio interior, sin desplazar a las demás.
 const fanTransform = (
   i: number,
   n: number,
   lifted: boolean,
   isMobile: boolean,
   expanded: boolean,
-  expandedIndex: number,
-  mobileHorizontalShift: number,
 ) => {
   const center = (n - 1) / 2;
   const offset = n > 1 ? (i - center) / center : 0; // -1..1
   if (isMobile) {
-    // Solo se desplaza la carta activa hacia el centro; el resto del abanico
-    // permanece inmóvil mientras se navega mediante gestos laterales.
     if (expanded) {
-      return `translateX(${mobileHorizontalShift}px) translateY(0)`;
+      return 'rotate(0deg) translateY(0px)';
     }
     const rot = offset * 10; // máx ±10°
-    return `translateX(${mobileHorizontalShift}px) rotate(${rot}deg) translateY(${Math.abs(offset) * 16}px)`;
+    return `rotate(${rot}deg) translateY(${Math.abs(offset) * 16}px)`;
   }
   const rot = offset * 7; // máx ±7°
   const y = lifted ? -16 : Math.abs(offset) * 14; // extremos más bajos
@@ -195,35 +192,6 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     mobileOverlap = Math.min(48, Math.max(16, neededOverlap));
   }
 
-  const mobileHorizontalShift = (index: number): number => {
-    if (!isMobile || expandedIndex < 0) return 0;
-
-    const layoutWidth = wrapW || window.innerWidth;
-    const spacing = cardWidth - mobileOverlap * 2;
-    const groupWidth = cardWidth + Math.max(0, n - 1) * spacing;
-    const baseCenter = (layoutWidth - groupWidth) / 2 + cardWidth / 2 + index * spacing;
-
-    if (index === expandedIndex) return layoutWidth / 2 - baseCenter;
-
-    const expandedHalfWidth = cardWidth * 1.32 / 2;
-    const selectedLeft = layoutWidth / 2 - expandedHalfWidth;
-    const selectedRight = layoutWidth / 2 + expandedHalfWidth;
-
-    if (index < expandedIndex) {
-      const cardsOnLeft = expandedIndex;
-      const tabWidth = Math.min(42, selectedLeft / cardsOnLeft);
-      const distance = expandedIndex - index;
-      const targetRight = selectedLeft - (distance - 1) * tabWidth;
-      return targetRight - cardWidth / 2 - baseCenter;
-    }
-
-    const cardsOnRight = n - expandedIndex - 1;
-    const tabWidth = Math.min(42, (layoutWidth - selectedRight) / cardsOnRight);
-    const distance = index - expandedIndex;
-    const targetRight = selectedRight + distance * tabWidth;
-    return targetRight - cardWidth / 2 - baseCenter;
-  };
-
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!isMobile) return;
     swipeStartX.current = event.clientX;
@@ -311,15 +279,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                   key={card.id}
                   style={{
                     margin: isMobile ? `0 -${mobileOverlap}px` : '0 -8px',
-                    transform: fanTransform(
-                      i,
-                      n,
-                      lifted,
-                      isMobile,
-                      expanded,
-                      expandedIndex,
-                      mobileHorizontalShift(i),
-                    ),
+                    transform: fanTransform(i, n, lifted, isMobile, expanded),
                     transformOrigin: 'bottom center',
                     transition: 'transform .2s',
                     zIndex: expanded || lifted
@@ -334,7 +294,13 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                   onMouseEnter={() => { hovered.current = card.id; force(); }}
                   onMouseLeave={() => { hovered.current = null; force(); }}
                 >
-                  <div className={`hand-card-zoom-shell ${expanded ? 'hand-card-zoom-expanded' : ''}`}>
+                  <div
+                    className={`hand-card-zoom-shell ${expanded ? 'hand-card-zoom-expanded' : ''}`}
+                    style={{
+                      // Las cartas de los extremos crecen hacia dentro para no salirse de la pantalla
+                      transformOrigin: n > 1 && i === 0 ? 'top left' : n > 1 && i === n - 1 ? 'top right' : 'top center',
+                    }}
+                  >
                     <Card
                       ref={cardRef}
                       card={card}

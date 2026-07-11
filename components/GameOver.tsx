@@ -10,9 +10,14 @@ import { soundService } from '../services/soundService';
 
 interface GameOverProps {
   winner: Player;
+  /** Revancha: online envía invitación a una sala nueva; local/IA repite la configuración. */
   onRestart: () => void;
   message?: string | null;
   onBackToMenu?: () => void;
+  /** Etiqueta del botón principal (p. ej. «Solicitar revancha» en online). */
+  restartLabel?: string;
+  /** Estado del botón principal mientras se crea la sala de revancha. */
+  restartBusy?: boolean;
 }
 
 const GoldRule: React.FC = () => (
@@ -23,7 +28,7 @@ const GoldRule: React.FC = () => (
   </div>
 );
 
-const GameOver: React.FC<GameOverProps> = ({ winner, onRestart, message, onBackToMenu }) => {
+const GameOver: React.FC<GameOverProps> = ({ winner, onRestart, message, onBackToMenu, restartLabel, restartBusy }) => {
   const handleRestartClick = () => {
     soundService.playClick();
     onRestart();
@@ -47,12 +52,13 @@ const GameOver: React.FC<GameOverProps> = ({ winner, onRestart, message, onBackT
         {message || 'Has colocado correctamente todas tus cartas en la línea del tiempo'}
       </p>
       <div className="flex flex-wrap justify-center gap-4">
-        <button onClick={handleRestartClick} className="btn-gold px-10 py-4 text-base">
-          JUGAR DE NUEVO
+        <button onClick={handleRestartClick} disabled={restartBusy}
+          className="btn-gold px-10 py-4 text-base disabled:opacity-60 disabled:cursor-wait">
+          {restartBusy ? 'CREANDO SALA…' : (restartLabel || 'JUGAR DE NUEVO')}
         </button>
         {onBackToMenu && (
           <button onClick={handleBackClick} className="btn-outline-gold px-8 py-4 text-base">
-            VOLVER AL MENÚ
+            VOLVER AL INICIO
           </button>
         )}
       </div>

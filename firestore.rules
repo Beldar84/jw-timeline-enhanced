@@ -83,9 +83,28 @@ service cloud.firestore {
       allow delete: if owns(userId);
     }
 
+    // Clasificación global sin Cloud Functions (plan Spark): cada cuenta
+    // registrada escribe únicamente su propio documento, con forma validada.
+    function validLeaderboardBucket(b) {
+      return b.keys().hasOnly(['periodKey', 'gamesPlayed', 'wins', 'winRate', 'currentStreak', 'bestStreak', 'score'])
+        && b.periodKey is string
+        && b.gamesPlayed is int && b.gamesPlayed > 0
+        && b.wins is int && b.wins >= 0 && b.wins <= b.gamesPlayed
+        && b.winRate is int
+        && b.currentStreak is int && b.bestStreak is int
+        && b.score is number;
+    }
+
     match /leaderboard/{userId} {
       allow read: if true;
-      allow write: if false;
+      allow create, update: if owns(userId)
+        && request.resource.data.keys().hasOnly(['id', 'name', 'avatar', 'updatedAt', 'allTime', 'weekly', 'monthly'])
+        && request.resource.data.id == userId
+        && request.resource.data.name is string
+        && validLeaderboardBucket(request.resource.data.allTime)
+        && validLeaderboardBucket(request.resource.data.weekly)
+        && validLeaderboardBucket(request.resource.data.monthly);
+      allow delete: if false;
     }
 
     match /competitiveStats/{userId} {

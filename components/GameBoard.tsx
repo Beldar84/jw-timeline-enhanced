@@ -243,7 +243,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       {/* ── Oponentes online ── */}
       {gameMode === 'online' && localPlayer && (
-        <div className="max-md:order-2 flex justify-center items-start gap-2 md:gap-6 px-4 flex-shrink-0">
+        <div className="max-md:order-2 max-md:mb-3 flex justify-center items-start gap-2 md:gap-6 px-4 flex-shrink-0">
           {players.filter(p => p.id !== localPlayer.id).map(opponent => (
             <div key={opponent.id} className="p-1 md:p-2 rounded-sm"
               style={currentPlayer.id === opponent.id ? { background: 'rgba(201,162,39,.12)', border: '1px solid rgba(201,162,39,.35)' } : {}}>
@@ -271,7 +271,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       <div className="max-md:contents md:flex md:items-end md:justify-between md:gap-3 md:px-10 md:pb-6 md:flex-shrink-0">
 
         {/* Pilas: en móvil fila propia encima del timeline; en escritorio se disuelve (contents) */}
-        <div className="max-md:order-3 max-md:flex max-md:items-end max-md:justify-between max-md:px-4 max-md:pt-1 max-md:pb-1 md:contents">
+        <div className="max-md:order-3 max-md:flex max-md:items-end max-md:justify-between max-md:px-4 max-md:pt-2 max-md:pb-1 md:contents">
 
         {/* Mazo apilado */}
         <div className="flex flex-col items-center gap-2 flex-shrink-0 md:order-1">
