@@ -91,6 +91,9 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
   const handleSignOut = async () => {
     soundService.playClick();
     await firebaseService.signOutUser();
+    // El nombre local venía sincronizado de la cuenta; al cerrar sesión
+    // se restaura el genérico para que la Home no muestre el perfil.
+    profileService.updateName('Jugador');
     onClose();
   };
 

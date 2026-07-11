@@ -134,36 +134,47 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
 
         <div className="parchment-panel w-full max-w-full px-6 sm:px-10 pt-9 pb-8 flex flex-col">
 
-          {/* Jugador / sesión */}
-          <div className="flex items-center gap-3.5 pb-5 cursor-pointer" style={{ borderBottom: '1px solid rgba(120,94,48,.3)' }}
-            onClick={click(onShowProfile)}>
-            <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ border: '1.5px solid #a8853c', background: 'rgba(201,162,39,.12)' }}>
-              <IconUser />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-display font-semibold text-[17px] tracking-wide m-0 truncate" style={{ color: 'var(--ink)' }}>
-                {profile.name}
-              </p>
-              <p className="font-body text-sm m-0" style={{ color: 'var(--gold-dark)' }}>
-                {profile.level.title} · Nivel {ROMAN[profile.level.level - 1] || profile.level.level}
-              </p>
-            </div>
-            {isLoggedIn ? (
+          {/* Jugador / sesión: con cuenta → perfil + Amigos; sin cuenta → Iniciar sesión */}
+          {isLoggedIn ? (
+            <div className="flex items-center gap-3.5 pb-5 cursor-pointer" style={{ borderBottom: '1px solid rgba(120,94,48,.3)' }}
+              onClick={click(onShowProfile)}>
+              <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ border: '1.5px solid #a8853c', background: 'rgba(201,162,39,.12)' }}>
+                <IconUser />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-display font-semibold text-[17px] tracking-wide m-0 truncate" style={{ color: 'var(--ink)' }}>
+                  {profile.name}
+                </p>
+                <p className="font-body text-sm m-0" style={{ color: 'var(--gold-dark)' }}>
+                  {profile.level.title} · Nivel {ROMAN[profile.level.level - 1] || profile.level.level}
+                </p>
+              </div>
               <button type="button"
                 className="font-body italic text-sm truncate max-w-[100px] sm:max-w-[130px] cursor-pointer"
                 style={{ color: '#a08a5c', background: 'none', border: 'none', padding: 0 }}
                 onClick={(e) => { e.stopPropagation(); click(onShowFriends)(); }}>
                 Amigos
               </button>
-            ) : (
-              <button type="button" className="font-body italic text-sm cursor-pointer"
-                style={{ color: '#a08a5c', background: 'none', border: 'none', padding: 0 }}
-                onClick={(e) => { e.stopPropagation(); click(onShowAuth)(); }}>
-                iniciar sesión
-              </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3.5 pb-5 cursor-pointer" style={{ borderBottom: '1px solid rgba(120,94,48,.3)' }}
+              onClick={click(onShowAuth)}>
+              <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ border: '1.5px solid #a8853c', background: 'rgba(201,162,39,.12)' }}>
+                <IconUser />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-display font-semibold text-[17px] tracking-wide m-0" style={{ color: 'var(--ink)' }}>
+                  Iniciar sesión
+                </p>
+                <p className="font-body text-sm m-0 truncate" style={{ color: 'var(--gold-dark)' }}>
+                  Guarda tu progreso y juega con amigos
+                </p>
+              </div>
+              <span className="font-display text-lg" style={{ color: '#a08a5c' }} aria-hidden="true">›</span>
+            </div>
+          )}
 
           {/* Partidas por turnos pendientes */}
           {isLoggedIn && onShowTurnBasedGames && pendingTurnGames > 0 && (
