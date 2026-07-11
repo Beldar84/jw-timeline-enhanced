@@ -101,22 +101,6 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   // Al cambiar la mano (carta jugada/robada), colapsa la ampliada
   useEffect(() => { setExpandedId(null); }, [player.hand.length]);
 
-  // Al ampliar o cambiar de carta, conserva la mano al final de la página.
-  useEffect(() => {
-    if (!isMobile || expandedId === null) return;
-
-    const keepCardVisible = () => {
-      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' });
-    };
-
-    const frame = requestAnimationFrame(keepCardVisible);
-    const settleTimer = window.setTimeout(keepCardVisible, 230);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.clearTimeout(settleTimer);
-    };
-  }, [expandedId, isMobile]);
-
   const titleText = placementMode
     ? 'Elige una carta para colocar'
     : `Tu mano · ${player.hand.length} ${player.hand.length === 1 ? 'carta' : 'cartas'}`;
@@ -195,16 +179,16 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   };
 
   return (
-    <div
-      ref={wrapRef}
-      className={`player-hand-wrap ${isMobile && expandedId !== null ? 'player-hand-expanded-space' : ''}`}
-    >
+    <div ref={wrapRef} className="player-hand-wrap">
       <div className="relative z-20 flex items-center justify-center gap-2 mb-2 landscape:mb-1">
         <h3 className="font-body italic text-center text-base md:text-lg"
           style={{
             color: placementMode && !disabled ? 'var(--gold-bright)' : '#c9b891',
+            ...(isMobile
+              ? { padding: '3px 14px', borderRadius: 999, border: '1px solid transparent' }
+              : {}),
             ...(isMobile && expandedId !== null
-              ? { background: 'rgba(10,7,3,.78)', padding: '3px 14px', borderRadius: 999, border: '1px solid rgba(201,162,39,.35)' }
+              ? { background: 'rgba(10,7,3,.78)', borderColor: 'rgba(201,162,39,.35)' }
               : {}),
           }}>
           {title}

@@ -230,15 +230,15 @@
    en React y lleva una sola carta al frente, manteniendo el conjunto fijo. */
 .player-hand-wrap {
   overflow: visible;
-  transition: padding-bottom .2s ease;
 }
 .player-hand-stage { overflow: visible; }
 
 @media (max-width: 767px) {
   .player-hand-stage { touch-action: pan-y; }
-  /* Las transformaciones no aumentan el alto de su contenedor. Esta reserva
-     permite ver la carta entera y aumenta también el final del documento. */
-  .player-hand-wrap.player-hand-expanded-space {
+  /* Las transformaciones no aumentan el alto del contenedor. Reservamos desde
+     el inicio el espacio de la carta ampliada para que el documento no cambie
+     de altura ni desplace el scroll al alternar el zoom. */
+  .player-hand-wrap {
     padding-bottom: 96px;
   }
 }
