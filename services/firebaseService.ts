@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, serverTimestamp, Timestamp, where, updateDoc, onSnapshot } from 'firebase/firestore';
+import { arrayRemove, arrayUnion, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, serverTimestamp, Timestamp, where, updateDoc, onSnapshot } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { Card } from '../types';
 import { statsService } from './statsService';
@@ -7,9 +7,6 @@ import { callCloudFunction, firebaseAuth as auth, firestoreDb as db, googleProvi
 
 const MIN_SEARCH_LENGTH = 2;
 const MAX_SEARCH_PREFIX_LENGTH = 24;
-// Cloud Functions requiere el plan Blaze. Se activará al desplegar el backend;
-// mientras tanto, la ruta Spark conserva las funciones sociales existentes.
-const SOCIAL_FUNCTIONS_ENABLED = false;
 
 function normalizeSearchText(value: string): string {
   return value
@@ -39,6 +36,17 @@ function buildSearchPrefixes(name: string): string[] {
     .forEach(addTokenPrefixes);
 
   return Array.from(prefixes);
+}
+
+async function writePublicProfile(userId: string, name: string, avatar?: string | null): Promise<void> {
+  await setDoc(doc(db, 'publicProfiles', userId), {
+    id: userId,
+    name: name.trim() || 'Jugador',
+    nameLower: normalizeSearchText(name || 'Jugador'),
+    searchPrefixes: buildSearchPrefixes(name || 'Jugador'),
+    avatar: avatar || null,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
 }
 
 // Set persistence to local (survives browser restarts - about 1 month)
@@ -130,6 +138,23 @@ async function loadLegacySocialProfile(userId: string): Promise<FriendInfo> {
       name: data.name || 'Amigo',
       avatar: data.avatar,
     };
+  }
+
+  // Las reglas permiten leer el documento privado únicamente cuando ambos
+  // usuarios ya son amigos. Esto recupera amistades anteriores a publicProfiles.
+  try {
+    const friendSnapshot = await getDoc(doc(db, 'users', userId));
+    if (friendSnapshot.exists()) {
+      const data = friendSnapshot.data();
+      return {
+        id: data.id || friendSnapshot.id,
+        name: data.name || 'Amigo',
+        avatar: data.avatar,
+      };
+    }
+  } catch {
+    // Una solicitud pendiente todavía no tiene acceso al perfil privado; su
+    // proyección pública, creada al iniciar sesión, es la fuente correcta.
   }
 
   // Antes de publicProfiles, la clasificación ya guardaba una copia pública
@@ -378,6 +403,7 @@ export const firebaseService = {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+      await writePublicProfile(userId, name, null);
       console.log('[Firebase] User profile created');
       return true;
     } catch (error) {
@@ -409,6 +435,8 @@ export const firebaseService = {
       } else {
         await this.createUserProfile(userId, name, email || undefined);
       }
+
+      await writePublicProfile(userId, name, avatar || null);
 
       console.log('[Firebase] Profile saved');
       return true;
@@ -446,8 +474,10 @@ export const firebaseService = {
   async refreshPublicProfile(): Promise<boolean> {
     if (!this.isRegisteredUser()) return false;
     try {
-      const result = await callCloudFunction<Record<string, never>, { success: boolean }>('refreshPublicProfile', {});
-      return result.success;
+      const profile = await this.getProfile();
+      if (!profile) return false;
+      await writePublicProfile(profile.id, profile.name || 'Jugador', profile.avatar || null);
+      return true;
     } catch (error) {
       console.error('[Firebase] Refresh public profile error:', error);
       return false;
@@ -456,26 +486,12 @@ export const firebaseService = {
 
   // ==================== FRIENDS METHODS ====================
 
-  // Uses the validated server search when available and the public projection
-  // on Spark, without exposing private account documents.
+  // Search the public projection. Users create/update this safe subset from
+  // their own account, so the feature works on Firebase Spark without Functions.
   async searchUserByUsername(username: string): Promise<FriendInfo[]> {
     const searchTerm = normalizeSearchText(username);
     if (searchTerm.length < MIN_SEARCH_LENGTH) return [];
 
-    if (SOCIAL_FUNCTIONS_ENABLED) {
-      try {
-        const result = await callCloudFunction<
-          { searchTerm: string },
-          { users: FriendInfo[] }
-        >('searchUsers', { searchTerm });
-        return result.users;
-      } catch (error) {
-        console.warn('[Firebase] Secure search unavailable, using public profiles:', error);
-      }
-    }
-
-    // Compatibilidad con proyectos Spark: hasta que Cloud Functions esté
-    // disponible, conserva la búsqueda mediante la proyección pública.
     const usersQuery = query(
       collection(db, 'publicProfiles'),
       where('searchPrefixes', 'array-contains', searchTerm.slice(0, MAX_SEARCH_PREFIX_LENGTH)),
@@ -501,11 +517,10 @@ export const firebaseService = {
     if (!userId || userId === friendId) return false;
 
     try {
-      const result = await callCloudFunction<{ friendId: string }, { success: boolean }>(
-        'sendFriendRequest',
-        { friendId }
-      );
-      return result.success;
+      await updateDoc(doc(db, 'users', friendId), {
+        friendRequests: arrayUnion(userId),
+      });
+      return true;
     } catch (error) {
       console.error('[Firebase] Send friend request error:', error);
       return false;
@@ -518,11 +533,16 @@ export const firebaseService = {
     if (!userId) return false;
 
     try {
-      const result = await callCloudFunction<
-        { friendId: string; accept: boolean },
-        { success: boolean }
-      >('respondFriendRequest', { friendId, accept: true });
-      return result.success;
+      // Primero se añade el receptor al perfil del solicitante. Las reglas
+      // comprueban que la solicitud existe antes de permitir esta escritura.
+      await updateDoc(doc(db, 'users', friendId), {
+        friends: arrayUnion(userId),
+      });
+      await updateDoc(doc(db, 'users', userId), {
+        friends: arrayUnion(friendId),
+        friendRequests: arrayRemove(friendId),
+      });
+      return true;
     } catch (error) {
       console.error('[Firebase] Accept friend request error:', error);
       return false;
@@ -535,11 +555,10 @@ export const firebaseService = {
     if (!userId) return false;
 
     try {
-      const result = await callCloudFunction<
-        { friendId: string; accept: boolean },
-        { success: boolean }
-      >('respondFriendRequest', { friendId, accept: false });
-      return result.success;
+      await updateDoc(doc(db, 'users', userId), {
+        friendRequests: arrayRemove(friendId),
+      });
+      return true;
     } catch (error) {
       console.error('[Firebase] Reject friend request error:', error);
       return false;
@@ -552,34 +571,25 @@ export const firebaseService = {
     if (!userId) return false;
 
     try {
-      const result = await callCloudFunction<{ friendId: string }, { success: boolean }>(
-        'removeFriend',
-        { friendId }
-      );
-      return result.success;
+      await updateDoc(doc(db, 'users', userId), {
+        friends: arrayRemove(friendId),
+      });
+      await updateDoc(doc(db, 'users', friendId), {
+        friends: arrayRemove(userId),
+      });
+      return true;
     } catch (error) {
       console.error('[Firebase] Remove friend error:', error);
       return false;
     }
   },
 
-  // Load both social lists in one secure server call. Reading the referenced
-  // private profiles on the server restores legacy friendships whose public
-  // profile projection has not been created yet.
+  // Load both lists from the signed-in user's private document, then resolve
+  // only the safe presentation data of every related account.
   async getSocialConnections(): Promise<SocialConnections> {
     const userId = this.getCurrentUserId();
     if (!userId) return { friends: [], requests: [] };
 
-    if (SOCIAL_FUNCTIONS_ENABLED) {
-      try {
-        return await callCloudFunction<Record<string, never>, SocialConnections>('getSocialConnections', {});
-      } catch (error) {
-        console.warn('[Firebase] Secure social data unavailable, using account list:', error);
-      }
-    }
-
-    // La aplicación sigue funcionando en Spark mientras las nuevas funciones
-    // esperan despliegue. Las listas se leen solo desde el perfil propio.
     const profile = await this.getProfile();
     if (!profile) throw new Error('No se pudo cargar el perfil social.');
     const [friends, requests] = await Promise.all([
@@ -609,11 +619,20 @@ export const firebaseService = {
     if (!userId) return false;
 
     try {
-      const result = await callCloudFunction<
-        { friendId: string; gameId: string; gameMode: 'realtime' | 'turnbased' },
-        { success: boolean }
-      >('sendGameInvitation', { friendId, gameId, gameMode });
-      return result.success;
+      const profile = await this.getProfile();
+      const inviteRef = doc(collection(db, 'gameInvitations'));
+      await setDoc(inviteRef, {
+        id: inviteRef.id,
+        fromUserId: userId,
+        fromUserName: profile?.name || 'Jugador',
+        toUserId: friendId,
+        gameId,
+        gameMode,
+        status: 'pending',
+        createdAt: serverTimestamp(),
+        expiresAt: Timestamp.fromMillis(Date.now() + 5 * 60 * 1000),
+      });
+      return true;
     } catch (error) {
       console.error('[Firebase] Send game invitation error:', error);
       return false;
@@ -708,11 +727,12 @@ export const firebaseService = {
   // Accept game invitation
   async acceptGameInvitation(invitationId: string): Promise<{ success: boolean; gameId?: string; gameMode?: 'realtime' | 'turnbased' }> {
     try {
-      const result = await callCloudFunction<
-        { invitationId: string; response: 'accepted' },
-        { success: boolean; gameId?: string; gameMode?: 'realtime' | 'turnbased' }
-      >('respondGameInvitation', { invitationId, response: 'accepted' });
-      return result;
+      const inviteRef = doc(db, 'gameInvitations', invitationId);
+      const snapshot = await getDoc(inviteRef);
+      if (!snapshot.exists()) return { success: false };
+      const data = snapshot.data();
+      await updateDoc(inviteRef, { status: 'accepted' });
+      return { success: true, gameId: data.gameId, gameMode: data.gameMode };
     } catch (error) {
       console.error('[Firebase] Accept game invitation error:', error);
       return { success: false };
@@ -722,11 +742,8 @@ export const firebaseService = {
   // Decline game invitation
   async declineGameInvitation(invitationId: string): Promise<boolean> {
     try {
-      const result = await callCloudFunction<
-        { invitationId: string; response: 'declined' },
-        { success: boolean }
-      >('respondGameInvitation', { invitationId, response: 'declined' });
-      return result.success;
+      await updateDoc(doc(db, 'gameInvitations', invitationId), { status: 'declined' });
+      return true;
     } catch (error) {
       console.error('[Firebase] Decline game invitation error:', error);
       return false;

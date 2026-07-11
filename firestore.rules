@@ -14,53 +14,75 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
 
-    function isRealtimeParticipant() {
+    function addsSelfToList(field) {
       return signedIn()
-        && request.auth.uid in resource.data.participantAuthIds
-        && resource.data.deck.size() == 0;
+        && onlyChanges([field])
+        && request.resource.data[field].hasAll(resource.data[field])
+        && request.resource.data[field].size() == resource.data[field].size() + 1
+        && request.auth.uid in request.resource.data[field];
     }
 
-    function onlyUpdatesOwnHeartbeat() {
-      return isRealtimeParticipant()
-        && onlyChanges(['lastSeenAt', 'updatedAt'])
-        && request.resource.data.lastSeenAt
-          .diff(resource.data.get('lastSeenAt', {}))
-          .affectedKeys()
-          .hasOnly([request.auth.uid]);
+    function removesSelfFromList(field) {
+      return signedIn()
+        && onlyChanges([field])
+        && resource.data[field].hasAll(request.resource.data[field])
+        && resource.data[field].size() == request.resource.data[field].size() + 1
+        && !(request.auth.uid in request.resource.data[field]);
     }
 
-    // Private account document: email, friends and notification settings are
-    // never exposed to other users. Social lists are changed only by validated
-    // Cloud Functions, while clients may edit their own presentation settings.
+    function addsSelfAsAcceptedFriend(userId) {
+      return addsSelfToList('friends')
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.friendRequests.hasAny([userId]);
+    }
+
+    function mutualFriend(otherId) {
+      return signedIn()
+        && otherId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.friends
+        && request.auth.uid in get(/databases/$(database)/documents/users/$(otherId)).data.friends;
+    }
+
+    function validPublicProfile(userId) {
+      return request.resource.data.keys().hasOnly([
+          'id', 'name', 'nameLower', 'searchPrefixes', 'avatar', 'updatedAt'
+        ])
+        && request.resource.data.id == userId
+        && request.resource.data.name is string
+        && request.resource.data.nameLower is string
+        && request.resource.data.searchPrefixes is list;
+    }
+
+    // El documento completo sigue siendo privado. Dos amigos mutuos pueden
+    // obtenerlo individualmente para migrar amistades anteriores, pero nunca
+    // se permiten consultas/listados sobre la colección users.
     match /users/{userId} {
-      allow read: if owns(userId);
+      allow get: if owns(userId) || (signedIn() && mutualFriend(userId));
+      allow list: if false;
       allow create: if owns(userId)
         && request.resource.data.id == userId
         && request.resource.data.friends is list
         && request.resource.data.friendRequests is list
         && request.resource.data.friends.size() == 0
         && request.resource.data.friendRequests.size() == 0;
-      allow update: if owns(userId) && onlyChanges([
-        'name',
-        'nameLower',
-        'searchPrefixes',
-        'avatar',
-        'updatedAt',
-        'notificationToken',
-        'notificationsEnabled'
-      ]);
+      allow update: if (
+          owns(userId) && onlyChanges([
+            'name', 'nameLower', 'searchPrefixes', 'avatar', 'updatedAt',
+            'notificationToken', 'notificationsEnabled', 'friends', 'friendRequests'
+          ])
+        )
+        || addsSelfToList('friendRequests')
+        || addsSelfAsAcceptedFriend(userId)
+        || removesSelfFromList('friends');
       allow delete: if owns(userId);
     }
 
-    // Public, searchable projection maintained by Cloud Functions. It contains
-    // no email address or social lists and clients can never write it directly.
+    // Proyección buscable sin correo ni listas sociales. Cada cuenta mantiene
+    // únicamente su propia ficha, por lo que no necesita Cloud Functions.
     match /publicProfiles/{userId} {
       allow read: if signedIn();
-      allow write: if false;
+      allow create, update: if owns(userId) && validPublicProfile(userId);
+      allow delete: if owns(userId);
     }
 
-    // Competitive scores are derived exclusively by authoritative game
-    // functions. Progress sync remains private in userStats.
     match /leaderboard/{userId} {
       allow read: if true;
       allow write: if false;
@@ -78,11 +100,20 @@ service cloud.firestore {
     match /gameInvitations/{invitationId} {
       allow read: if signedIn()
         && (resource.data.toUserId == request.auth.uid || resource.data.fromUserId == request.auth.uid);
-      allow create, update, delete: if false;
+      allow create: if signedIn()
+        && request.resource.data.fromUserId == request.auth.uid
+        && request.resource.data.toUserId is string
+        && request.resource.data.status == 'pending'
+        && request.resource.data.gameMode in ['realtime', 'turnbased']
+        && mutualFriend(request.resource.data.toUserId);
+      allow update: if signedIn()
+        && resource.data.toUserId == request.auth.uid
+        && onlyChanges(['status'])
+        && request.resource.data.status in ['accepted', 'declined'];
+      allow delete: if false;
     }
 
-    // All game state changes are performed with the Admin SDK in callable
-    // functions. Players can only read games they actually participate in.
+    // El modo por turnos continúa reservado al backend autoritativo opcional.
     match /turnBasedGames/{gameId} {
       allow read: if signedIn()
         && request.auth.uid in resource.data.playerIds
@@ -101,15 +132,31 @@ service cloud.firestore {
       }
     }
 
+    // Partida en tiempo real compatible con Spark. La sala solo es visible
+    // antes de empezar o para sus participantes. Un usuario nuevo únicamente
+    // puede añadirse a una sala que todavía está en el lobby.
     match /realtimeGames/{gameId} {
-      allow read: if isRealtimeParticipant();
-      allow create, delete: if false;
-      allow update: if onlyUpdatesOwnHeartbeat();
+      allow get: if signedIn()
+        && (request.auth.uid in resource.data.participantAuthIds || resource.data.phase == 'LOBBY');
+      allow list: if false;
+      allow create: if signedIn()
+        && request.auth.uid in request.resource.data.participantAuthIds
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if signedIn() && (
+        request.auth.uid in resource.data.participantAuthIds
+        || (
+          resource.data.phase == 'LOBBY'
+          && request.auth.uid in request.resource.data.participantAuthIds
+          && request.resource.data.participantAuthIds.hasAll(resource.data.participantAuthIds)
+          && request.resource.data.participantAuthIds.size() == resource.data.participantAuthIds.size() + 1
+          && request.resource.data.players.size() == resource.data.players.size() + 1
+          && onlyChanges(['players', 'participantAuthIds', 'message', 'updatedAt'])
+        )
+      );
+      allow delete: if signedIn() && resource.data.createdBy == request.auth.uid;
 
       match /hands/{playerId} {
-        allow read: if owns(playerId)
-          && request.auth.uid in get(/databases/$(database)/documents/realtimeGames/$(gameId)).data.participantAuthIds;
-        allow write: if false;
+        allow read, write: if false;
       }
 
       match /private/{documentId} {

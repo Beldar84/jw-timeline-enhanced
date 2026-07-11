@@ -36,16 +36,24 @@ describe('Firestore security rules', () => {
     await testEnvironment.cleanup();
   });
 
-  it('keeps private profiles private while exposing only the public projection', async () => {
+  it('keeps account documents private while owners maintain a public projection', async () => {
     await seed('users/alice', { id: 'alice', name: 'Alice', email: 'alice@example.com' });
-    await seed('publicProfiles/alice', { id: 'alice', name: 'Alice', searchPrefixes: ['a'] });
+    await seed('publicProfiles/alice', { id: 'alice', name: 'Alice', nameLower: 'alice', searchPrefixes: ['al'] });
     const alice = testEnvironment.authenticatedContext('alice').firestore();
     const bob = testEnvironment.authenticatedContext('bob').firestore();
 
     await assertSucceeds(getDoc(doc(alice, 'users/alice')));
     await assertFails(getDoc(doc(bob, 'users/alice')));
     await assertSucceeds(getDoc(doc(bob, 'publicProfiles/alice')));
-    await assertFails(setDoc(doc(alice, 'publicProfiles/alice'), { name: 'Manipulado' }, { merge: true }));
+    await assertSucceeds(setDoc(doc(alice, 'publicProfiles/alice'), {
+      id: 'alice',
+      name: 'Alicia',
+      nameLower: 'alicia',
+      searchPrefixes: ['al', 'ali'],
+      avatar: null,
+      updatedAt: 1,
+    }));
+    await assertFails(setDoc(doc(bob, 'publicProfiles/alice'), { name: 'Manipulado' }, { merge: true }));
   });
 
   it('prevents clients from forging competitive scores', async () => {
@@ -58,7 +66,7 @@ describe('Firestore security rules', () => {
     await assertFails(setDoc(doc(alice, 'competitiveStats/alice'), { wins: 999 }));
   });
 
-  it('allows only a participant heartbeat update in realtime games', async () => {
+  it('allows realtime participants to synchronize a game without exposing it to outsiders', async () => {
     await seed('realtimeGames/JW-ABC123', {
       participantAuthIds: ['alice', 'bob'],
       phase: 'PLAYING',
@@ -75,32 +83,48 @@ describe('Firestore security rules', () => {
 
     await assertSucceeds(getDoc(gameForAlice));
     await assertFails(getDoc(doc(charlie, 'realtimeGames/JW-ABC123')));
-    await assertSucceeds(getDoc(doc(alice, 'realtimeGames/JW-ABC123/hands/alice')));
+    await assertFails(getDoc(doc(alice, 'realtimeGames/JW-ABC123/hands/alice')));
     await assertFails(getDoc(doc(alice, 'realtimeGames/JW-ABC123/hands/bob')));
     await assertFails(getDoc(doc(alice, 'realtimeGames/JW-ABC123/private/state')));
     await assertSucceeds(updateDoc(gameForAlice, { 'lastSeenAt.alice': 2, updatedAt: 2 }));
-    await assertFails(updateDoc(gameForAlice, { phase: 'GAME_OVER' }));
-    await assertFails(updateDoc(gameForAlice, { 'lastSeenAt.bob': 2, updatedAt: 3 }));
+    await assertSucceeds(updateDoc(gameForAlice, { phase: 'GAME_OVER' }));
+    await assertFails(updateDoc(doc(charlie, 'realtimeGames/JW-ABC123'), { phase: 'GAME_OVER' }));
   });
 
-  it('reserves invitations and social lists for validated server operations', async () => {
-    await seed('users/alice', { id: 'alice', friends: ['bob'], friendRequests: [] });
-    await seed('gameInvitations/invite-1', {
-      fromUserId: 'alice',
-      toUserId: 'bob',
-      status: 'pending',
-    });
+  it('validates direct friend requests, acceptance and invitations on Spark', async () => {
+    await seed('users/alice', { id: 'alice', friends: [], friendRequests: [] });
+    await seed('users/bob', { id: 'bob', friends: [], friendRequests: [] });
+    await seed('users/charlie', { id: 'charlie', friends: [], friendRequests: [] });
     const alice = testEnvironment.authenticatedContext('alice').firestore();
     const bob = testEnvironment.authenticatedContext('bob').firestore();
+    const charlie = testEnvironment.authenticatedContext('charlie').firestore();
 
-    await assertFails(setDoc(doc(alice, 'gameInvitations/invite-2'), {
+    await assertSucceeds(updateDoc(doc(alice, 'users/bob'), { friendRequests: ['alice'] }));
+    await assertFails(updateDoc(doc(charlie, 'users/bob'), { friends: ['charlie'] }));
+    await assertSucceeds(updateDoc(doc(bob, 'users/alice'), { friends: ['bob'] }));
+    await assertSucceeds(updateDoc(doc(bob, 'users/bob'), { friends: ['alice'], friendRequests: [] }));
+    await assertSucceeds(getDoc(doc(alice, 'users/bob')));
+    await assertFails(getDoc(doc(charlie, 'users/alice')));
+
+    await assertSucceeds(setDoc(doc(alice, 'gameInvitations/invite-1'), {
+      id: 'invite-1',
       fromUserId: 'alice',
       toUserId: 'bob',
+      fromUserName: 'Alice',
+      gameId: 'JW-1234',
+      gameMode: 'realtime',
+      status: 'pending',
+      createdAt: 1,
+      expiresAt: 2,
+    }));
+    await assertFails(setDoc(doc(charlie, 'gameInvitations/invite-2'), {
+      fromUserId: 'charlie',
+      toUserId: 'alice',
+      gameMode: 'realtime',
       status: 'pending',
     }));
-    await assertFails(updateDoc(doc(bob, 'gameInvitations/invite-1'), { status: 'accepted' }));
+    await assertSucceeds(updateDoc(doc(bob, 'gameInvitations/invite-1'), { status: 'accepted' }));
     await assertFails(updateDoc(doc(alice, 'gameInvitations/invite-1'), { status: 'declined' }));
-    await assertFails(updateDoc(doc(alice, 'users/alice'), { friends: ['bob', 'charlie'] }));
   });
 
   it('allows local history but reserves online history and turn state for the server', async () => {
