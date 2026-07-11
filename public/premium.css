@@ -273,15 +273,20 @@
 .player-hand-stage { overflow: visible; }
 
 @media (max-width: 767px) {
-  .player-hand-stage { touch-action: pan-y; }
-  /* Las transformaciones no aumentan el alto del contenedor. Reservamos desde
-     el inicio el espacio de la carta ampliada para que el documento no cambie
-     de altura ni desplace el scroll al alternar el zoom. */
+  /* iOS recorta lo que sobresale de la caja del escenario, tanto por arriba
+     como por abajo. El crecimiento de la carta ampliada (hacia arriba) y la
+     caída por rotación de los extremos (hacia abajo) se reservan como padding
+     INTERNO del escenario, y el margen negativo compensa el hueco visual para
+     que el abanico quede a la misma distancia del título. */
+  .player-hand-stage {
+    touch-action: pan-y;
+    padding-top: 96px;
+    padding-bottom: 44px;
+    margin-top: -68px;
+    margin-bottom: -24px;
+  }
   .player-hand-wrap {
-    /* La ampliación crece hacia arriba (ver .hand-card-zoom-shell), así que solo
-       hay que reservar la caída por rotación de las cartas de los extremos y el
-       rebaje seguro de iPhone. */
-    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   }
 }
 

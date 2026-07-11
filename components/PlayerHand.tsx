@@ -267,7 +267,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
         onPointerUp={handlePointerUp}
         onPointerCancel={() => { swipeStartX.current = null; }}
       >
-        <div className={`player-hand-row flex items-end ${isMobile ? 'justify-center px-2 pt-5' : 'justify-center min-w-max px-6 pt-4'}`}>
+        <div className={`player-hand-row flex items-end ${isMobile ? 'justify-center px-2' : 'justify-center min-w-max px-6 pt-4'}`}>
           {n > 0 ? (
             player.hand.map((card, i) => {
               const cardRef = cardRefs.current.get(card.id)!;
