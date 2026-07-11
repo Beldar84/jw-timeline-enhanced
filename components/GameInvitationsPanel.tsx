@@ -2,6 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { firebaseService, GameInvitation } from '../services/firebaseService';
 import { soundService } from '../services/soundService';
 
+// ============================================================
+// JW Timeline — GameInvitationsPanel premium
+// Sustituye components/GameInvitationsPanel.tsx. Misma API y
+// lógica (suscripción en tiempo real, aceptar/rechazar,
+// tiempo restante). Estilo pergamino: sin gradiente morado,
+// sin 🎮/⏳. Requiere public/premium.css.
+// ============================================================
+
 interface GameInvitationsPanelProps {
   onAcceptInvitation: (gameId: string, gameMode: 'realtime' | 'turnbased') => void;
   onClose: () => void;
@@ -75,53 +83,63 @@ const GameInvitationsPanel: React.FC<GameInvitationsPanelProps> = ({ onAcceptInv
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 max-w-sm">
+    <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-40 max-w-sm sm:w-96">
       {loading ? (
-        <div className="bg-gray-800/90 backdrop-blur-sm rounded-lg p-4 shadow-xl border border-gray-700">
-          <span className="animate-spin text-2xl">⏳</span>
+        <div className="parchment-panel px-5 py-4">
+          <p className="font-body italic text-[14.5px] m-0 text-center" style={{ color: '#a08a5c' }}>Cargando invitaciones…</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {invitations.map((invitation) => (
-            <div
-              key={invitation.id}
-              className="bg-gradient-to-r from-purple-600/90 to-blue-600/90 backdrop-blur-sm rounded-lg p-4 shadow-xl border border-purple-400/50 animate-pulse"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl">
-                  🎮
+            <div key={invitation.id} className="parchment-panel px-5 py-4"
+              style={{ boxShadow: '0 8px 30px rgba(0,0,0,.5), 0 0 20px rgba(201,162,39,.25)' }}>
+
+              {/* Cabecera */}
+              <div className="flex items-center gap-3.5">
+                {/* Medallón con inicial del anfitrión */}
+                <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 font-display font-bold text-lg"
+                  style={{ border: '2px solid #a8853c', background: 'rgba(201,162,39,.14)', color: '#8a6a2a', boxShadow: '0 0 12px rgba(201,162,39,.25)' }}>
+                  {invitation.fromUserName.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex-1">
-                  <p className="font-bold text-white">¡Invitación de partida!</p>
-                  <p className="text-sm text-purple-200">
-                    {invitation.fromUserName} te invita a jugar
+                <div className="flex-1 min-w-0">
+                  <p className="font-display text-[11px] tracking-widest m-0" style={{ color: '#a08a5c' }}>
+                    ★ INVITACIÓN DE PARTIDA
                   </p>
+                  <p className="font-display font-bold text-[16px] tracking-wide m-0 mt-0.5 truncate" style={{ color: 'var(--ink)' }}>
+                    {invitation.fromUserName}
+                  </p>
+                  <p className="font-body italic text-[13.5px] m-0" style={{ color: '#7c6a48' }}>te invita a jugar</p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs text-purple-200 mb-3">
-                <span>
-                  {invitation.gameMode === 'realtime' ? '⚡ Tiempo real' : '🕐 Por turnos'}
+              {/* Modo + tiempo restante */}
+              <div className="flex items-center justify-between mt-3 mb-3 py-2 px-1"
+                style={{ borderTop: '1px solid rgba(120,94,48,.2)', borderBottom: '1px solid rgba(120,94,48,.2)' }}>
+                <span className="font-display text-[12px] tracking-wider" style={{ color: '#8a6a2a' }}>
+                  {invitation.gameMode === 'realtime' ? 'TIEMPO REAL' : 'POR TURNOS'}
                 </span>
-                <span className="bg-red-500/50 px-2 py-0.5 rounded">
-                  ⏱️ {formatTimeRemaining(invitation.expiresAt)}
+                <span className="font-body text-[13px] px-2 py-0.5 rounded-sm"
+                  style={{ border: '1px solid rgba(138,59,42,.4)', background: 'rgba(138,59,42,.08)', color: '#8a3b2a' }}>
+                  Expira en {formatTimeRemaining(invitation.expiresAt)}
                 </span>
               </div>
 
+              {/* Acciones */}
               <div className="flex gap-2">
                 <button
                   onClick={() => handleAccept(invitation)}
                   disabled={actionLoading === invitation.id}
-                  className="flex-1 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-500 text-white font-bold rounded-lg transition"
+                  className="btn-gold flex-[2] py-2.5 text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {actionLoading === invitation.id ? '...' : '✓ Unirse'}
+                  {actionLoading === invitation.id ? '…' : 'UNIRSE'}
                 </button>
                 <button
                   onClick={() => handleDecline(invitation.id)}
                   disabled={actionLoading === invitation.id}
-                  className="flex-1 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-500 text-white font-bold rounded-lg transition"
+                  className="flex-1 py-2.5 font-display text-[13px] tracking-wider rounded-sm cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'none', border: '1px solid rgba(120,94,48,.3)', color: '#a08a5c' }}
                 >
-                  ✕ Rechazar
+                  RECHAZAR
                 </button>
               </div>
             </div>

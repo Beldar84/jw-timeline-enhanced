@@ -178,7 +178,6 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const title = disabled ? 'Esperando tu turno…' : titleText;
 
   const n = player.hand.length;
-  const expandedIndex = player.hand.findIndex(card => card.id === expandedId);
 
   // Solape dinámico: todas las cartas permanecen fijas dentro de la pantalla.
   // El gesto lateral cambia únicamente cuál se desplaza y amplía al frente.
@@ -282,11 +281,10 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                     transform: fanTransform(i, n, lifted, isMobile, expanded),
                     transformOrigin: 'bottom center',
                     transition: 'transform .2s',
-                    zIndex: expanded || lifted
-                      ? 10
-                      : expandedIndex >= 0
-                        ? n - Math.abs(i - expandedIndex)
-                        : i + 1,
+                    // Orden fijo del abanico: la carta de la derecha siempre delante
+                    // de la anterior. Solo la pulsada (ampliada) pasa a primer plano.
+                    // El hover se ignora en táctil porque queda «pegajoso» tras el toque.
+                    zIndex: expanded || (!isMobile && lifted) ? 10 : i + 1,
                     borderRadius: 4,
                     touchAction: !disabled && onCardDragStart ? 'none' : undefined,
                   }}
@@ -297,8 +295,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                   <div
                     className={`hand-card-zoom-shell ${expanded ? 'hand-card-zoom-expanded' : ''}`}
                     style={{
-                      // Las cartas de los extremos crecen hacia dentro para no salirse de la pantalla
-                      transformOrigin: n > 1 && i === 0 ? 'top left' : n > 1 && i === n - 1 ? 'top right' : 'top center',
+                      // Crece hacia ARRIBA (nunca hacia el borde inferior del documento,
+                      // que iOS recorta) y las de los extremos crecen hacia dentro.
+                      transformOrigin: n > 1 && i === 0 ? 'bottom left' : n > 1 && i === n - 1 ? 'bottom right' : 'bottom center',
                     }}
                   >
                     <Card

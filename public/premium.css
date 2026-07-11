@@ -278,9 +278,10 @@
      el inicio el espacio de la carta ampliada para que el documento no cambie
      de altura ni desplace el scroll al alternar el zoom. */
   .player-hand-wrap {
-    /* Reserva la carta ampliada (crece ~78px), la caída por rotación de las
-       cartas de los extremos (~30px) y el rebaje seguro de iPhone. */
-    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+    /* La ampliación crece hacia arriba (ver .hand-card-zoom-shell), así que solo
+       hay que reservar la caída por rotación de las cartas de los extremos y el
+       rebaje seguro de iPhone. */
+    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
   }
 }
 
