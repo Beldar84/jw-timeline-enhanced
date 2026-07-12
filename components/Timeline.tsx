@@ -15,6 +15,8 @@ interface TimelineProps {
   onSelectSlot: (timelineIndex: number, element: HTMLButtonElement) => void;
   selectedSlotIndex: number | null;
   dragTargetIndex?: number | null;
+  /** Hay una carta arrastrándose: todas las ranuras se resaltan como destino */
+  dragActive?: boolean;
   highlightedCardId?: number | null;
   disabled?: boolean;
 }
@@ -24,6 +26,7 @@ interface PlacementSlotProps {
   onClick: () => void;
   isSelected: boolean;
   isDragTarget?: boolean;
+  isDragReady?: boolean;
   edgeLabel?: 'Antes' | 'Después';
   disabled?: boolean;
 }
@@ -37,7 +40,7 @@ const PlusIcon: React.FC<{ selected: boolean }> = ({ selected }) => (
   </svg>
 );
 
-const PlacementSlot = forwardRef<HTMLButtonElement, PlacementSlotProps>(({ id, onClick, isSelected, isDragTarget = false, edgeLabel, disabled }, ref) => (
+const PlacementSlot = forwardRef<HTMLButtonElement, PlacementSlotProps>(({ id, onClick, isSelected, isDragTarget = false, isDragReady = false, edgeLabel, disabled }, ref) => (
   <div className="relative flex flex-shrink-0 items-center justify-center">
     {edgeLabel && <span className="timeline-edge-label">{edgeLabel}</span>}
     <button
@@ -46,7 +49,7 @@ const PlacementSlot = forwardRef<HTMLButtonElement, PlacementSlotProps>(({ id, o
       ref={ref}
       onClick={onClick}
       disabled={disabled}
-      className={`slot-circle ${isSelected ? 'selected' : ''} ${isDragTarget ? 'drag-target' : ''} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+      className={`slot-circle ${isSelected ? 'selected' : ''} ${isDragTarget ? 'drag-target' : ''} ${isDragReady ? 'drag-ready' : ''} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
       aria-label={isSelected ? 'Ranura de colocación seleccionada' : `Colocar ${edgeLabel ? `más ${edgeLabel.toLowerCase()}` : 'aquí'}`}
       aria-pressed={isSelected}
     >
@@ -57,7 +60,7 @@ const PlacementSlot = forwardRef<HTMLButtonElement, PlacementSlotProps>(({ id, o
 
 const Timeline: React.FC<TimelineProps> = ({
   cards, onSelectSlot, selectedSlotIndex, dragTargetIndex = null,
-  highlightedCardId = null, disabled = false,
+  dragActive = false, highlightedCardId = null, disabled = false,
 }) => {
   const slotRefs = useRef<React.RefObject<HTMLButtonElement>[]>([]);
   const cardRefs = useRef(new Map<number, React.RefObject<HTMLDivElement>>());
@@ -92,8 +95,10 @@ const Timeline: React.FC<TimelineProps> = ({
   }, [highlightedCardId, cards.length]);
 
   return (
-    <div className="relative pt-16 pb-2 md:py-10">
-      {/* Eje temporal dorado detrás de cartas y ranuras */}
+    <div className="relative min-w-max pt-16 pb-2 md:py-10">
+      {/* Eje temporal dorado detrás de cartas y ranuras. El min-w-max del
+          contenedor hace que el eje absoluto (left:0; right:0) abarque todo
+          el ancho desplazable y no solo el primer viewport. */}
       <div className="gold-axis" aria-hidden="true"></div>
 
       <div className="relative flex items-center min-w-max px-4 gap-4 md:gap-7">
@@ -103,6 +108,7 @@ const Timeline: React.FC<TimelineProps> = ({
           onClick={() => handleSelect(0)}
           isSelected={selectedSlotIndex === 0}
           isDragTarget={dragTargetIndex === 0}
+          isDragReady={dragActive}
           edgeLabel="Antes"
           disabled={disabled}
         />
@@ -129,6 +135,7 @@ const Timeline: React.FC<TimelineProps> = ({
               onClick={() => handleSelect(index + 1)}
               isSelected={selectedSlotIndex === index + 1}
               isDragTarget={dragTargetIndex === index + 1}
+              isDragReady={dragActive}
               edgeLabel={index === cards.length - 1 ? 'Después' : undefined}
               disabled={disabled}
             />

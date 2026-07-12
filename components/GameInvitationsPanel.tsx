@@ -94,41 +94,42 @@ const GameInvitationsPanel: React.FC<GameInvitationsPanelProps> = ({ onAcceptInv
   return (
     <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-40 max-w-sm sm:w-96">
       {loading ? (
-        <div className="parchment-panel px-5 py-4">
-          <p className="font-body italic text-[14.5px] m-0 text-center" style={{ color: '#a08a5c' }}>Cargando invitaciones…</p>
+        <div className="px-5 py-4 rounded-md"
+          style={{ background: 'rgba(20,14,6,.96)', border: '1px solid rgba(201,162,39,.35)' }}>
+          <p className="font-body italic text-[14.5px] m-0 text-center" style={{ color: '#a89870' }}>Cargando invitaciones…</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
           {activeInvitations.map((invitation) => (
-            <div key={invitation.id} className="parchment-panel px-5 py-4"
-              style={{ border: '2px solid #a8853c', boxShadow: '0 8px 30px rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.4)' }}>
+            <div key={invitation.id} className="px-5 py-4 rounded-md"
+              style={{ background: 'rgba(20,14,6,.96)', border: '2px solid #a8853c', boxShadow: '0 8px 30px rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.4)' }}>
 
               {/* Cabecera */}
               <div className="flex items-center gap-3.5">
                 {/* Medallón con inicial del anfitrión */}
                 <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 font-display font-bold text-lg"
-                  style={{ border: '2px solid #a8853c', background: 'rgba(201,162,39,.14)', color: '#8a6a2a', boxShadow: '0 0 12px rgba(201,162,39,.25)' }}>
+                  style={{ border: '2px solid #a8853c', background: 'rgba(201,162,39,.12)', color: '#e5c96a', boxShadow: '0 0 12px rgba(201,162,39,.25)' }}>
                   {invitation.fromUserName.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-display text-[11px] tracking-widest m-0" style={{ color: '#a08a5c' }}>
+                  <p className="font-display text-[11px] tracking-widest m-0" style={{ color: '#c9a227' }}>
                     ★ INVITACIÓN DE PARTIDA
                   </p>
-                  <p className="font-display font-bold text-[16px] tracking-wide m-0 mt-0.5 truncate" style={{ color: 'var(--ink)' }}>
+                  <p className="font-display font-bold text-[16px] tracking-wide m-0 mt-0.5 truncate" style={{ color: '#f2e8d5' }}>
                     {invitation.fromUserName}
                   </p>
-                  <p className="font-body italic text-[13.5px] m-0" style={{ color: '#7c6a48' }}>te invita a jugar</p>
+                  <p className="font-body italic text-[13.5px] m-0" style={{ color: '#a89870' }}>te invita a jugar</p>
                 </div>
               </div>
 
               {/* Modo + tiempo restante */}
               <div className="flex items-center justify-between mt-3 mb-3 py-2 px-1"
-                style={{ borderTop: '1px solid rgba(120,94,48,.2)', borderBottom: '1px solid rgba(120,94,48,.2)' }}>
-                <span className="font-display text-[12px] tracking-wider" style={{ color: '#8a6a2a' }}>
+                style={{ borderTop: '1px solid rgba(201,162,39,.25)', borderBottom: '1px solid rgba(201,162,39,.25)' }}>
+                <span className="font-display text-[12px] tracking-wider" style={{ color: '#e8d9b0' }}>
                   {invitation.gameMode === 'realtime' ? 'TIEMPO REAL' : 'POR TURNOS'}
                 </span>
                 <span className="font-body text-[13px] px-2 py-0.5 rounded-sm"
-                  style={{ border: '1px solid rgba(138,59,42,.4)', background: 'rgba(138,59,42,.08)', color: '#8a3b2a' }}>
+                  style={{ border: '1px solid rgba(178,74,54,.55)', background: 'rgba(138,59,42,.22)', color: '#e08a7a' }}>
                   Expira en {formatTimeRemaining(invitation.expiresAt)}
                 </span>
               </div>
@@ -146,7 +147,7 @@ const GameInvitationsPanel: React.FC<GameInvitationsPanelProps> = ({ onAcceptInv
                   onClick={() => handleDecline(invitation.id)}
                   disabled={actionLoading === invitation.id}
                   className="flex-1 py-2.5 font-display text-[13px] tracking-wider rounded-sm cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ background: 'none', border: '1px solid rgba(120,94,48,.3)', color: '#a08a5c' }}
+                  style={{ background: 'none', border: '1px solid rgba(201,162,39,.35)', color: '#c9b891' }}
                 >
                   RECHAZAR
                 </button>

@@ -283,6 +283,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           onSelectSlot={handleSelectSlot}
           selectedSlotIndex={selectedTimelineIndex}
           dragTargetIndex={dragTargetIndex}
+          dragActive={dragPreview !== null}
           highlightedCardId={highlightedTimelineCardId}
           disabled={!canInteract}
         />

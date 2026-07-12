@@ -143,6 +143,16 @@
   transform: scale(1.1);
   color: #f2e8d5;
 }
+/* Al empezar a arrastrar una carta, TODAS las ranuras se agrandan y brillan
+   como destinos posibles; :not(.drag-target) evita pisar el resaltado fuerte
+   de la ranura sobre la que está la carta. */
+.slot-circle.drag-ready:not(.drag-target) {
+  border: 2px solid var(--gold);
+  color: var(--gold-bright);
+  background: rgba(201,162,39,.16);
+  box-shadow: 0 0 18px rgba(201,162,39,.4);
+  transform: scale(1.15);
+}
 .slot-circle.drag-target {
   border: 2px solid var(--gold-bright);
   background: rgba(201,162,39,.3);
@@ -228,13 +238,29 @@
 
 /* ================== AJUSTES DE PARTIDA ==================
    Mini-carta del descarte: nombre en máx. 2 líneas y sin
-   referencia bíblica para que conserve la proporción de carta. */
+   referencia bíblica, y misma relación de aspecto que las
+   cartas del mazo (la ilustración flexa y se recorta). */
 #discard-pile-container .parchment-card .font-body { display: none; }
 #discard-pile-container .parchment-card .font-display.font-semibold {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+#discard-pile-container .parchment-card {
+  aspect-ratio: 500 / 734;
+  /* Sin esto, la altura mínima automática del contenido gana al aspect-ratio */
+  min-height: 0;
+  overflow: hidden;
+}
+#discard-pile-container .torn-art {
+  aspect-ratio: auto !important;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+#discard-pile-container .torn-art > img {
+  height: 106%;
+  object-fit: cover;
 }
 
 /* Carta ampliada en móvil: el marco dorado se dibuja sobre la
