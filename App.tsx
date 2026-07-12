@@ -622,6 +622,9 @@ const AppEnhanced: React.FC = () => {
       const playerName = profileService.getProfile()?.name || 'Jugador';
       try {
         gameService.disconnect();
+        // Limpia el estado de la partida terminada para que el lobby no
+        // muestre la sala antigua mientras llega el snapshot de la nueva.
+        setOnlineGameState(null);
         const result = await gameService.createGame(playerName);
         let sent = 0;
         for (const opponent of opponents) {

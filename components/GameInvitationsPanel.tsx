@@ -19,7 +19,14 @@ const GameInvitationsPanel: React.FC<GameInvitationsPanelProps> = ({ onAcceptInv
   const [invitations, setInvitations] = useState<GameInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [now, setNow] = useState(Date.now());
   const previousInvitationIds = useRef(new Set<string>());
+
+  // Tic de 1s: mantiene viva la cuenta atrás y retira las invitaciones caducadas
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     // Subscribe to real-time invitations
@@ -69,17 +76,19 @@ const GameInvitationsPanel: React.FC<GameInvitationsPanelProps> = ({ onAcceptInv
     }
   };
 
-  const formatTimeRemaining = (expiresAt: any): string => {
-    const expires = expiresAt?.toDate ? expiresAt.toDate() : new Date(expiresAt);
-    const now = new Date();
-    const diff = Math.max(0, Math.floor((expires.getTime() - now.getTime()) / 1000));
+  const expiryMs = (expiresAt: any): number =>
+    (expiresAt?.toDate ? expiresAt.toDate() : new Date(expiresAt)).getTime();
 
+  const formatTimeRemaining = (expiresAt: any): string => {
+    const diff = Math.max(0, Math.floor((expiryMs(expiresAt) - now) / 1000));
     if (diff < 60) return `${diff}s`;
     return `${Math.floor(diff / 60)}m ${diff % 60}s`;
   };
 
-  if (invitations.length === 0 && !loading) {
-    return null; // No mostrar si no hay invitaciones
+  const activeInvitations = invitations.filter(invitation => expiryMs(invitation.expiresAt) > now);
+
+  if (activeInvitations.length === 0 && !loading) {
+    return null; // No mostrar si no hay invitaciones vigentes
   }
 
   return (
@@ -90,7 +99,7 @@ const GameInvitationsPanel: React.FC<GameInvitationsPanelProps> = ({ onAcceptInv
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {invitations.map((invitation) => (
+          {activeInvitations.map((invitation) => (
             <div key={invitation.id} className="parchment-panel px-5 py-4"
               style={{ border: '2px solid #a8853c', boxShadow: '0 8px 30px rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.4)' }}>
 

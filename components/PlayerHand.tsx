@@ -181,7 +181,8 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
   // Solape dinámico: todas las cartas permanecen fijas dentro de la pantalla.
   // El gesto lateral cambia únicamente cuál se desplaza y amplía al frente.
-  const cardWidth = isMobile && window.matchMedia('(orientation: landscape)').matches ? 120 : 140;
+  // Debe coincidir con .card-responsive de premium.css (136px en apaisado, 140px en vertical)
+  const cardWidth = isMobile && window.matchMedia('(orientation: landscape)').matches ? 136 : 140;
   let mobileOverlap = 18;
   if (isMobile && n > 1 && wrapW > 0) {
     // Reservamos solo 8 px por lado: así las cuatro cartas ocupan casi todo el
