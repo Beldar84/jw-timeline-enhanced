@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Player, Card as CardType } from '../types';
 import Card from './Card';
+import { soundService } from '../services/soundService';
 
 // ============================================================
 // JW Timeline — PlayerHand premium (diseño 2b) · handoff/PlayerHand.tsx
@@ -230,6 +231,17 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     onCardFocus?.(nextCard, cardRefs.current.get(nextCard.id)?.current ?? null);
   };
 
+  // Navegación con flechas: mismo comportamiento que el gesto lateral
+  const stepExpanded = (direction: 1 | -1) => {
+    if (n === 0) return;
+    soundService.playClick();
+    setExpandedId(currentId => {
+      const currentIndex = player.hand.findIndex(card => card.id === currentId);
+      if (currentIndex < 0) return player.hand[direction === 1 ? 0 : n - 1].id;
+      return player.hand[(currentIndex + direction + n) % n].id;
+    });
+  };
+
   const startCardDragCandidate = (
     event: React.PointerEvent<HTMLDivElement>,
     card: CardType,
@@ -249,21 +261,14 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
   return (
     <div ref={wrapRef} className="player-hand-wrap">
-      <div className="relative z-20 flex items-center justify-center gap-2 mb-2 landscape:mb-1">
+      {/* El título se oculta mientras hay una carta ampliada para no superponerse a ella */}
+      <div className="relative z-20 flex items-center justify-center gap-2 mb-2 landscape:mb-1"
+        style={{ visibility: isMobile && expandedId !== null ? 'hidden' : 'visible' }}>
         <h3 className="font-body italic text-center text-base md:text-lg"
           style={{
             color: placementMode && !disabled ? 'var(--gold-bright)' : '#c9b891',
             ...(isMobile
-              ? {
-                  padding: '3px 14px',
-                  borderRadius: 999,
-                  border: expandedId !== null
-                    ? '1px solid rgba(201,162,39,.35)'
-                    : '1px solid transparent',
-                }
-              : {}),
-            ...(isMobile && expandedId !== null
-              ? { background: 'rgba(10,7,3,.78)' }
+              ? { padding: '3px 14px', borderRadius: 999, border: '1px solid transparent' }
               : {}),
           }}>
           {title}
@@ -356,6 +361,17 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             <p className="font-body italic px-4" style={{ color: '#a89870' }}>¡No quedan cartas!</p>
           )}
         </div>
+
+        {/* Flechas de navegación: aparecen con una carta ampliada para
+            indicar que se puede pasar a las cartas vecinas */}
+        {isMobile && expandedId !== null && n > 1 && (
+          <div className="hand-nav-arrows" role="group" aria-label="Cambiar de carta">
+            <button type="button" className="hand-nav-arrow" aria-label="Ver carta anterior"
+              onClick={() => stepExpanded(-1)}>‹</button>
+            <button type="button" className="hand-nav-arrow" aria-label="Ver carta siguiente"
+              onClick={() => stepExpanded(1)}>›</button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -129,7 +129,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   // Distancia máxima (px) del dedo a una ranura para considerarla destino.
-  const DROP_RADIUS = 130;
+  // Generosa para que el resalte empiece pronto, sin llegar a la zona de la mano.
+  const DROP_RADIUS = 210;
 
   // Devuelve la ranura MÁS CERCANA al puntero dentro del radio: el resalte
   // sigue al dedo mientras se arrastra, sin exigir estar justo encima del «+».

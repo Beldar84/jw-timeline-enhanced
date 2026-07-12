@@ -129,7 +129,7 @@ const MainMenuEnhanced: React.FC<MainMenuEnhancedProps> = ({
     <>
       <div className="flex flex-col items-center relative w-full max-w-md px-1 sm:px-0">
         <p className="font-body italic text-lg mb-8 tracking-wide" style={{ color: '#c9b891' }}>
-          Cronología bíblica · un juego de cartas
+          Un juego de cartas con la cronología bíblica
         </p>
 
         <div className="parchment-panel w-full max-w-full px-6 sm:px-10 pt-9 pb-8 flex flex-col">

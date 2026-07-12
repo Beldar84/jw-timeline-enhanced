@@ -318,7 +318,42 @@
 .player-hand-wrap {
   overflow: visible;
 }
-.player-hand-stage { overflow: visible; }
+.player-hand-stage { overflow: visible; position: relative; }
+
+/* Flechas ‹ › bajo la carta ampliada: indican que se puede navegar de lado */
+.hand-nav-arrows {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  display: flex;
+  justify-content: center;
+  gap: 96px;
+  pointer-events: none;
+  z-index: 30;
+}
+.hand-nav-arrow {
+  pointer-events: auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(201,162,39,.55);
+  background: rgba(10,7,3,.72);
+  color: #e5c96a;
+  font-family: 'EB Garamond', serif;
+  font-size: 26px;
+  line-height: 1;
+  padding-bottom: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,.4);
+}
+.hand-nav-arrow:active {
+  background: rgba(201,162,39,.25);
+  color: #fff5cf;
+}
 
 @media (max-width: 767px) {
   /* iOS recorta lo que sobresale de la caja del escenario, tanto por arriba
