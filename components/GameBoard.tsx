@@ -128,14 +128,31 @@ const GameBoard: React.FC<GameBoardProps> = ({
     setSelectedCard({ card, element });
   };
 
+  // Distancia máxima (px) del dedo a una ranura para considerarla destino.
+  const DROP_RADIUS = 130;
+
+  // Devuelve la ranura MÁS CERCANA al puntero dentro del radio: el resalte
+  // sigue al dedo mientras se arrastra, sin exigir estar justo encima del «+».
   const findDropSlot = (clientX: number, clientY: number) => {
     if (clientX < 0 || clientY < 0) return null;
-    const slot = document.elementFromPoint(clientX, clientY)?.closest<HTMLButtonElement>('.slot-circle');
-    if (!slot || slot.disabled || !slot.id.startsWith('timeline-slot-')) return null;
-    const index = Number(slot.id.replace('timeline-slot-', ''));
-    return Number.isInteger(index) && index >= 0 && index <= timeline.length
-      ? { index, element: slot }
-      : null;
+    const slots = Array.from(document.querySelectorAll<HTMLButtonElement>('.slot-circle'));
+    let best: { index: number; element: HTMLButtonElement } | null = null;
+    let bestDistance = DROP_RADIUS;
+    for (const slot of slots) {
+      if (slot.disabled || !slot.id.startsWith('timeline-slot-')) continue;
+      const index = Number(slot.id.replace('timeline-slot-', ''));
+      if (!Number.isInteger(index) || index < 0 || index > timeline.length) continue;
+      const rect = slot.getBoundingClientRect();
+      if (rect.right < 0 || rect.left > window.innerWidth) continue; // fuera del viewport (eje con scroll)
+      const dx = clientX - (rect.left + rect.width / 2);
+      const dy = clientY - (rect.top + rect.height / 2);
+      const distance = Math.hypot(dx, dy);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = { index, element: slot };
+      }
+    }
+    return best;
   };
 
   const handleCardDragStart = (

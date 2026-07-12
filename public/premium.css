@@ -143,15 +143,13 @@
   transform: scale(1.1);
   color: #f2e8d5;
 }
-/* Al empezar a arrastrar una carta, TODAS las ranuras se agrandan y brillan
-   como destinos posibles; :not(.drag-target) evita pisar el resaltado fuerte
-   de la ranura sobre la que está la carta. */
+/* Durante el arrastre, las ranuras se insinúan sutilmente (sin crecer):
+   el resalte fuerte (.drag-target) lo lleva solo la más cercana al dedo
+   y va cambiando según se mueve. */
 .slot-circle.drag-ready:not(.drag-target) {
-  border: 2px solid var(--gold);
+  border-color: var(--gold);
   color: var(--gold-bright);
-  background: rgba(201,162,39,.16);
-  box-shadow: 0 0 18px rgba(201,162,39,.4);
-  transform: scale(1.15);
+  box-shadow: 0 0 10px rgba(201,162,39,.22);
 }
 .slot-circle.drag-target {
   border: 2px solid var(--gold-bright);
