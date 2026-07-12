@@ -868,7 +868,14 @@ const AppEnhanced: React.FC = () => {
     if (turnBasedGame.status === 'finished') {
       const winningPlayer = turnPlayers.find(player => player.id === turnBasedGame.winnerId);
       return winningPlayer ? (
-        <GameOver winner={winningPlayer} onRestart={handleExitTurnBasedGame} restartLabel="VOLVER AL INICIO" />
+        <GameOver
+          winner={winningPlayer}
+          onRestart={handleExitTurnBasedGame}
+          restartLabel="VOLVER AL INICIO"
+          loserName={currentUserId && winningPlayer.id !== currentUserId
+            ? (turnPlayers.find(player => player.id === currentUserId)?.name || 'Jugador')
+            : undefined}
+        />
       ) : (
         <div className="flex flex-col items-center justify-center p-8 md:p-10 rounded-sm max-w-md text-center"
           style={{ border: '1px solid rgba(201,162,39,.35)', background: 'rgba(0,0,0,.35)', backdropFilter: 'blur(4px)' }}>
@@ -991,6 +998,17 @@ const AppEnhanced: React.FC = () => {
         const gameOverMessage = gameMode === 'online' ? onlineGameState?.message : null;
         // Si hay ganador, mostrar pantalla de victoria
         if (finalWinner) {
+          // Si el jugador local ha perdido, GameOver muestra «Lo siento, …»
+          let defeatedLocalName: string | null = null;
+          if (gameMode === 'online') {
+            const myId = firebaseService.getCurrentUserId();
+            if (myId && finalWinner.id !== myId) {
+              defeatedLocalName = onlineGameState?.players.find(p => p.id === myId)?.name
+                || profileService.getProfile()?.name || 'Jugador';
+            }
+          } else if (gameMode === 'ai' && finalWinner.isAI) {
+            defeatedLocalName = players.find(p => !p.isAI)?.name || 'Jugador';
+          }
           return (
             <GameOver
               winner={finalWinner}
@@ -999,6 +1017,7 @@ const AppEnhanced: React.FC = () => {
               restartBusy={rematchBusy}
               onBackToMenu={handleRestart}
               message={gameOverMessage}
+              loserName={defeatedLocalName}
             />
           );
         }

@@ -18,6 +18,8 @@ interface GameOverProps {
   restartLabel?: string;
   /** Estado del botón principal mientras se crea la sala de revancha. */
   restartBusy?: boolean;
+  /** Nombre del jugador local si HA PERDIDO: cambia el mensaje a «Lo siento…». */
+  loserName?: string | null;
 }
 
 const GoldRule: React.FC = () => (
@@ -28,7 +30,7 @@ const GoldRule: React.FC = () => (
   </div>
 );
 
-const GameOver: React.FC<GameOverProps> = ({ winner, onRestart, message, onBackToMenu, restartLabel, restartBusy }) => {
+const GameOver: React.FC<GameOverProps> = ({ winner, onRestart, message, onBackToMenu, restartLabel, restartBusy, loserName }) => {
   const handleRestartClick = () => {
     soundService.playClick();
     onRestart();
@@ -45,12 +47,25 @@ const GameOver: React.FC<GameOverProps> = ({ winner, onRestart, message, onBackT
         style={{ color: '#f2e8d5', textShadow: '0 4px 24px rgba(0,0,0,.6)' }}>
         Fin del juego
       </h2>
-      <p className="font-body text-xl md:text-2xl mb-1.5" style={{ color: '#e5c96a' }}>
-        Felicidades, <span className="font-semibold">{winner.name}</span>
-      </p>
-      <p className="font-body italic text-base md:text-lg mb-10 max-w-md" style={{ color: '#c9b891' }}>
-        {message || 'Has colocado correctamente todas tus cartas en la línea del tiempo'}
-      </p>
+      {loserName ? (
+        <>
+          <p className="font-body text-xl md:text-2xl mb-1.5" style={{ color: '#e5c96a' }}>
+            Lo siento, <span className="font-semibold">{loserName}</span>
+          </p>
+          <p className="font-body italic text-base md:text-lg mb-10 max-w-md" style={{ color: '#c9b891' }}>
+            {message || `${winner.name} ha colocado correctamente todas sus cartas en la línea del tiempo`}
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="font-body text-xl md:text-2xl mb-1.5" style={{ color: '#e5c96a' }}>
+            Felicidades, <span className="font-semibold">{winner.name}</span>
+          </p>
+          <p className="font-body italic text-base md:text-lg mb-10 max-w-md" style={{ color: '#c9b891' }}>
+            {message || 'Has colocado correctamente todas tus cartas en la línea del tiempo'}
+          </p>
+        </>
+      )}
       <div className="flex flex-wrap justify-center gap-4">
         <button onClick={handleRestartClick} disabled={restartBusy}
           className="btn-gold px-10 py-4 text-base disabled:opacity-60 disabled:cursor-wait">

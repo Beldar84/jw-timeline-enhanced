@@ -14,10 +14,7 @@ const FeedbackMessage: React.FC<FeedbackMessageProps> = ({ type }) => {
   const isCorrect = type === 'correct';
 
   return (
-    <div
-      className="fixed inset-x-0 flex items-start justify-center z-[100] transition-opacity duration-300 pointer-events-none px-4"
-      style={{ top: 'max(16px, env(safe-area-inset-top, 0px))' }}
-    >
+    <div className="fixed inset-0 flex items-center justify-center z-[100] transition-opacity duration-300 pointer-events-none px-4">
       <div
         className="px-8 py-3 md:px-12 md:py-4 rounded-sm text-center"
         role="alert"
