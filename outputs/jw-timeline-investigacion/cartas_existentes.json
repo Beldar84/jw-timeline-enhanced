@@ -1,0 +1,906 @@
+[
+  [
+    "ID",
+    "Nombre",
+    "Año (negativo = a.e.c.)",
+    "Fecha mostrada",
+    "Referencia bíblica",
+    "Imagen (ruta)"
+  ],
+  [
+    1,
+    "Creación del Universo",
+    -14000000000,
+    "14,000,000,000 a.e.c.",
+    "Génesis 1:1",
+    "/images/cards/JW Timeline 1.png"
+  ],
+  [
+    2,
+    "Creación de Adán",
+    -4026,
+    "4026,0 a.e.c.",
+    "Génesis 2:7",
+    "/images/cards/JW Timeline 2.png"
+  ],
+  [
+    3,
+    "Primera profecía",
+    -4025,
+    "4025,0 a.e.c.",
+    "Génesis 3:15",
+    "/images/cards/JW Timeline 3.png"
+  ],
+  [
+    4,
+    "Caín mata a Abel",
+    -3896,
+    "3896,0 a.e.c.",
+    "Génesis 4:8",
+    "/images/cards/JW Timeline 4.png"
+  ],
+  [
+    5,
+    "Nace el justo Enoc",
+    -3403,
+    "3403,0 a.e.c.",
+    "Génesis 5:18",
+    "/images/cards/JW Timeline 5.png"
+  ],
+  [
+    6,
+    "Nace Matusalén",
+    -3338,
+    "3338,0 a.e.c.",
+    "Génesis 5:21",
+    "/images/cards/JW Timeline 6.png"
+  ],
+  [
+    7,
+    "Nace Lamec",
+    -3151,
+    "3151,0 a.e.c.",
+    "Génesis 5:25",
+    "/images/cards/JW Timeline 7.png"
+  ],
+  [
+    8,
+    "Muerte de Adán con 930 años",
+    -3096,
+    "3096,0 a.e.c.",
+    "Génesis 5:5",
+    "/images/cards/JW Timeline 8.png"
+  ],
+  [
+    9,
+    "Traslación de Enoc",
+    -3038,
+    "3038,0 a.e.c.",
+    "Génesis 5:24",
+    "/images/cards/JW Timeline 9.png"
+  ],
+  [
+    10,
+    "Nace Noé",
+    -2970,
+    "2970,0 a.e.c.",
+    "Génesis 5:28-29",
+    "/images/cards/JW Timeline 10.png"
+  ],
+  [
+    11,
+    "Jehová decreta el Diluvio",
+    -2490,
+    "2490,0 a.e.c.",
+    "Génesis 6:3, 13",
+    "/images/cards/JW Timeline 11.png"
+  ],
+  [
+    12,
+    "Nace Sem",
+    -2468,
+    "2468,0 a.e.c.",
+    "Génesis 5:32",
+    "/images/cards/JW Timeline 12.png"
+  ],
+  [
+    13,
+    "Noé comienza a construir el arca",
+    -2420,
+    "2420,0 a.e.c.",
+    "Génesis 6:14-16",
+    "/images/cards/JW Timeline 13.png"
+  ],
+  [
+    14,
+    "Fallece Lamec",
+    -2375,
+    "2375,0 a.e.c.",
+    "Génesis 5:31",
+    "/images/cards/JW Timeline 14.png"
+  ],
+  [
+    15,
+    "Fallece Matusalén con 969 años",
+    -2370,
+    "2370,0 a.e.c.",
+    "Génesis 5:27",
+    "/images/cards/JW Timeline 15.png"
+  ],
+  [
+    16,
+    "Comienza el Diluvio",
+    -2370,
+    "2370,0 a.e.c.",
+    "Génesis 7:11",
+    "/images/cards/JW Timeline 16.png"
+  ],
+  [
+    17,
+    "Construcción de la Torre de Babel",
+    -2239,
+    "2239,0 a.e.c.",
+    "Génesis 11:1-9",
+    "/images/cards/JW Timeline 17.png"
+  ],
+  [
+    18,
+    "Muere Noé con 950 años",
+    -2020,
+    "2020,0 a.e.c.",
+    "Génesis 9:29",
+    "/images/cards/JW Timeline 18.png"
+  ],
+  [
+    19,
+    "Nace Abrahán",
+    -2018,
+    "2018,0 a.e.c.",
+    "Génesis 11:26",
+    "/images/cards/JW Timeline 19.png"
+  ],
+  [
+    20,
+    "Establecimiento del pacto abrahámico",
+    -1943,
+    "1943,0 a.e.c.",
+    "Génesis 12:1-3",
+    "/images/cards/JW Timeline 20.png"
+  ],
+  [
+    21,
+    "Abrahán rescata a su sobrino Lot",
+    -1933,
+    "1933,0 a.e.c.",
+    "Génesis 14:14-16",
+    "/images/cards/JW Timeline 21.png"
+  ],
+  [
+    22,
+    "Nacimiento de Ismael",
+    -1932,
+    "1932,0 a.e.c.",
+    "Génesis 16:15-16",
+    "/images/cards/JW Timeline 22.png"
+  ],
+  [
+    23,
+    "Se hace el pacto de la circuncisión",
+    -1919,
+    "1919,0 a.e.c.",
+    "Génesis 17:9-14",
+    "/images/cards/JW Timeline 23.png"
+  ],
+  [
+    24,
+    "Destrucción de Sodoma y Gomorra",
+    -1919,
+    "1919,0 a.e.c.",
+    "Génesis 19:24-25",
+    "/images/cards/JW Timeline 24.png"
+  ],
+  [
+    25,
+    "Nacimiento de Isaac",
+    -1918,
+    "1918,0 a.e.c.",
+    "Génesis 21:2-3",
+    "/images/cards/JW Timeline 25.png"
+  ],
+  [
+    26,
+    "Ismael y su madre son despedidos",
+    -1913,
+    "1913,0 a.e.c.",
+    "Génesis 21:14",
+    "/images/cards/JW Timeline 26.png"
+  ],
+  [
+    27,
+    "Isaac es ofrecido en Moria",
+    -1893,
+    "1893,0 a.e.c.",
+    "Génesis 22:1-12",
+    "/images/cards/JW Timeline 27.png"
+  ],
+  [
+    28,
+    "Muere Sara con 127 años",
+    -1881,
+    "1881,0 a.e.c.",
+    "Génesis 23:1-2",
+    "/images/cards/JW Timeline 28.png"
+  ],
+  [
+    29,
+    "Isaac se casa con Rebeca",
+    -1878,
+    "1878,0 a.e.c.",
+    "Génesis 24:67",
+    "/images/cards/JW Timeline 29.png"
+  ],
+  [
+    30,
+    "Fallece Sem con 600 años",
+    -1868,
+    "1868,0 a.e.c.",
+    "Génesis 11:10-11",
+    "/images/cards/JW Timeline 30.png"
+  ],
+  [
+    31,
+    "Nacimiento de Esaú y Jacob",
+    -1858,
+    "1858,0 a.e.c.",
+    "Génesis 25:24-26",
+    "/images/cards/JW Timeline 31.png"
+  ],
+  [
+    32,
+    "Muere Abrahán con 175 años",
+    -1843,
+    "1843,0 a.e.c.",
+    "Génesis 25:7-8",
+    "/images/cards/JW Timeline 32.png"
+  ],
+  [
+    33,
+    "Esaú se casa con Judit",
+    -1818,
+    "1,818 a.e.c.",
+    "Génesis 26:34",
+    "/images/cards/JW Timeline 33.png"
+  ],
+  [
+    34,
+    "Ismael fallece con 137 años",
+    -1795,
+    "1795,0 a.e.c.",
+    "Génesis 25:17",
+    "/images/cards/JW Timeline 34.png"
+  ],
+  [
+    35,
+    "Jacob huye a Padán-aram",
+    -1781,
+    "1781,0 a.e.c.",
+    "Génesis 28:2-5",
+    "/images/cards/JW Timeline 35.png"
+  ],
+  [
+    36,
+    "Jacob se casa con Lea y Raquel",
+    -1774,
+    "1774,0 a.e.c.",
+    "Génesis 29:23-28",
+    "/images/cards/JW Timeline 36.png"
+  ],
+  [
+    37,
+    "Nacimiento de José",
+    -1767,
+    "1767,0 a.e.c.",
+    "Génesis 30:22-24",
+    "/images/cards/JW Timeline 37.png"
+  ],
+  [
+    38,
+    "Jacob regresa a Canaán",
+    -1761,
+    "1761,0 a.e.c.",
+    "Génesis 31:17-18",
+    "/images/cards/JW Timeline 38.png"
+  ],
+  [
+    39,
+    "La lucha de Jacob con el ángel",
+    -1761,
+    "1761,0 a.e.c.",
+    "Génesis 32:24-28",
+    "/images/cards/JW Timeline 39.png"
+  ],
+  [
+    40,
+    "Venden a José como esclavo",
+    -1750,
+    "1750,0 a.e.c.",
+    "Génesis 37:28",
+    "/images/cards/JW Timeline 40.png"
+  ],
+  [
+    41,
+    "Muere Isaac con 180 años",
+    -1739,
+    "1739,0 a.e.c.",
+    "Génesis 35:28-29",
+    "/images/cards/JW Timeline 41.png"
+  ],
+  [
+    42,
+    "José se convierte en virrey de Egipto",
+    -1737,
+    "1737,0 a.e.c.",
+    "Génesis 41:40-43",
+    "/images/cards/JW Timeline 42.png"
+  ],
+  [
+    43,
+    "Jacob se traslada a Egipto",
+    -1728,
+    "1728,0 a.e.c.",
+    "Génesis 46:5-7",
+    "/images/cards/JW Timeline 43.png"
+  ],
+  [
+    44,
+    "Fallece Jacob con 147 años",
+    -1712,
+    "1712,0 a.e.c.",
+    "Génesis 47:28",
+    "/images/cards/JW Timeline 44.png"
+  ],
+  [
+    45,
+    "Muere José con 110 años",
+    -1657,
+    "1657,0 a.e.c.",
+    "Génesis 50:26",
+    "/images/cards/JW Timeline 45.png"
+  ],
+  [
+    46,
+    "Pruebas de Job",
+    -1613,
+    "1613,0 a.e.c.",
+    "Job 1:1-22",
+    "/images/cards/JW Timeline 46.png"
+  ],
+  [
+    47,
+    "Nace Moisés",
+    -1593,
+    "1593,0 a.e.c.",
+    "Éxodo 2:1-2",
+    "/images/cards/JW Timeline 47.png"
+  ],
+  [
+    48,
+    "Moisés huye a Madián",
+    -1553,
+    "1553,0 a.e.c.",
+    "Éxodo 2:15",
+    "/images/cards/JW Timeline 48.png"
+  ],
+  [
+    49,
+    "La zarza ardiente",
+    -1514,
+    "1514,0 a.e.c.",
+    "Éxodo 3:2-4",
+    "/images/cards/JW Timeline 49.png"
+  ],
+  [
+    50,
+    "Éxodo de Egipto",
+    -1513,
+    "1513,0 a.e.c.",
+    "Éxodo 12:40-41",
+    "/images/cards/JW Timeline 50.png"
+  ],
+  [
+    51,
+    "Los Diez Mandamientos",
+    -1513,
+    "1513,0 a.e.c.",
+    "Éxodo 20:1-17",
+    "/images/cards/JW Timeline 51.png"
+  ],
+  [
+    52,
+    "Se completa el tabernáculo",
+    -1512,
+    "1512,0 a.e.c.",
+    "Éxodo 40:17, 33-34",
+    "/images/cards/JW Timeline 52.png"
+  ],
+  [
+    53,
+    "Israel entra en Canaán",
+    -1473,
+    "1473,0 a.e.c.",
+    "Josué 3:14-17",
+    "/images/cards/JW Timeline 53.png"
+  ],
+  [
+    54,
+    "Moisés muere en Moab con 120 años",
+    -1473,
+    "1473,0 a.e.c.",
+    "Deuteronomio 34:5-7",
+    "/images/cards/JW Timeline 54.png"
+  ],
+  [
+    55,
+    "Distribución de Canaán",
+    -1467,
+    "1467,0 a.e.c.",
+    "Josué 14:1-5",
+    "/images/cards/JW Timeline 55.png"
+  ],
+  [
+    56,
+    "Fallece Josué con 110 años",
+    -1450,
+    "1450,0 a.e.c.",
+    "Josué 24:29",
+    "/images/cards/JW Timeline 56.png"
+  ],
+  [
+    57,
+    "Rut se casa con Boaz",
+    -1400,
+    "1400,0 a.e.c.",
+    "Rut 4:13",
+    "/images/cards/JW Timeline 57.png"
+  ],
+  [
+    58,
+    "Nace Ana",
+    -1300,
+    "1300,0 a.e.c.",
+    "1 Samuel 1:2",
+    "/images/cards/JW Timeline 58.png"
+  ],
+  [
+    59,
+    "Nace Samuel",
+    -1192,
+    "1192,0 a.e.c.",
+    "1 Samuel 1:20",
+    "/images/cards/JW Timeline 59.png"
+  ],
+  [
+    60,
+    "Victoria de Jefté sobre Ammón",
+    -1173,
+    "1173,0 a.e.c.",
+    "Jueces 11:32-33",
+    "/images/cards/JW Timeline 60.png"
+  ],
+  [
+    61,
+    "El arca se muda de Silo",
+    -1137,
+    "1137,0 a.e.c.",
+    "1 Samuel 4:1-11",
+    "/images/cards/JW Timeline 61.png"
+  ],
+  [
+    62,
+    "Nace Jonatán, hijo de Saúl",
+    -1137,
+    "1137,0 a.e.c.",
+    "1 Samuel 14:49",
+    "/images/cards/JW Timeline 62.png"
+  ],
+  [
+    63,
+    "Se nombra rey a Saúl",
+    -1117,
+    "1117,0 a.e.c.",
+    "1 Samuel 10:24",
+    "/images/cards/JW Timeline 63.png"
+  ],
+  [
+    64,
+    "David nace en Belén",
+    -1107,
+    "1107,0 a.e.c.",
+    "1 Samuel 16:1, 11-13",
+    "/images/cards/JW Timeline 64.png"
+  ],
+  [
+    65,
+    "Abigail se casa con David",
+    -1100,
+    "1,100 a.e.c.",
+    "1 Samuel 25:42",
+    "/images/cards/JW Timeline 65.png"
+  ],
+  [
+    66,
+    "Samuel unge a David como rey",
+    -1097,
+    "1097,0 a.e.c.",
+    "1 Samuel 16:13",
+    "/images/cards/JW Timeline 66.png"
+  ],
+  [
+    67,
+    "Muerte del rey Saúl",
+    -1077,
+    "1077,0 a.e.c.",
+    "1 Samuel 31:4-6",
+    "/images/cards/JW Timeline 67.png"
+  ],
+  [
+    68,
+    "David ungido como rey de Judá",
+    -1077,
+    "1077,0 a.e.c.",
+    "2 Samuel 2:4",
+    "/images/cards/JW Timeline 68.png"
+  ],
+  [
+    69,
+    "Dios le hace a David la promesa del Reino",
+    -1070,
+    "1070,0 a.e.c.",
+    "2 Samuel 7:12-16",
+    "/images/cards/JW Timeline 69.png"
+  ],
+  [
+    70,
+    "David toma Jerusalén y la hace capital",
+    -1070,
+    "1070,0 a.e.c.",
+    "2 Samuel 5:6-9",
+    "/images/cards/JW Timeline 70.png"
+  ],
+  [
+    71,
+    "Fallece David con 70 años",
+    -1037,
+    "1037,0 a.e.c.",
+    "1 Reyes 2:10-11",
+    "/images/cards/JW Timeline 71.png"
+  ],
+  [
+    72,
+    "Salomón comienza a reinar",
+    -1037,
+    "1037,0 a.e.c.",
+    "1 Reyes 1:39",
+    "/images/cards/JW Timeline 72.png"
+  ],
+  [
+    73,
+    "Comienzo de la construcción del templo",
+    -1034,
+    "1034,0 a.e.c.",
+    "1 Reyes 6:1",
+    "/images/cards/JW Timeline 73.png"
+  ],
+  [
+    74,
+    "Se termina el templo de Jerusalén",
+    -1027,
+    "1027,0 a.e.c.",
+    "1 Reyes 6:38",
+    "/images/cards/JW Timeline 74.png"
+  ],
+  [
+    75,
+    "Reino dividido: Israel y Judá",
+    -997,
+    "997,0 a.e.c.",
+    "1 Reyes 12:16-20",
+    "/images/cards/JW Timeline 75.png"
+  ],
+  [
+    76,
+    "Elías desafía a los profetas de Baal",
+    -930,
+    "930,0 a.e.c.",
+    "1 Reyes 18:20-40",
+    "/images/cards/JW Timeline 76.png"
+  ],
+  [
+    77,
+    "Josías promueve la adoración pura",
+    -659,
+    "659,0 a.e.c.",
+    "2 Reyes 22:1-2",
+    "/images/cards/JW Timeline 77.png"
+  ],
+  [
+    78,
+    "Nace Ezequiel",
+    -643,
+    "643,0 a.e.c.",
+    "Ezequiel 1:3",
+    "/images/cards/JW Timeline 78.png"
+  ],
+  [
+    79,
+    "Nabucodonosor derrota al ejército egipcio",
+    -625,
+    "625,0 a.e.c.",
+    "Jeremías 46:2",
+    "/images/cards/JW Timeline 79.png"
+  ],
+  [
+    80,
+    "Ezequiel es llevado cautivo a Babilonia",
+    -617,
+    "617,0 a.e.c.",
+    "Ezequiel 1:1-2",
+    "/images/cards/JW Timeline 80.png"
+  ],
+  [
+    81,
+    "Ezequiel comienza a profetizar",
+    -613,
+    "613,0 a.e.c.",
+    "Ezequiel 1:3",
+    "/images/cards/JW Timeline 81.png"
+  ],
+  [
+    82,
+    "Nabucodonosor destruye Jerusalén",
+    -607,
+    "607,0 a.e.c.",
+    "2 Reyes 25:8-10",
+    "/images/cards/JW Timeline 82.png"
+  ],
+  [
+    83,
+    "Ciro conquista Babilonia",
+    -539,
+    "539,0 a.e.c.",
+    "Daniel 5:30-31",
+    "/images/cards/JW Timeline 83.png"
+  ],
+  [
+    84,
+    "Los judíos exiliados regresan a Jerusalén",
+    -537,
+    "537,0 a.e.c.",
+    "Esdras 1:1-4",
+    "/images/cards/JW Timeline 84.png"
+  ],
+  [
+    85,
+    "Ester salva a los judíos",
+    -480,
+    "480,0 a.e.c.",
+    "Ester 7:1-6",
+    "/images/cards/JW Timeline 85.png"
+  ],
+  [
+    86,
+    "Se reconstruyen los muros de Jerusalén",
+    -455,
+    "455,0 a.e.c.",
+    "Nehemías 2:17-18",
+    "/images/cards/JW Timeline 86.png"
+  ],
+  [
+    87,
+    "Jerusalem completamente reconstruida",
+    -406,
+    "406,0 a.e.c.",
+    "Nehemías 6:15",
+    "/images/cards/JW Timeline 87.png"
+  ],
+  [
+    88,
+    "Renovación del templo tras idolatría griega",
+    -165,
+    "165,0 a.e.c.",
+    "Daniel 11:31-32",
+    "/images/cards/JW Timeline 88.png"
+  ],
+  [
+    89,
+    "Herodes toma Jerusalén por asalto",
+    -37,
+    "37,0 a.e.c.",
+    "Mateo 2:1",
+    "/images/cards/JW Timeline 89.png"
+  ],
+  [
+    90,
+    "Herodes reconstruye el tercer templo",
+    -17,
+    "17,0 a.e.c.",
+    "Juan 2:20",
+    "/images/cards/JW Timeline 90.png"
+  ],
+  [
+    91,
+    "José se casa con María",
+    -2,
+    "2,0 a.e.c.",
+    "Mateo 1:24",
+    "/images/cards/JW Timeline 91.png"
+  ],
+  [
+    92,
+    "Nacimiento de Jesús",
+    -2,
+    "2,0 a.e.c.",
+    "Lucas 2:6-7",
+    "/images/cards/JW Timeline 92.png"
+  ],
+  [
+    93,
+    "Bautismo de Jesús",
+    29,
+    "29,0 e.c.",
+    "Mateo 3:13-17",
+    "/images/cards/JW Timeline 93.png"
+  ],
+  [
+    94,
+    "Jesús elige a los doce apóstoles",
+    31,
+    "31,0 e.c.",
+    "Lucas 6:13-16",
+    "/images/cards/JW Timeline 94.png"
+  ],
+  [
+    95,
+    "Jesús pronuncia el Sermón del Monte",
+    31,
+    "31,0 e.c.",
+    "Mateo 5:1-2",
+    "/images/cards/JW Timeline 95.png"
+  ],
+  [
+    96,
+    "Jesús resucita a Lázaro",
+    32,
+    "32,0 e.c.",
+    "Juan 11:43-44",
+    "/images/cards/JW Timeline 96.png"
+  ],
+  [
+    97,
+    "Juan el Bautista es decapitado",
+    32,
+    "32 e.c.",
+    "Mateo 14:10",
+    "/images/cards/JW Timeline 97.png"
+  ],
+  [
+    98,
+    "Santiago y Juan: Hijos del Trueno",
+    33,
+    "33,0 e.c.",
+    "Marcos 3:17",
+    "/images/cards/JW Timeline 98.png"
+  ],
+  [
+    99,
+    "Jehová derrama espíritu santo",
+    33,
+    "33,0 e.c.",
+    "Hechos 2:1-4",
+    "/images/cards/JW Timeline 99.png"
+  ],
+  [
+    100,
+    "Jesús muere en el madero",
+    33,
+    "33,0 e.c.",
+    "Lucas 23:46",
+    "/images/cards/JW Timeline 100.png"
+  ],
+  [
+    101,
+    "Resurrección de Jesús",
+    33,
+    "33,0 e.c.",
+    "Mateo 28:5-6",
+    "/images/cards/JW Timeline 101.png"
+  ],
+  [
+    102,
+    "Cornelio se convierte al cristianismo",
+    36,
+    "36,0 e.c.",
+    "Hechos 10:44-48",
+    "/images/cards/JW Timeline 102.png"
+  ],
+  [
+    103,
+    "Pablo inicia su primer viaje misional",
+    47,
+    "47,0 e.c.",
+    "Hechos 13:2-4",
+    "/images/cards/JW Timeline 103.png"
+  ],
+  [
+    104,
+    "Cuerpo gobernante rige contra la circuncisión",
+    49,
+    "49,0 e.c.",
+    "Hechos 15:28-29",
+    "/images/cards/JW Timeline 104.png"
+  ],
+  [
+    105,
+    "Pablo inicia su segundo viaje misional",
+    49,
+    "49,0 e.c.",
+    "Hechos 15:40",
+    "/images/cards/JW Timeline 105.png"
+  ],
+  [
+    106,
+    "Pablo inicia su tercer viaje misional",
+    52,
+    "52,0 e.c.",
+    "Hechos 18:23",
+    "/images/cards/JW Timeline 106.png"
+  ],
+  [
+    107,
+    "Rebelión judía contra Roma",
+    66,
+    "66,0 e.c.",
+    "Lucas 21:20",
+    "/images/cards/JW Timeline 107.png"
+  ],
+  [
+    108,
+    "Los romanos destruyen Jerusalén",
+    70,
+    "70,0 e.c.",
+    "Mateo 24:1-2",
+    "/images/cards/JW Timeline 108.png"
+  ],
+  [
+    109,
+    "Muere Juan, el último apóstol",
+    100,
+    "100,0 e.c.",
+    "Juan 21:22-23",
+    "/images/cards/JW Timeline 109.png"
+  ],
+  [
+    110,
+    "Jesús pregunta en el templo",
+    12,
+    "12,0 e.c.",
+    "Lucas 2:46-47",
+    "/images/cards/JW Timeline 110.png"
+  ],
+  [
+    111,
+    "Joaquín se rinde ante Nabucodonosor",
+    -617,
+    "617,0 a.e.c.",
+    "2 Reyes 24:12",
+    "/images/cards/JW Timeline 111.png"
+  ],
+  [
+    112,
+    "Visita de los astrólogos",
+    -1,
+    "1,0 a.e.c.",
+    "Mateo 2:1-2",
+    "/images/cards/JW Timeline 112.png"
+  ]
+]

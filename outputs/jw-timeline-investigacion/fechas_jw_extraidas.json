@@ -1,0 +1,2626 @@
+[
+  {
+    "name": "Nace Set",
+    "year": -3896,
+    "shown": "3896 a. e. c.",
+    "reference": "Génesis 5:3",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Enós",
+    "year": -3791,
+    "shown": "3791 a. e. c.",
+    "reference": "Génesis 5:6",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Quenán",
+    "year": -3701,
+    "shown": "3701 a. e. c.",
+    "reference": "Génesis 5:9",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Mahalalel",
+    "year": -3631,
+    "shown": "3631 a. e. c.",
+    "reference": "Génesis 5:12",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Jared",
+    "year": -3566,
+    "shown": "3566 a. e. c.",
+    "reference": "Génesis 5:15",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Arpaksad",
+    "year": -2368,
+    "shown": "2368 a. e. c.",
+    "reference": "Génesis 11:10",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Selah",
+    "year": -2333,
+    "shown": "2333 a. e. c.",
+    "reference": "Génesis 11:12",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Éber",
+    "year": -2303,
+    "shown": "2303 a. e. c.",
+    "reference": "Génesis 11:14",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Péleg",
+    "year": -2269,
+    "shown": "2269 a. e. c.",
+    "reference": "Génesis 11:16",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Reú",
+    "year": -2239,
+    "shown": "2239 a. e. c.",
+    "reference": "Génesis 11:18",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Serug",
+    "year": -2207,
+    "shown": "2207 a. e. c.",
+    "reference": "Génesis 11:20",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Nacor",
+    "year": -2177,
+    "shown": "2177 a. e. c.",
+    "reference": "Génesis 11:22",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Nace Taré",
+    "year": -2148,
+    "shown": "2148 a. e. c.",
+    "reference": "Génesis 11:24",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Genealogía"
+  },
+  {
+    "name": "Se termina de escribir Génesis",
+    "year": -1513,
+    "shown": "1513 a. e. c.",
+    "reference": "Libro de Génesis; escritor: Moisés",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Levítico",
+    "year": -1512,
+    "shown": "1512 a. e. c.",
+    "reference": "Libro de Levítico; escritor: Moisés",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Éxodo",
+    "year": -1512,
+    "shown": "1512 a. e. c.",
+    "reference": "Libro de Éxodo; escritor: Moisés",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Deuteronomio",
+    "year": -1473,
+    "shown": "1473 a. e. c.",
+    "reference": "Libro de Deuteronomio; escritor: Moisés",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Job",
+    "year": -1473,
+    "shown": "c. 1473 a. e. c.",
+    "reference": "Libro de Job; escritor: Moisés",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Números",
+    "year": -1473,
+    "shown": "1473 a. e. c.",
+    "reference": "Libro de Números; escritor: Moisés",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Josué",
+    "year": -1450,
+    "shown": "c. 1450 a. e. c.",
+    "reference": "Libro de Josué; escritor: Josué",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Jueces",
+    "year": -1100,
+    "shown": "c. 1100 a. e. c.",
+    "reference": "Libro de Jueces; escritor: Samuel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Rut",
+    "year": -1090,
+    "shown": "c. 1090 a. e. c.",
+    "reference": "Libro de Rut; escritor: Samuel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 1 Samuel",
+    "year": -1078,
+    "shown": "c. 1078 a. e. c.",
+    "reference": "Libro de 1 Samuel; escritor: Samuel, Gad, Natán",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 2 Samuel",
+    "year": -1040,
+    "shown": "c. 1040 a. e. c.",
+    "reference": "Libro de 2 Samuel; escritor: Gad, Natán",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir El Cantar de los Cantares",
+    "year": -1020,
+    "shown": "c. 1020 a. e. c.",
+    "reference": "Libro de El Cantar de los Cantares; escritor: Salomón",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Eclesiastés",
+    "year": -1000,
+    "shown": "a. 1000 a. e. c.",
+    "reference": "Libro de Eclesiastés; escritor: Salomón",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "REHOBOAM empieza a reinar (17 años); nación dividida en dos reinos",
+    "year": -997,
+    "shown": "997 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JEROBOÁN empieza a reinar sobre las 10 tribus norteñas, al parecer primero desde Siquem y después, desde Tirzá (22 años)",
+    "year": -993,
+    "shown": "993 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Sisaq de Egipto invade Judá y toma tesoros del templo de Jerusalén",
+    "year": -993,
+    "shown": "993 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "ABÍAS (ABIYAM) empieza a reinar (3)",
+    "year": -980,
+    "shown": "980 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "ASÁ debe empezar a reinar (41), pero su primer año reinante se cuenta desde 977",
+    "year": -978,
+    "shown": "978 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "NADAB empieza a reinar (2)",
+    "year": -975,
+    "shown": "c. 975 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "BAASÁ asesina a Nadab y empieza a reinar (24)",
+    "year": -967,
+    "shown": "967 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Zérah el etíope ataca Judá",
+    "year": -967,
+    "shown": "967 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "ELAH empieza a reinar (2)",
+    "year": -951,
+    "shown": "c. 951 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "OMRÍ, jefe del ejército, empieza a reinar (12)",
+    "year": -951,
+    "shown": "c. 951 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "ZIMRÍ, un jefe militar, asesina a Elah y luego reina (7 días)",
+    "year": -951,
+    "shown": "c. 951 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Tibní llega a ser rey sobre parte del pueblo, dividiendo más a la nación",
+    "year": -947,
+    "shown": "c. 947 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Omrí vence al opositor Tibní y llega a ser el único gobernante de Israel",
+    "year": -945,
+    "shown": "c. 945 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Omrí compra la montaña de Samaria y edifica allí su capital",
+    "year": -940,
+    "shown": "c. 940 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "ACAB empieza a reinar (22)",
+    "year": -937,
+    "shown": "937 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JEHOSAFAT empieza a gobernar (25), pero su primer año reinante se cuenta desde 936",
+    "year": -937,
+    "shown": "937 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Jehoram, el hijo de Jehosafat, se asocia de algún modo con su padre en el gobierno",
+    "year": -919,
+    "shown": "c. 919 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Los años del reinado de Ocozías pueden contarse desde c. 919",
+    "year": -919,
+    "shown": "c. 919 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "OCOZÍAS, hijo de Acab, ‘llega a ser rey’ (2); su padre aún debe vivir;",
+    "year": -919,
+    "shown": "c. 919 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JEHORAM llega a ser corregente oficial junto con Jehosafat; en este año puede empezar a contarse el reinado de Jehoram (8)",
+    "year": -913,
+    "shown": "913 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JEHORAM, hijo de Acab, empieza a gobernar como único rey de Israel (12); al menos en un texto el breve reinado de su hermano Ocozías, que murió sin hijos, también puede habérsele acreditado a Jehoram",
+    "year": -913,
+    "shown": "913 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Jehosafat muere y Jehoram llega a ser el único gobernante",
+    "year": -911,
+    "shown": "c. 911 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "OCOZÍAS, hijo de Jehoram, empieza a reinar (1), aunque quizás se le unge rey c. 907",
+    "year": -906,
+    "shown": "c. 906 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "ATALÍA usurpa el trono (6)",
+    "year": -905,
+    "shown": "c. 905 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JEHOÁS, hijo de Ocozías, empieza a reinar (40)",
+    "year": -898,
+    "shown": "898 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JEHÚ, un jefe militar, asesina a Jehoram y luego empieza a reinar (28), pero parece ser que su reinado se cuenta desde c. 904",
+    "year": -898,
+    "shown": "898 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JEHOACAZ empieza a reinar (17)",
+    "year": -862,
+    "shown": "c. 862 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Por lo visto, Jehoás se asocia con su padre Jehoacaz en el gobierno",
+    "year": -859,
+    "shown": "c. 859 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "AMASÍAS empieza a reinar (29)",
+    "year": -858,
+    "shown": "858 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JEHOÁS, hijo de Jehoacaz, empieza a reinar como único rey de Israel (16)",
+    "year": -858,
+    "shown": "858 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Jehoás de Israel captura a Amasías, abre brecha en los muros de Jerusalén y toma los tesoros del templo",
+    "year": -858,
+    "shown": "d. 858 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina de escribir Jonás",
+    "year": -844,
+    "shown": "c. 844 a. e. c.",
+    "reference": "Libro de Jonás; escritor: Jonás",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "JEROBOÁN II empieza a reinar (41)",
+    "year": -829,
+    "shown": "829 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se escribe el libro de Jonás",
+    "year": -829,
+    "shown": "829 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "UZÍAS (AZARÍAS) empieza a reinar (52)",
+    "year": -829,
+    "shown": "829 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Posiblemente se escribe el libro de Joel",
+    "year": -820,
+    "shown": "c. 820 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina de escribir Joel",
+    "year": -820,
+    "shown": "c. 820 (?) a. e. c.",
+    "reference": "Libro de Joel; escritor: Joel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Uzías ‘llega a ser rey’ en algún sentido especial, posiblemente libre de la dominación de Jeroboán II",
+    "year": -818,
+    "shown": "c. 818 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se escribe el libro de Amós",
+    "year": -804,
+    "shown": "c. 804 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina de escribir Amós",
+    "year": -804,
+    "shown": "c. 804 a. e. c.",
+    "reference": "Libro de Amós; escritor: Amós",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "SALUM asesina a Zacarías y luego reina (1 mes)",
+    "year": -791,
+    "shown": "c. 791 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "ZACARÍAS ‘empieza a reinar’ en algún sentido, pero parece que su reinado no se confirma plenamente hasta c. 792 (6 meses)",
+    "year": -791,
+    "shown": "c. 791 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "MENAHEM asesina a Salum y luego empieza a reinar, pero parece que su reinado empieza a contarse desde c. 790 (10)",
+    "year": -780,
+    "shown": "c. 780 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "PEQAHÍAS empieza a reinar (2)",
+    "year": -778,
+    "shown": "c. 778 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JOTÁN empieza a reinar (16)",
+    "year": -777,
+    "shown": "777 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "PÉQAH asesina a Peqahías y luego empieza a reinar (20)",
+    "year": -777,
+    "shown": "777 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "ACAZ empieza a reinar (16), pero su primer año reinante se cuenta desde 761",
+    "year": -762,
+    "shown": "762 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Acaz al parecer se hace tributario de Tiglat-piléser III de Asiria",
+    "year": -759,
+    "shown": "c. 759 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "EZEQUÍAS empieza a reinar (29), pero su primer año reinante se cuenta desde 745",
+    "year": -746,
+    "shown": "746 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "HOSEA asesina a Péqah y luego ‘empieza a reinar’ en lugar de él, pero parece ser que su control no es absoluto o no recibe el apoyo del monarca asirio Tiglat-piléser III hasta c. 748 (9 años)",
+    "year": -746,
+    "shown": "746 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina de escribir Oseas",
+    "year": -745,
+    "shown": "d. 745 a. e. c.",
+    "reference": "Libro de Oseas; escritor: Oseas",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina el libro de Oseas",
+    "year": -742,
+    "shown": "742 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "El ejército asirio empieza el sitio de Samaria",
+    "year": -740,
+    "shown": "740 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Asiria conquista Samaria, subyuga a Israel; el reino septentrional llega a su fin",
+    "year": -732,
+    "shown": "732 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina de escribir Isaías",
+    "year": -732,
+    "shown": "d. 732 a. e. c.",
+    "reference": "Libro de Isaías; escritor: Isaías",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina el libro de Isaías",
+    "year": -732,
+    "shown": "d. 732 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Senaquerib invade Judá",
+    "year": -732,
+    "shown": "732 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina de escribir Miqueas",
+    "year": -717,
+    "shown": "a. 717 a. e. c.",
+    "reference": "Libro de Miqueas; escritor: Miqueas",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Proverbios",
+    "year": -717,
+    "shown": "c. 717 a. e. c.",
+    "reference": "Libro de Proverbios; escritor: Salomón, Agur, Lemuel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina el libro de Miqueas",
+    "year": -717,
+    "shown": "a. 717 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina la compilación de Proverbios",
+    "year": -717,
+    "shown": "c. 717 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "MANASÉS empieza a reinar (55)",
+    "year": -716,
+    "shown": "716 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "AMÓN empieza a reinar (2)",
+    "year": -661,
+    "shown": "661 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JOSÍAS empieza a reinar (31)",
+    "year": -659,
+    "shown": "659 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se escribe el libro de Sofonías",
+    "year": -648,
+    "shown": "a. 648 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina de escribir Sofonías",
+    "year": -648,
+    "shown": "a. 648 a. e. c.",
+    "reference": "Libro de Sofonías; escritor: Sofonías",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se escribe el libro de Nahúm",
+    "year": -632,
+    "shown": "a. 632 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina de escribir Nahúm",
+    "year": -632,
+    "shown": "a. 632 a. e. c.",
+    "reference": "Libro de Nahúm; escritor: Nahúm",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "JEHOACAZ reina (3 meses)",
+    "year": -628,
+    "shown": "628 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JEHOIAQUIM empieza a reinar, tributario de Egipto (11)",
+    "year": -628,
+    "shown": "628 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Posiblemente se escribe el libro de Habacuc",
+    "year": -628,
+    "shown": "c. 628 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina de escribir Habacuc",
+    "year": -628,
+    "shown": "c. 628 (?) a. e. c.",
+    "reference": "Libro de Habacuc; escritor: Habacuc",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Nabucodonosor II hace tributario de Babilonia a Jehoiaquim",
+    "year": -620,
+    "shown": "620 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "JOAQUÍN empieza a reinar (3 meses y 10 días)",
+    "year": -618,
+    "shown": "618 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Nabucodonosor II toma judíos cautivos y se lleva los tesoros del templo a Babilonia",
+    "year": -617,
+    "shown": "617 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "SEDEQUÍAS empieza a reinar (11)",
+    "year": -617,
+    "shown": "617 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Nabucodonosor II invade Judá de nuevo; empieza el sitio de Jerusalén",
+    "year": -609,
+    "shown": "609 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Jeremías escribe el libro de Lamentaciones",
+    "year": -607,
+    "shown": "607 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se abre brecha en los muros de Jerusalén el día 9 del cuarto mes",
+    "year": -607,
+    "shown": "607 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se escribe el libro de Abdías",
+    "year": -607,
+    "shown": "c. 607 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se quema Jerusalén y su templo el día 10 del quinto mes",
+    "year": -607,
+    "shown": "607 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina de escribir Abdías",
+    "year": -607,
+    "shown": "c. 607 a. e. c.",
+    "reference": "Libro de Abdías; escritor: Abdías",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Lamentaciones",
+    "year": -607,
+    "shown": "607 a. e. c.",
+    "reference": "Libro de Lamentaciones; escritor: Jeremías",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Últimos judíos abandonan Judá a mediados del séptimo mes",
+    "year": -607,
+    "shown": "607 a. e. c.",
+    "reference": "Tabla de reyes, profetas y acontecimientos de Judá e Israel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Cronolog%C3%ADa/",
+    "source_group": "Cronología de Judá e Israel"
+  },
+  {
+    "name": "Se termina de escribir Ezequiel",
+    "year": -591,
+    "shown": "c. 591 a. e. c.",
+    "reference": "Libro de Ezequiel; escritor: Ezequiel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 1 y 2 Reyes",
+    "year": -580,
+    "shown": "580 a. e. c.",
+    "reference": "Libro de 1 y 2 Reyes; escritor: Jeremías",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Jeremías",
+    "year": -580,
+    "shown": "580 a. e. c.",
+    "reference": "Libro de Jeremías; escritor: Jeremías",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Daniel",
+    "year": -536,
+    "shown": "c. 536 a. e. c.",
+    "reference": "Libro de Daniel; escritor: Daniel",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Ageo",
+    "year": -520,
+    "shown": "520 a. e. c.",
+    "reference": "Libro de Ageo; escritor: Ageo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Zacarías",
+    "year": -518,
+    "shown": "518 a. e. c.",
+    "reference": "Libro de Zacarías; escritor: Zacarías",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Ester",
+    "year": -475,
+    "shown": "c. 475 a. e. c.",
+    "reference": "Libro de Ester; escritor: Mardoqueo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 1 y 2 Crónicas",
+    "year": -460,
+    "shown": "c. 460 a. e. c.",
+    "reference": "Libro de 1 y 2 Crónicas; escritor: Esdras",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Esdras",
+    "year": -460,
+    "shown": "c. 460 a. e. c.",
+    "reference": "Libro de Esdras; escritor: Esdras",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Salmos",
+    "year": -460,
+    "shown": "c. 460 a. e. c.",
+    "reference": "Libro de Salmos; escritor: David y otros",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Malaquías",
+    "year": -443,
+    "shown": "d. 443 a. e. c.",
+    "reference": "Libro de Malaquías; escritor: Malaquías",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Nehemías",
+    "year": -443,
+    "shown": "d. 443 a. e. c.",
+    "reference": "Libro de Nehemías; escritor: Nehemías",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Circuncisión de Jesús (8.° día)",
+    "year": -2,
+    "shown": "2 a. E.C., c. 1 oct. (misma etapa)",
+    "reference": "Lucas 2:21-38",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Más tarde, su vida en el desierto",
+    "year": -2,
+    "shown": "2 a. E.C.",
+    "reference": "Lucas 1:57-80",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Pastores visitan al niño",
+    "year": -2,
+    "shown": "2 a. E.C., c. 1 oct. (misma etapa)",
+    "reference": "Lucas 2:8-20",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Presentación en el templo (después del 40.° día)",
+    "year": -2,
+    "shown": "2 a. E.C., c. 1 oct. (misma etapa)",
+    "reference": "Lucas 2:21-38",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ángel anuncia buenas nuevas",
+    "year": -2,
+    "shown": "2 a. E.C., c. 1 oct. (misma etapa)",
+    "reference": "Lucas 2:8-20",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Huida a Egipto",
+    "year": -1,
+    "shown": "1 a. E.C. ó 1 E.C.",
+    "reference": "Mateo 2:1-23; Lucas 2:39, 40",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Matanza de niños",
+    "year": -1,
+    "shown": "1 a. E.C. ó 1 E.C.",
+    "reference": "Mateo 2:1-23; Lucas 2:39, 40",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Regreso de Jesús",
+    "year": -1,
+    "shown": "1 a. E.C. ó 1 E.C.",
+    "reference": "Mateo 2:1-23; Lucas 2:39, 40",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Bajan del madero de tormento el cuerpo de Jesús y lo entierran",
+    "year": 3,
+    "shown": "(c. de las 3 de la tarde, viernes) (misma etapa)",
+    "reference": "Mateo 27:57-61; Marcos 15:42-47; Lucas 23:50-56; Juan 19:31-42",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Muerte de Jesús en el madero y sucesos relacionados",
+    "year": 3,
+    "shown": "(c. de las 3 de la tarde, viernes)",
+    "reference": "Mateo 27:31-56; Marcos 15:20-41; Lucas 23:26-49; Juan 19:16-30",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Jesús tiene doce años, presente en la Pascua",
+    "year": 12,
+    "shown": "12 E.C.",
+    "reference": "Lucas 2:41-52",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Va a casa",
+    "year": 12,
+    "shown": "12 E.C.",
+    "reference": "Lucas 2:41-52",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ayuno y tentación de Jesús",
+    "year": 29,
+    "shown": "29, otoño (misma etapa)",
+    "reference": "Mateo 4:1-11; Marcos 1:12, 13; Lucas 4:1-13",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ministerio de Juan el Bautista",
+    "year": 29,
+    "shown": "29, primavera",
+    "reference": "Mateo 3:1-12; Marcos 1:1-8; Lucas 3:1-18; Juan 1:6-8, 15-28",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Primer milagro de Jesús",
+    "year": 29,
+    "shown": "29, otoño (misma etapa)",
+    "reference": "Juan 2:1-12",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Primeros discípulos de Jesús",
+    "year": 29,
+    "shown": "29, otoño (misma etapa)",
+    "reference": "Juan 1:35-51",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Testimonio de Juan el Bautista sobre Jesús",
+    "year": 29,
+    "shown": "29, otoño (misma etapa)",
+    "reference": "Juan 1:15, 29-34",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Visita Capernaum",
+    "year": 29,
+    "shown": "29, otoño (misma etapa)",
+    "reference": "Juan 2:1-12",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Anuncia por primera vez: “El reino de los cielos se ha acercado”",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 4:17; Marcos 1:14, 15; Lucas 4:14, 15; Juan 4:44, 45",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Banquete con recaudadores de impuestos",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 9:9-17; Marcos 2:13-22; Lucas 5:27-39",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Celebración de la Pascua",
+    "year": 30,
+    "shown": "30, Pascua",
+    "reference": "Juan 2:13-25",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Conversación de Jesús con Nicodemo",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Juan 3:1-21",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "De camino a Galilea, Jesús enseña a los samaritanos",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Juan 4:4-43",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Discípulos de Jesús bautizan",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Juan 3:22-36",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Expulsa del templo a los mercaderes",
+    "year": 30,
+    "shown": "30, Pascua",
+    "reference": "Juan 2:13-25",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Jesús parte para Galilea",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 4:12; 14:3-5; Marcos 1:14; 6:17-20; Lucas 3:19, 20; 4:14; Juan 4:1-3",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Juan apresado",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 4:12; 14:3-5; Marcos 1:14; 6:17-20; Lucas 3:19, 20; 4:14; Juan 4:1-3",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Juan habrá de menguar",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Juan 3:22-36",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Lee su comisión",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 4:13-16; Lucas 4:16-31; Juan 4:46-54",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Llama a Mateo",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 9:9-17; Marcos 2:13-22; Lucas 5:27-39",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Llama a Simón y Andrés, Santiago y Juan",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 4:18-22; Marcos 1:16-20; Lucas 5:1-11",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Multitudes acuden a Jesús",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 8:1-4; Marcos 1:40-45; Lucas 5:12-16",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Predica en las sinagogas de Judea",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Lucas 4:44",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Primera gira por Galilea, con los cuatro discípulos llamados",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 4:23-25; Marcos 1:35-39; Lucas 4:42, 43",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Rechazado",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 4:13-16; Lucas 4:16-31; Juan 4:46-54",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a leproso",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 8:1-4; Marcos 1:40-45; Lucas 5:12-16",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a un endemoniado, a la suegra de Pedro y a otros muchos",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 8:14-17; Marcos 1:21-34; Lucas 4:31-41",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a un muchacho",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 4:13-16; Lucas 4:16-31; Juan 4:46-54",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a un paralítico",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 9:1-8; Marcos 2:1-12; Lucas 5:17-26",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Se va a Capernaum",
+    "year": 30,
+    "shown": "30, Pascua (misma etapa)",
+    "reference": "Mateo 4:13-16; Lucas 4:16-31; Juan 4:46-54",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Asiste a la fiesta",
+    "year": 31,
+    "shown": "31, Pascua",
+    "reference": "Juan 5:1-47",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Calma la tempestad de viento cuando cruzaban el lago",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 8:18, 23-27; Marcos 4:35-41; Lucas 8:22-25",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Censura a algunas ciudades",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 11:20-30",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Curaciones",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 12:9-21; Marcos 3:1-12; Lucas 6:6-11",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Demonios entran en cerdos",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 8:28-34; Marcos 5:1-20; Lucas 8:26-39",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Discípulos arrancan espigas en sábado",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 12:1-8; Marcos 2:23-28; Lucas 6:1-5",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Escribas y fariseos buscan una señal",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 12:38-45",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Explicaciones",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 13:1-53; Marcos 4:1-34; Lucas 8:4-18",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Herodes se siente culpable",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 14:1-12; Marcos 6:14-29; Lucas 9:7-9",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustraciones del sembrador, la mala hierba y otras",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 13:1-53; Marcos 4:1-34; Lucas 8:4-18",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustración de los deudores",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Lucas 7:36-50",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Le acusan de ser aliado de Beelzebub",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 12:22-37; Marcos 3:19-30",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Levanta al hijo de una viuda",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Lucas 7:11-17",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Los discípulos de Cristo son sus parientes cercanos",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 12:46-50; Marcos 3:31-35; Lucas 8:19-21",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Mientras está en la cárcel, Juan envía a sus discípulos a Jesús",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 11:2-19; Lucas 7:18-35",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Rechazado de nuevo",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 13:54-58; Marcos 6:1-6",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Reprende a los fariseos",
+    "year": 31,
+    "shown": "31, Pascua",
+    "reference": "Juan 5:1-47",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Resucita a la hija de Jairo",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 9:18-26; Marcos 5:21-43; Lucas 8:40-56",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Revelación a pequeñuelos",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 11:20-30",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a dos ciegos y un endemoniado mudo",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 9:27-34",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a dos endemoniados",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 8:28-34; Marcos 5:1-20; Lucas 8:26-39",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a un endemoniado",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 12:22-37; Marcos 3:19-30",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a un hombre",
+    "year": 31,
+    "shown": "31, Pascua",
+    "reference": "Juan 5:1-47",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a una mujer",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 9:18-26; Marcos 5:21-43; Lucas 8:40-56",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana al siervo de un oficial del ejército",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 8:5-13; Lucas 7:1-10",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana una mano en sábado",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 12:9-21; Marcos 3:1-12; Lucas 6:6-11",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Se retira a la orilla del mar",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 12:9-21; Marcos 3:1-12; Lucas 6:6-11",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Segunda gira por Galilea, con los doce",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Lucas 8:1-3",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Tercera gira por Galilea, ampliada porque envía a apóstoles",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 9:35–11:1; Marcos 6:6-13; Lucas 9:1-6",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Una pecadora le unge los pies",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Lucas 7:36-50",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Vuelve a visitar la ciudad donde se crió",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 13:54-58; Marcos 6:1-6",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Yugo suave",
+    "year": 31,
+    "shown": "31, Pascua (misma etapa)",
+    "reference": "Mateo 11:20-30",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Alimenta a 4.000 personas",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 15:21-38; Marcos 7:24–8:9",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Alimenta a 5.000 personas",
+    "year": 32,
+    "shown": "32, cerca de la Pascua ( Jn 6:4 )",
+    "reference": "Mateo 14:13-21; Marcos 6:30-44; Lucas 9:10-17; Juan 6:1-13",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Amenaza de Herodes",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 13:23-35",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Apóstoles regresan de la gira de predicación",
+    "year": 32,
+    "shown": "32, cerca de la Pascua ( Jn 6:4 )",
+    "reference": "Mateo 14:13-21; Marcos 6:30-44; Lucas 9:10-17; Juan 6:1-13",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Avanza hacia Jerusalén",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 13:22",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Baja por Perea",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Mateo 19:1-12; Marcos 10:1-12",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Calcular el costo del discipulado",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 14:25-35",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Camina sobre el mar",
+    "year": 32,
+    "shown": "32, cerca de la Pascua ( Jn 6:4 ) (misma etapa)",
+    "reference": "Mateo 14:22-36; Marcos 6:45-56; Juan 6:14-21",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Casa desolada",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 13:23-35",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Cerca de Tiro, Sidón",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 15:21-38; Marcos 7:24–8:9",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Consejo de Caifás contra Jesús",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Juan 11:47-54",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Curaciones y enseñanza en Samaria y Galilea",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 17:11-37",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Cómo zanjar dificultades",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 18:1-35; Marcos 9:33-50; Lucas 9:46-50",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Discurso sobre el cuidado de Dios",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 12:1-59",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "El mayor en el Reino",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 18:1-35; Marcos 9:33-50; Lucas 9:46-50",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "El servicio ministerial antes que cualquier otra cosa",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 8:19-22; Lucas 9:51-62; Juan 7:2-10",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "En casa de Marta y María",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 10:25-42",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Enseña después de la fiesta",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Juan 8:12–9:41",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Enseña en ciudades y aldeas",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 13:22",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Enseña sobre divorcio",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Mateo 19:1-12; Marcos 10:1-12",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Enseñanza pública de Jesús en la fiesta de las cabañas",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas",
+    "reference": "Juan 7:11-52",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Entrada en el Reino",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 13:23-35",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Envía a predicar a los setenta",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 10:1-24",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Esclavos que no sirven para nada",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 17:1-10",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Generación condenada",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 11:14-36",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Hay que persistir cuando se pide",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 11:1-13",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Humildad",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 14:1-24",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Identifica “el pan de la vida”",
+    "year": 32,
+    "shown": "32, cerca de la Pascua ( Jn 6:4 ) (misma etapa)",
+    "reference": "Juan 6:22-71",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustraciones: mayordomo injusto, hombre rico y Lázaro",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 16:1-31",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustraciones: oveja perdida, moneda perdida, hijo pródigo",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 15:1-32",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustraciones: viuda insistente, fariseo y recaudador de impuestos",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 18:1-14",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustración de la gran cena",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 14:1-24",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustración de las diez minas",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Mateo 20:29-34; Marcos 10:46-52; Lucas 18:35–19:28",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustración de los obreros de la viña",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Mateo 19:16–20:16; Marcos 10:17-31; Lucas 18:18-30",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustración del buen samaritano",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 10:25-42",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Intentan hacer rey a Jesús",
+    "year": 32,
+    "shown": "32, cerca de la Pascua ( Jn 6:4 ) (misma etapa)",
+    "reference": "Mateo 14:22-36; Marcos 6:45-56; Juan 6:14-21",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Jesús en la fiesta de la dedicación",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación",
+    "reference": "Juan 10:1-39",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Jesús es el Mesías",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 16:13-28; Marcos 8:27–9:1; Lucas 9:18-27",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Jesús se retira",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Juan 11:47-54",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Joven rico",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Mateo 19:16–20:16; Marcos 10:17-31; Lucas 18:18-30",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Luego va a la Decápolis",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 15:21-38; Marcos 7:24–8:9",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Mayordomo fiel",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 12:1-59",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Misericordia",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 18:1-35; Marcos 9:33-50; Lucas 9:46-50",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Muchos cifran su fe en Jesús",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Juan 10:40-42",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Muchos discípulos se apartan",
+    "year": 32,
+    "shown": "32, cerca de la Pascua ( Jn 6:4 ) (misma etapa)",
+    "reference": "Juan 6:22-71",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Pastor Excelente",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación",
+    "reference": "Juan 10:1-39",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Perdón y fe",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Lucas 17:1-10",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Previene contra la levadura de los fariseos",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 16:5-12; Marcos 8:13-26",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Provee milagrosamente el dinero para pagar el impuesto",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 17:24-27",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Recibe y bendice a niños",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Mateo 19:13-15; Marcos 10:13-16; Lucas 18:15-17",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Reclinado a la mesa de un fariseo, Jesús denuncia a los hipócritas",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 11:37-54",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Refuta una acusación falsa",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 11:14-36",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Regresan, presentan su informe",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 10:1-24",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Saduceos y fariseos buscan de nuevo una señal",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 15:39–16:4; Marcos 8:10-12",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sale de Galilea para la fiesta de las cabañas",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 8:19-22; Lucas 9:51-62; Juan 7:2-10",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a dos ciegos al pasar por Jericó",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Mateo 20:29-34; Marcos 10:46-52; Lucas 18:35–19:28",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a un ciego",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 16:5-12; Marcos 8:13-26",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana a una mujer inválida en sábado",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 13:1-21",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Sana al endemoniado que los discípulos no habían podido sanar",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 17:14-20; Marcos 9:14-29; Lucas 9:37-43",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Santiago y Juan piden sentarse al lado de Jesús en el Reino",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Mateo 20:20-28; Marcos 10:35-45",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Tradiciones que invalidan la Palabra de Dios",
+    "year": 32,
+    "shown": "32, después de la Pascua",
+    "reference": "Mateo 15:1-20; Marcos 7:1-23; Juan 7:1",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Transfiguración ante Pedro, Santiago y Juan",
+    "year": 32,
+    "shown": "32, después de la Pascua (misma etapa)",
+    "reference": "Mateo 17:1-13; Marcos 9:2-13; Lucas 9:28-36",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Tres ilustraciones",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 13:1-21",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Visita a Zaqueo",
+    "year": 32,
+    "shown": "32, fiesta de la dedicación (misma etapa)",
+    "reference": "Mateo 20:29-34; Marcos 10:46-52; Lucas 18:35–19:28",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Vuelve a enseñar la oración modelo",
+    "year": 32,
+    "shown": "32, fiesta de las cabañas (misma etapa)",
+    "reference": "Lucas 11:1-13",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Agonía en el jardín",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Mateo 26:30, 36-56; Marcos 14:26, 32-52; Lucas 22:39-53; Juan 18:1-12",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Amor mutuo",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Juan 14:1–17:26",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ante Pilato, luego ante Herodes y de nuevo ante Pilato",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Mateo 27:2, 11-14; Marcos 15:1-5; Lucas 23:1-12; Juan 18:28-38",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ayudante",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Juan 14:1–17:26",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Banquete en casa de Simón el leproso",
+    "year": 33,
+    "shown": "9 de Nisán",
+    "reference": "Mateo 26:6-13; Marcos 14:3-9; Juan 12:2-11",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Celebra la fiesta de la Pascua con los doce",
+    "year": 33,
+    "shown": "14 de Nisán",
+    "reference": "Mateo 26:20, 21; Marcos 14:17, 18; Lucas 22:14-18",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Cena de la Conmemoración instituida con los once",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Mateo 26:26-29; Marcos 14:22-25; Lucas 22:19, 20, 24-30; Juan [ 1Co 11:23-25 ]",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Cuestionan la autoridad de Cristo",
+    "year": 33,
+    "shown": "11 de Nisán (misma etapa)",
+    "reference": "Mateo 21:23-32; Marcos 11:27-33; Lucas 20:1-8",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "El óbolo de la viuda",
+    "year": 33,
+    "shown": "11 de Nisán (misma etapa)",
+    "reference": "Marcos 12:41-44; Lucas 21:1-4",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Entrada triunfal de Cristo en Jerusalén",
+    "year": 33,
+    "shown": "9 de Nisán (misma etapa)",
+    "reference": "Mateo 21:1-11, 14-17; Marcos 11:1-11; Lucas 19:29-44; Juan 12:12-19",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Entregado a la muerte después que Pilato intenta libertarlo",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Mateo 27:15-30; Marcos 15:6-19; Lucas 23:13-25; Juan 18:39–19:16",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Fin del sistema",
+    "year": 33,
+    "shown": "11 de Nisán (misma etapa)",
+    "reference": "Mateo 24:1-51; Marcos 13:1-37; Lucas 21:5-38",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Habla a griegos",
+    "year": 33,
+    "shown": "10 de Nisán (misma etapa)",
+    "reference": "Juan 12:20-50",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Identifica a Judas como traidor, lo despide",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Mateo 26:21-25; Marcos 14:18-21; Lucas 22:21-23; Juan 13:21-30",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustraciones: cultivadores malvados, banquete de bodas",
+    "year": 33,
+    "shown": "11 de Nisán (misma etapa)",
+    "reference": "Mateo 21:33–22:14; Marcos 12:1-12; Lucas 20:9-19",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustraciones: diez vírgenes, talentos, ovejas y cabras",
+    "year": 33,
+    "shown": "11 de Nisán (misma etapa)",
+    "reference": "Mateo 25:1-46",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Ilustración de dos hijos",
+    "year": 33,
+    "shown": "11 de Nisán (misma etapa)",
+    "reference": "Mateo 21:23-32; Marcos 11:27-33; Lucas 20:1-8",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Incredulidad de judíos",
+    "year": 33,
+    "shown": "10 de Nisán (misma etapa)",
+    "reference": "Juan 12:20-50",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Judas el traidor se ahorca",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Mateo 27:3-10; Lucas [ Hch 1:18, 19 ]",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Judas negocia con los sacerdotes para traicionar a Jesús",
+    "year": 33,
+    "shown": "12 de Nisán (misma etapa)",
+    "reference": "Mateo 26:14-16; Marcos 14:10, 11; Lucas 22:3-6",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Judíos van a ver a Jesús y a Lázaro",
+    "year": 33,
+    "shown": "9 de Nisán",
+    "reference": "Mateo 26:6-13; Marcos 14:3-9; Juan 12:2-11",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Juicio por Anás, Caifás, Sanedrín",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Mateo 26:57–27:1; Marcos 14:53–15:1; Lucas 22:54-71; Juan 18:13-27",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "La higuera sin fruto se ha marchitado",
+    "year": 33,
+    "shown": "11 de Nisán",
+    "reference": "Mateo 21:19-22; Marcos 11:20-25",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Lava los pies de sus apóstoles",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Juan 13:1-20",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Llega a Betania seis días antes de la Pascua",
+    "year": 33,
+    "shown": "8 de Nisán de 33",
+    "reference": "Juan 11:55–12:1",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Los sacerdotes y los fariseos consiguen guardia para el sepulcro",
+    "year": 33,
+    "shown": "15 de Nisán",
+    "reference": "Mateo 27:62-66",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Líderes religiosos maquinan la muerte de Jesús",
+    "year": 33,
+    "shown": "12 de Nisán",
+    "reference": "Mateo 26:1-5; Marcos 14:1, 2; Lucas 22:1, 2",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Maldice a la higuera sin fruto",
+    "year": 33,
+    "shown": "10 de Nisán",
+    "reference": "Mateo 21:18, 19, 12, 13; Marcos 11:12-17; Lucas 19:45, 46",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "María unge a Jesús",
+    "year": 33,
+    "shown": "9 de Nisán",
+    "reference": "Mateo 26:6-13; Marcos 14:3-9; Juan 12:2-11",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Oración de Jesús",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Juan 14:1–17:26",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Pedro le niega",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Mateo 26:57–27:1; Marcos 14:53–15:1; Lucas 22:54-71; Juan 18:13-27",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Predicción de la caída de Jerusalén",
+    "year": 33,
+    "shown": "11 de Nisán (misma etapa)",
+    "reference": "Mateo 24:1-51; Marcos 13:1-37; Lucas 21:5-38",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Predice la negación de Pedro y la dispersión de los apóstoles",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Mateo 26:31-35; Marcos 14:27-31; Lucas 22:31-38; Juan 13:31-38",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Pregunta de Jesús sobre la ascendencia del Mesías que les deja sin respuesta",
+    "year": 33,
+    "shown": "11 de Nisán (misma etapa)",
+    "reference": "Mateo 22:41-46; Marcos 12:35-37; Lucas 20:41-44",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Preparativos para la Pascua",
+    "year": 33,
+    "shown": "13 de Nisán (jueves por la tarde)",
+    "reference": "Mateo 26:17-19; Marcos 14:12-16; Lucas 22:7-13",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Presencia de Jesús",
+    "year": 33,
+    "shown": "11 de Nisán (misma etapa)",
+    "reference": "Mateo 24:1-51; Marcos 13:1-37; Lucas 21:5-38",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Principales sacerdotes y escribas traman destruir a Jesús",
+    "year": 33,
+    "shown": "10 de Nisán (misma etapa)",
+    "reference": "Marcos 11:18, 19; Lucas 19:47, 48",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Segunda limpieza del templo",
+    "year": 33,
+    "shown": "10 de Nisán",
+    "reference": "Mateo 21:18, 19, 12, 13; Marcos 11:12-17; Lucas 19:45, 46",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Siguientes apariciones de Jesucristo",
+    "year": 33,
+    "shown": "16 de Nisán y después (misma etapa)",
+    "reference": "Mateo 28:16-20; Marcos [ 1Co 15:5-7 ]; Lucas [ Hch 1:3-8 ]; Juan 20:26–21:25",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Tajante denuncia de los escribas y fariseos",
+    "year": 33,
+    "shown": "11 de Nisán (misma etapa)",
+    "reference": "Mateo 23:1-39; Marcos 12:38-40; Lucas 20:45-47",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Traición y detención de Jesús",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Mateo 26:30, 36-56; Marcos 14:26, 32-52; Lucas 22:39-53; Juan 18:1-12",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Tribulación",
+    "year": 33,
+    "shown": "14 de Nisán (misma etapa)",
+    "reference": "Juan 14:1–17:26",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Jesucristo/",
+    "source_group": "Vida de Jesús"
+  },
+  {
+    "name": "Se termina de escribir Mateo",
+    "year": 41,
+    "shown": "c. 41 e. c.",
+    "reference": "Libro de Mateo; escritor: Mateo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 1 Tesalonicenses",
+    "year": 50,
+    "shown": "c. 50 e. c.",
+    "reference": "Libro de 1 Tesalonicenses; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 2 Tesalonicenses",
+    "year": 51,
+    "shown": "c. 51 e. c.",
+    "reference": "Libro de 2 Tesalonicenses; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Gálatas",
+    "year": 51,
+    "shown": "c. 50-52 e. c.",
+    "reference": "Libro de Gálatas; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 1 Corintios",
+    "year": 55,
+    "shown": "c. 55 e. c.",
+    "reference": "Libro de 1 Corintios; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 2 Corintios",
+    "year": 55,
+    "shown": "c. 55 e. c.",
+    "reference": "Libro de 2 Corintios; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Romanos",
+    "year": 56,
+    "shown": "c. 56 e. c.",
+    "reference": "Libro de Romanos; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Lucas",
+    "year": 57,
+    "shown": "c. 56-58 e. c.",
+    "reference": "Libro de Lucas; escritor: Lucas",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Colosenses",
+    "year": 60,
+    "shown": "c. 60-61 e. c.",
+    "reference": "Libro de Colosenses; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Efesios",
+    "year": 60,
+    "shown": "c. 60-61 e. c.",
+    "reference": "Libro de Efesios; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Filemón",
+    "year": 60,
+    "shown": "c. 60-61 e. c.",
+    "reference": "Libro de Filemón; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Filipenses",
+    "year": 60,
+    "shown": "c. 60-61 e. c.",
+    "reference": "Libro de Filipenses; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Hebreos",
+    "year": 61,
+    "shown": "c. 61 e. c.",
+    "reference": "Libro de Hebreos; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Hechos",
+    "year": 61,
+    "shown": "c. 61 e. c.",
+    "reference": "Libro de Hechos; escritor: Lucas",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 1 Timoteo",
+    "year": 62,
+    "shown": "c. 61-64 e. c.",
+    "reference": "Libro de 1 Timoteo; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Marcos",
+    "year": 62,
+    "shown": "c. 60-65 e. c.",
+    "reference": "Libro de Marcos; escritor: Marcos",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Santiago",
+    "year": 62,
+    "shown": "a. 62 e. c.",
+    "reference": "Libro de Santiago; escritor: Santiago",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Tito",
+    "year": 62,
+    "shown": "c. 61-64 e. c.",
+    "reference": "Libro de Tito; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 1 Pedro",
+    "year": 63,
+    "shown": "c. 62-64 e. c.",
+    "reference": "Libro de 1 Pedro; escritor: Pedro",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 2 Pedro",
+    "year": 64,
+    "shown": "c. 64 e. c.",
+    "reference": "Libro de 2 Pedro; escritor: Pedro",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 2 Timoteo",
+    "year": 65,
+    "shown": "c. 65 e. c.",
+    "reference": "Libro de 2 Timoteo; escritor: Pablo",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Judas",
+    "year": 65,
+    "shown": "c. 65 e. c.",
+    "reference": "Libro de Judas; escritor: Judas",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Revelación",
+    "year": 96,
+    "shown": "c. 96 e. c.",
+    "reference": "Libro de Revelación; escritor: Juan",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 1 Juan",
+    "year": 98,
+    "shown": "c. 98 e. c.",
+    "reference": "Libro de 1 Juan; escritor: Juan",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 2 Juan",
+    "year": 98,
+    "shown": "c. 98 e. c.",
+    "reference": "Libro de 2 Juan; escritor: Juan",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir 3 Juan",
+    "year": 98,
+    "shown": "c. 98 e. c.",
+    "reference": "Libro de 3 Juan; escritor: Juan",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  },
+  {
+    "name": "Se termina de escribir Juan",
+    "year": 98,
+    "shown": "c. 98 e. c.",
+    "reference": "Libro de Juan; escritor: Juan",
+    "url": "https://www.jw.org/es/biblioteca/libros/Perspicacia-para-comprender-las-Escrituras/Biblia/",
+    "source_group": "Libros bíblicos"
+  }
+]
