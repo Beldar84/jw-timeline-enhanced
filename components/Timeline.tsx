@@ -1,4 +1,4 @@
-import React, { createRef, useRef, useState, forwardRef } from 'react';
+import React, { createRef, useEffect, useRef, useState, forwardRef } from 'react';
 import { Card as CardType } from '../types';
 import Card, { formatYearPremium } from './Card';
 
@@ -15,6 +15,7 @@ interface TimelineProps {
   onSelectSlot: (timelineIndex: number, element: HTMLButtonElement) => void;
   selectedSlotIndex: number | null;
   dragTargetIndex?: number | null;
+  highlightedCardId?: number | null;
   disabled?: boolean;
 }
 
@@ -23,6 +24,7 @@ interface PlacementSlotProps {
   onClick: () => void;
   isSelected: boolean;
   isDragTarget?: boolean;
+  edgeLabel?: 'Antes' | 'Después';
   disabled?: boolean;
 }
 
@@ -35,23 +37,30 @@ const PlusIcon: React.FC<{ selected: boolean }> = ({ selected }) => (
   </svg>
 );
 
-const PlacementSlot = forwardRef<HTMLButtonElement, PlacementSlotProps>(({ id, onClick, isSelected, isDragTarget = false, disabled }, ref) => (
-  <button
-    type="button"
-    id={id}
-    ref={ref}
-    onClick={onClick}
-    disabled={disabled}
-    className={`slot-circle ${isSelected ? 'selected' : ''} ${isDragTarget ? 'drag-target' : ''} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
-    aria-label={isSelected ? 'Ranura de colocación seleccionada' : 'Seleccionar esta ranura para colocar una carta'}
-    aria-pressed={isSelected}
-  >
-    <PlusIcon selected={isSelected} />
-  </button>
+const PlacementSlot = forwardRef<HTMLButtonElement, PlacementSlotProps>(({ id, onClick, isSelected, isDragTarget = false, edgeLabel, disabled }, ref) => (
+  <div className="relative flex flex-shrink-0 items-center justify-center">
+    {edgeLabel && <span className="timeline-edge-label">{edgeLabel}</span>}
+    <button
+      type="button"
+      id={id}
+      ref={ref}
+      onClick={onClick}
+      disabled={disabled}
+      className={`slot-circle ${isSelected ? 'selected' : ''} ${isDragTarget ? 'drag-target' : ''} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+      aria-label={isSelected ? 'Ranura de colocación seleccionada' : `Colocar ${edgeLabel ? `más ${edgeLabel.toLowerCase()}` : 'aquí'}`}
+      aria-pressed={isSelected}
+    >
+      <PlusIcon selected={isSelected} />
+    </button>
+  </div>
 ));
 
-const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIndex, dragTargetIndex = null, disabled = false }) => {
+const Timeline: React.FC<TimelineProps> = ({
+  cards, onSelectSlot, selectedSlotIndex, dragTargetIndex = null,
+  highlightedCardId = null, disabled = false,
+}) => {
   const slotRefs = useRef<React.RefObject<HTMLButtonElement>[]>([]);
+  const cardRefs = useRef(new Map<number, React.RefObject<HTMLDivElement>>());
   const [expandedCardId, setExpandedCardId] = useState<number | null>(null);
   slotRefs.current = [...Array(cards.length + 1)].map(
     (_, i) => slotRefs.current[i] ?? createRef<HTMLButtonElement>()
@@ -63,6 +72,24 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
       onSelectSlot(index, slotRefs.current[index].current!);
     }
   };
+
+  cards.forEach(card => {
+    if (!cardRefs.current.has(card.id)) cardRefs.current.set(card.id, createRef<HTMLDivElement>());
+  });
+
+  useEffect(() => {
+    if (highlightedCardId === null) return;
+    const cardElement = cardRefs.current.get(highlightedCardId)?.current;
+    const scrollContainer = cardElement?.closest<HTMLElement>('.timeline-scroll');
+    if (!cardElement || !scrollContainer) return;
+
+    const cardRect = cardElement.getBoundingClientRect();
+    const containerRect = scrollContainer.getBoundingClientRect();
+    const targetLeft = scrollContainer.scrollLeft
+      + cardRect.left - containerRect.left
+      - (containerRect.width - cardRect.width) / 2;
+    scrollContainer.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+  }, [highlightedCardId, cards.length]);
 
   return (
     <div className="relative pt-16 pb-2 md:py-10">
@@ -76,13 +103,17 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
           onClick={() => handleSelect(0)}
           isSelected={selectedSlotIndex === 0}
           isDragTarget={dragTargetIndex === 0}
+          edgeLabel="Antes"
           disabled={disabled}
         />
 
         {cards.map((card, index) => (
           <React.Fragment key={card.id}>
             <div className="relative flex flex-col items-center gap-2 md:gap-3 flex-shrink-0">
-              <div className={`timeline-card-shell ${expandedCardId === card.id ? 'timeline-card-expanded' : ''}`}>
+              <div
+                ref={cardRefs.current.get(card.id)}
+                className={`timeline-card-shell ${expandedCardId === card.id ? 'timeline-card-expanded' : ''} ${highlightedCardId === card.id ? 'timeline-card-highlighted' : ''}`}
+              >
                 <Card
                   card={card}
                   showYear={false}
@@ -98,6 +129,7 @@ const Timeline: React.FC<TimelineProps> = ({ cards, onSelectSlot, selectedSlotIn
               onClick={() => handleSelect(index + 1)}
               isSelected={selectedSlotIndex === index + 1}
               isDragTarget={dragTargetIndex === index + 1}
+              edgeLabel={index === cards.length - 1 ? 'Después' : undefined}
               disabled={disabled}
             />
           </React.Fragment>

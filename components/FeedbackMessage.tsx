@@ -15,20 +15,20 @@ const FeedbackMessage: React.FC<FeedbackMessageProps> = ({ type }) => {
 
   return (
     <div
-      className="absolute inset-0 flex items-center justify-center z-50 transition-opacity duration-300 pointer-events-none"
-      style={{ background: 'rgba(10,7,3,.55)', backdropFilter: 'blur(2px)' }}
+      className="fixed inset-x-0 flex items-start justify-center z-[100] transition-opacity duration-300 pointer-events-none px-4"
+      style={{ top: 'max(16px, env(safe-area-inset-top, 0px))' }}
     >
       <div
-        className="px-10 py-6 md:px-14 md:py-8 rounded-sm text-center"
+        className="px-8 py-3 md:px-12 md:py-4 rounded-sm text-center"
         role="alert"
         style={{
           border: `1px solid ${isCorrect ? 'rgba(201,162,39,.6)' : 'rgba(192,96,77,.6)'}`,
-          background: 'rgba(10,7,3,.72)',
+          background: 'rgba(10,7,3,.9)',
           boxShadow: '0 18px 50px rgba(0,0,0,.5)',
         }}
       >
         <p
-          className="font-display font-bold text-3xl md:text-5xl tracking-wider m-0"
+          className="font-display font-bold text-2xl md:text-4xl tracking-wider m-0"
           style={{
             color: isCorrect ? '#e5c96a' : '#e08a7a',
             textShadow: isCorrect ? '0 2px 18px rgba(201,162,39,.35)' : '0 2px 18px rgba(192,96,77,.3)',

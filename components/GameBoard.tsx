@@ -32,6 +32,8 @@ interface GameBoardProps {
   gameMode: 'local' | 'ai' | 'online' | null;
   localPlayer?: Player | null;
   hidingCardId?: number | null;
+  highlightedTimelineCardId?: number | null;
+  highlightedHandCardId?: number | null;
   isAnimating: boolean;
   onPlaceCardOnline?: (card: CardType, timelineIndex: number) => void;
   onExitGame?: () => void;
@@ -49,7 +51,8 @@ interface DragPreview {
 const GameBoard: React.FC<GameBoardProps> = ({
   players, currentPlayer, timeline, onAttemptPlaceCard, deckSize, topOfDeck,
   discardPile, message, revealedAICard, gameMode, localPlayer, hidingCardId,
-  isAnimating, onPlaceCardOnline, onExitGame, isStudyMode = false,
+  highlightedTimelineCardId, highlightedHandCardId, isAnimating,
+  onPlaceCardOnline, onExitGame, isStudyMode = false,
 }) => {
   const [selectedTimelineIndex, setSelectedTimelineIndex] = useState<number | null>(null);
   const [selectedSlotElement, setSelectedSlotElement] = useState<HTMLElement | null>(null);
@@ -69,6 +72,13 @@ const GameBoard: React.FC<GameBoardProps> = ({
     (gameMode === 'online' && localPlayer ? currentPlayer.id === localPlayer.id : false);
 
   const canInteract = isTurnOfHumanOnThisDevice && !isAnimating;
+
+  useEffect(() => {
+    if (canInteract) return;
+    setSelectedCard(null);
+    setSelectedTimelineIndex(null);
+    setSelectedSlotElement(null);
+  }, [canInteract]);
 
   useEffect(() => {
     if (selectedCard && selectedSlotElement !== null && selectedTimelineIndex !== null && discardRef.current && deckRef.current && handRef.current) {
@@ -110,6 +120,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
     }
   };
 
+  const handleCardFocus = (card: CardType | null, element: HTMLDivElement | null) => {
+    if (!card || !element || !canInteract) {
+      setSelectedCard(null);
+      return;
+    }
+    setSelectedCard({ card, element });
+  };
+
   const findDropSlot = (clientX: number, clientY: number) => {
     if (clientX < 0 || clientY < 0) return null;
     const slot = document.elementFromPoint(clientX, clientY)?.closest<HTMLButtonElement>('.slot-circle');
@@ -128,6 +146,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   ) => {
     if (!canInteract) return;
     const rect = element.getBoundingClientRect();
+    setSelectedCard(null);
     setSelectedTimelineIndex(null);
     setSelectedSlotElement(null);
     setDragPreview({
@@ -198,7 +217,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   const finalMessage = selectedTimelineIndex !== null && canInteract
     ? 'Ahora selecciona una carta de tu mano para colocarla'
-    : dynamicMessage;
+    : selectedCard && canInteract
+      ? 'Ahora selecciona un + de la línea de tiempo'
+      : dynamicMessage;
 
   const handPlayer = gameMode === 'local' || gameMode === 'ai' ? currentPlayer : localPlayer;
   const topDiscard = discardPile[0] || null;
@@ -262,6 +283,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           onSelectSlot={handleSelectSlot}
           selectedSlotIndex={selectedTimelineIndex}
           dragTargetIndex={dragTargetIndex}
+          highlightedCardId={highlightedTimelineCardId}
           disabled={!canInteract}
         />
       </div>
@@ -322,12 +344,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
               <PlayerHand
                 player={handPlayer}
                 onSelectCard={handleCardClick}
+                onCardFocus={handleCardFocus}
                 onCardDragStart={handleCardDragStart}
                 onCardDragMove={handleCardDragMove}
                 onCardDragEnd={handleCardDragEnd}
                 placementMode={selectedTimelineIndex !== null}
                 disabled={!canInteract}
                 hidingCardId={hidingCardId}
+                highlightedCardId={highlightedHandCardId}
                 isStudyMode={isStudyMode}
               />
             )

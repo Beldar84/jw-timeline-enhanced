@@ -14,6 +14,15 @@ export interface Player {
     isAI: boolean;
 }
 
+export interface LastMove {
+    id: number;
+    playerId: string;
+    cardId: number;
+    timelineIndex: number;
+    isCorrect: boolean;
+    replacementCardId?: number | null;
+}
+
 export enum OnlineGamePhase {
     LOBBY = 'LOBBY',
     PLAYING = 'PLAYING',
@@ -31,6 +40,7 @@ export interface GameState {
     currentPlayerIndex: number;
     winner: Player | null;
     message: string | null;
+    lastMove?: LastMove | null;
 }
 
 export enum GamePhase {

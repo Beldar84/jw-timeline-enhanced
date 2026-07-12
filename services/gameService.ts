@@ -49,6 +49,7 @@ function toGameState(data: RealtimeGameDocument): GameState {
     currentPlayerIndex: data.currentPlayerIndex || 0,
     winner: data.winner || null,
     message: data.message || null,
+    lastMove: data.lastMove || null,
   };
 }
 
@@ -586,6 +587,7 @@ class GameService {
     const timeline = [...this.gameState.timeline];
     let deck = [...this.gameState.deck];
     let discardPile = [...this.gameState.discardPile];
+    let replacementCardId: number | null = null;
 
     activePlayer.hand = activePlayer.hand.filter(card => card.id !== cardId);
 
@@ -599,6 +601,7 @@ class GameService {
       discardPile = replacementDraw.discardPile;
       if (replacementDraw.drawnCard) {
         activePlayer.hand.push(replacementDraw.drawnCard);
+        replacementCardId = replacementDraw.drawnCard.id;
       } else {
         // Defensive fallback: preserve the card instead of awarding a false win.
         activePlayer.hand.push(cardToPlace);
@@ -615,6 +618,14 @@ class GameService {
         winner: activePlayer,
         phase: OnlineGamePhase.GAME_OVER,
         message: `¡${activePlayer.name} ha ganado!`,
+        lastMove: {
+          id: Date.now(),
+          playerId,
+          cardId: cardToPlace.id,
+          timelineIndex,
+          isCorrect,
+          replacementCardId,
+        },
       };
       this.broadcastState();
       return;
@@ -629,6 +640,14 @@ class GameService {
       discardPile,
       currentPlayerIndex: nextPlayerIndex,
       message: `Es el turno de ${players[nextPlayerIndex].name}.`,
+      lastMove: {
+        id: Date.now(),
+        playerId,
+        cardId: cardToPlace.id,
+        timelineIndex,
+        isCorrect,
+        replacementCardId,
+      },
     };
 
     this.broadcastState();

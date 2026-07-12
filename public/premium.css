@@ -148,8 +148,23 @@
   background: rgba(201,162,39,.3);
   color: #fff5cf;
   box-shadow: 0 0 0 8px rgba(201,162,39,.12), 0 0 34px rgba(229,201,106,.65);
-  transform: scale(1.18);
+  transform: scale(1.3);
   animation: drag-slot-pulse .7s ease-in-out infinite alternate;
+}
+
+.timeline-edge-label {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  transform: translateX(-50%);
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--gold-bright);
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: 0 2px 12px rgba(0,0,0,.75);
 }
 
 @keyframes drag-slot-pulse {
@@ -239,6 +254,15 @@
   transform: scale(1.32);
 }
 
+.card-new-draw-highlight {
+  animation: new-card-highlight 2s ease-in-out both;
+}
+
+@keyframes new-card-highlight {
+  0%, 100% { box-shadow: 0 0 0 2.5px #e5c96a, 0 0 22px rgba(201,162,39,.42), 0 12px 28px rgba(0,0,0,.55); }
+  35%, 70% { box-shadow: 0 0 0 5px #fff0a8, 0 0 48px rgba(229,201,106,.9), 0 16px 34px rgba(0,0,0,.62); }
+}
+
 .drag-card-preview {
   position: fixed;
   z-index: 90;
@@ -310,7 +334,20 @@
   filter: drop-shadow(0 16px 22px rgba(0,0,0,.48));
 }
 
+.timeline-card-shell.timeline-card-highlighted {
+  z-index: 24;
+  animation: placed-card-highlight 2s ease-in-out both;
+}
+
+@keyframes placed-card-highlight {
+  0%, 100% { transform: translateY(-4px) scale(1.02); filter: drop-shadow(0 12px 20px rgba(0,0,0,.45)); }
+  30%, 72% { transform: translateY(-12px) scale(1.12); filter: drop-shadow(0 0 24px rgba(229,201,106,.85)); }
+}
+
 @media (min-width: 768px) {
+  .hand-card-zoom-shell.hand-card-zoom-expanded {
+    transform: scale(1.14);
+  }
   .timeline-card-shell.timeline-card-expanded {
     transform: translateY(-8px) scale(1.12);
   }

@@ -122,9 +122,13 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
   // ---------- Pantalla de creación de perfil ----------
   if (!hasProfile) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
-        style={{ background: 'rgba(20,14,6,.75)' }} onClick={onClose}>
-        <div className="parchment-panel w-full max-w-md px-9 py-8"
+      <div className="fixed inset-0 flex items-start md:items-center justify-center z-50 px-4 overflow-y-auto"
+        style={{
+          background: 'rgba(20,14,6,.75)',
+          paddingTop: 'max(16px, env(safe-area-inset-top, 0px))',
+          paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))',
+        }} onClick={onClose}>
+        <div className="parchment-panel w-full max-w-md px-6 sm:px-9 py-7 sm:py-8 my-0 md:my-auto"
           onClick={(e) => e.stopPropagation()}>
           <h2 className="font-display font-bold text-2xl text-center tracking-wider m-0 mb-1" style={{ color: 'var(--ink)' }}>Crear perfil</h2>
           <p className="font-body italic text-base text-center m-0 mb-6" style={{ color: 'var(--gold-dark)' }}>Introduce tu nombre para comenzar</p>
@@ -153,9 +157,13 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
 
   // ---------- Panel de perfil ----------
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 overflow-y-auto"
-      style={{ background: 'rgba(20,14,6,.75)' }} onClick={onClose}>
-      <div className="parchment-panel w-full max-w-lg px-9 md:px-10 py-8 my-4"
+    <div className="fixed inset-0 flex items-start md:items-center justify-center z-50 px-4 overflow-y-auto"
+      style={{
+        background: 'rgba(20,14,6,.75)',
+        paddingTop: 'max(16px, env(safe-area-inset-top, 0px))',
+        paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))',
+      }} onClick={onClose}>
+      <div className="parchment-panel w-full max-w-lg px-6 sm:px-9 md:px-10 py-7 md:py-8 my-0 md:my-4"
         onClick={(e) => e.stopPropagation()}>
 
         {/* Cabecera: nombre + nivel */}

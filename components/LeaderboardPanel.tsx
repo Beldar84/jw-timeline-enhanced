@@ -51,7 +51,7 @@ const RankRow: React.FC<{
 );
 
 const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ onClose }) => {
-  const [tab, setTab] = useState<Tab>('local');
+  const [tab, setTab] = useState<Tab>('global');
   const [period, setPeriod] = useState<Period>('allTime');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
 
@@ -125,9 +125,9 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({ onClose }) => {
             style={{ background: 'none', border: '1px solid rgba(120,94,48,.35)', color: '#5c4a28' }}>×</button>
         </div>
 
-        {/* Pestañas Local/Global */}
+        {/* Pestañas Global/Local */}
         <div className="flex gap-6 px-8 pt-4" style={{ borderBottom: '1px solid rgba(120,94,48,.3)' }}>
-          {(['local', 'global'] as Tab[]).map(t => (
+          {(['global', 'local'] as Tab[]).map(t => (
             <button key={t} onClick={() => handleTabChange(t)}
               className="pb-2.5 px-0.5 cursor-pointer font-display text-[13.5px] tracking-wider"
               style={{

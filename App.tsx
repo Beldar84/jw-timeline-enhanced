@@ -110,6 +110,8 @@ const AppEnhanced: React.FC = () => {
 
   const [animation, setAnimation] = useState<AnimationInfo | null>(null);
   const [hidingCardId, setHidingCardId] = useState<number | null>(null);
+  const [highlightedTimelineCardId, setHighlightedTimelineCardId] = useState<number | null>(null);
+  const [highlightedHandCardId, setHighlightedHandCardId] = useState<number | null>(null);
   const [aiMove, setAiMove] = useState<{ card: CardType; timelineIndex: number } | null>(null);
 
   const [onlineGameState, setOnlineGameState] = useState<GameState | null>(null);
@@ -131,6 +133,7 @@ const AppEnhanced: React.FC = () => {
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [stats, setStats] = useState<PlayerStats>(statsService.loadStats());
   const pendingTimeoutsRef = useRef<Set<number>>(new Set());
+  const processedOnlineMoveIdRef = useRef<number | null>(null);
 
   const scheduleTimeout = useCallback((callback: () => void, delay: number): number => {
     const timeoutId = window.setTimeout(() => {
@@ -293,6 +296,10 @@ const AppEnhanced: React.FC = () => {
         const newTimeline = [...timeline];
         newTimeline.splice(timelineIndex, 0, card);
         setTimeline(newTimeline);
+        setHighlightedTimelineCardId(card.id);
+        scheduleTimeout(() => {
+          setHighlightedTimelineCardId(current => current === card.id ? null : current);
+        }, 2000);
         setPlayers(players.map(p => p.id === player.id ? { ...p, hand: newHand } : p));
 
         if (newHand.length === 0) {
@@ -325,6 +332,18 @@ const AppEnhanced: React.FC = () => {
             const handWithDrawnCard = [...newHand, drawnCard];
             setPlayers(players.map(p => p.id === player.id ? { ...p, hand: handWithDrawnCard } : p));
 
+            const finishDraw = () => {
+              if (player.isAI) {
+                handleNextTurn();
+                return;
+              }
+              setHighlightedHandCardId(drawnCard.id);
+              scheduleTimeout(() => {
+                setHighlightedHandCardId(current => current === drawnCard.id ? null : current);
+                handleNextTurn();
+              }, 2000);
+            };
+
             const deckEl = document.getElementById('deck-container');
             const handEl = document.getElementById(player.isAI ? 'ai-hand-container' : 'player-hand-container');
             if (deckEl && handEl) {
@@ -343,11 +362,11 @@ const AppEnhanced: React.FC = () => {
                     type: 'draw',
                     onComplete: () => {
                         setAnimation(null);
-                        handleNextTurn();
+                        finishDraw();
                     },
                 });
             } else {
-                handleNextTurn();
+                finishDraw();
             }
         } else {
             // Defensive fallback: never turn a failed placement into a win.
@@ -371,7 +390,7 @@ const AppEnhanced: React.FC = () => {
     const isCorrect = canPlaceCard(card, timeline, timelineIndex);
 
     setFeedback(isCorrect ? 'correct' : 'incorrect');
-    scheduleTimeout(() => setFeedback(null), 1500);
+    scheduleTimeout(() => setFeedback(null), 2000);
 
     const fromRect = cardEl.getBoundingClientRect();
     const toRect = isCorrect ? slotEl.getBoundingClientRect() : discardEl.getBoundingClientRect();
@@ -425,6 +444,7 @@ const AppEnhanced: React.FC = () => {
       if (!move) return;
 
       setRevealedAICard(move.card);
+      setIsAITurnMessageVisible(false);
       soundService.playClick();
 
       scheduleTimeout(() => {
@@ -468,7 +488,7 @@ const AppEnhanced: React.FC = () => {
     const isCorrect = canPlaceCard(card, timeline, timelineIndex);
 
     setFeedback(isCorrect ? 'correct' : 'incorrect');
-    scheduleTimeout(() => setFeedback(null), 1500);
+    scheduleTimeout(() => setFeedback(null), 2000);
 
     const targetElId = isCorrect ? `timeline-slot-${timelineIndex}` : 'discard-pile-container';
     const targetEl = document.getElementById(targetElId);
@@ -592,7 +612,10 @@ const AppEnhanced: React.FC = () => {
     setIsAITurnMessageVisible(false);
     setAnimation(null);
     setHidingCardId(null);
+    setHighlightedTimelineCardId(null);
+    setHighlightedHandCardId(null);
     setAiMove(null);
+    processedOnlineMoveIdRef.current = null;
     setIsStudyMode(false);
     setAiDifficulty('normal');
     setSelectedDeckId(ACTIVE_DECK_ID);
@@ -696,6 +719,29 @@ const AppEnhanced: React.FC = () => {
     if(onlineGameState?.phase === OnlineGamePhase.PLAYING) setGamePhase(GamePhase.PLAYING);
     if(onlineGameState?.phase === OnlineGamePhase.GAME_OVER) setGamePhase(GamePhase.GAME_OVER);
   }, [onlineGameState?.phase])
+
+  // Cada jugada en tiempo real lleva un resultado mínimo compartido. Así todos
+  // los clientes muestran el mismo feedback y enfocan la carta afectada.
+  useEffect(() => {
+    const move = onlineGameState?.lastMove;
+    if (gameMode !== 'online' || !move || processedOnlineMoveIdRef.current === move.id) return;
+    processedOnlineMoveIdRef.current = move.id;
+
+    setFeedback(move.isCorrect ? 'correct' : 'incorrect');
+    scheduleTimeout(() => setFeedback(null), 2000);
+
+    if (move.isCorrect) {
+      setHighlightedTimelineCardId(move.cardId);
+      scheduleTimeout(() => {
+        setHighlightedTimelineCardId(current => current === move.cardId ? null : current);
+      }, 2000);
+    } else if (move.playerId === localPlayerId && move.replacementCardId != null) {
+      setHighlightedHandCardId(move.replacementCardId);
+      scheduleTimeout(() => {
+        setHighlightedHandCardId(current => current === move.replacementCardId ? null : current);
+      }, 2000);
+    }
+  }, [gameMode, onlineGameState?.lastMove?.id, localPlayerId, scheduleTimeout]);
 
   // ==================== ESTADÍSTICAS DE PARTIDAS ONLINE ====================
   // Antes las partidas online no registraban nada: statsService solo funciona
@@ -911,6 +957,8 @@ const AppEnhanced: React.FC = () => {
                 gameMode={gameMode}
                 localPlayer={localPlayer}
                 isAnimating={!!animation}
+                highlightedTimelineCardId={highlightedTimelineCardId}
+                highlightedHandCardId={highlightedHandCardId}
                 revealedAICard={null}
                 onExitGame={handleExitGame}
               />
@@ -929,6 +977,8 @@ const AppEnhanced: React.FC = () => {
             revealedAICard={revealedAICard}
             gameMode={gameMode}
             hidingCardId={hidingCardId}
+            highlightedTimelineCardId={highlightedTimelineCardId}
+            highlightedHandCardId={highlightedHandCardId}
             isAnimating={!!animation}
             onExitGame={handleExitGame}
             isStudyMode={isStudyMode}

@@ -15,12 +15,14 @@ import Card from './Card';
 interface PlayerHandProps {
   player: Player;
   onSelectCard: (card: CardType, element: HTMLDivElement) => void;
+  onCardFocus?: (card: CardType | null, element: HTMLDivElement | null) => void;
   onCardDragStart?: (card: CardType, element: HTMLDivElement, clientX: number, clientY: number) => void;
   onCardDragMove?: (clientX: number, clientY: number) => void;
   onCardDragEnd?: (card: CardType, element: HTMLDivElement, clientX: number, clientY: number) => void;
   placementMode?: boolean;
   disabled?: boolean;
   hidingCardId?: number | null;
+  highlightedCardId?: number | null;
   isStudyMode?: boolean;
 }
 
@@ -45,13 +47,14 @@ const fanTransform = (
     return `rotate(${rot}deg) translateY(${Math.abs(offset) * 16}px)`;
   }
   const rot = offset * 7; // máx ±7°
-  const y = lifted ? -16 : Math.abs(offset) * 14; // extremos más bajos
+  const y = expanded || lifted ? -16 : Math.abs(offset) * 14; // extremos más bajos
   return `rotate(${rot}deg) translateY(${y}px)`;
 };
 
 const PlayerHand: React.FC<PlayerHandProps> = ({
-  player, onSelectCard, onCardDragStart, onCardDragMove, onCardDragEnd,
-  placementMode = false, disabled = false, hidingCardId, isStudyMode = false,
+  player, onSelectCard, onCardFocus, onCardDragStart, onCardDragMove, onCardDragEnd,
+  placementMode = false, disabled = false, hidingCardId, highlightedCardId,
+  isStudyMode = false,
 }) => {
   const cardRefs = useRef(new Map<number, React.RefObject<HTMLDivElement>>());
   const hovered = useRef<number | null>(null);
@@ -210,14 +213,12 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       suppressClickTimer.current = null;
     }, 350);
 
-    setExpandedId(currentId => {
-      const currentIndex = player.hand.findIndex(card => card.id === currentId);
-      if (currentIndex < 0) {
-        return player.hand[deltaX < 0 ? 0 : n - 1].id;
-      }
-      const direction = deltaX < 0 ? 1 : -1;
-      return player.hand[(currentIndex + direction + n) % n].id;
-    });
+    const currentIndex = player.hand.findIndex(card => card.id === expandedId);
+    const nextCard = currentIndex < 0
+      ? player.hand[deltaX < 0 ? 0 : n - 1]
+      : player.hand[(currentIndex + (deltaX < 0 ? 1 : -1) + n) % n];
+    setExpandedId(nextCard.id);
+    onCardFocus?.(nextCard, cardRefs.current.get(nextCard.id)?.current ?? null);
   };
 
   const startCardDragCandidate = (
@@ -273,7 +274,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             player.hand.map((card, i) => {
               const cardRef = cardRefs.current.get(card.id)!;
               const lifted = hovered.current === card.id;
-              const expanded = isMobile && expandedId === card.id;
+              const expanded = expandedId === card.id;
               return (
                 <div
                   key={card.id}
@@ -304,7 +305,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                     <Card
                       ref={cardRef}
                       card={card}
-                      className={expanded ? 'card-expanded-ring' : ''}
+                      className={`${expanded ? 'card-expanded-ring' : ''} ${highlightedCardId === card.id ? 'card-new-draw-highlight' : ''}`}
                       showYear={false}
                       isStudyMode={isStudyMode}
                       onClick={() => {
@@ -316,20 +317,19 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                           }
                           return;
                         }
-                        if (isMobile) {
-                          // Tras elegir una posición del eje, la carta se coloca
-                          // directamente para conservar el flujo de la partida.
-                          if (placementMode && !disabled && cardRef.current) {
-                            onSelectCard(card, cardRef.current);
-                            setExpandedId(null);
-                            return;
-                          }
-
-                          setExpandedId(currentId => currentId === card.id ? null : card.id);
+                        // Tras elegir una posición del eje, la carta se coloca
+                        // directamente. En el orden inverso, la carta ampliada
+                        // queda seleccionada y el siguiente toque en un + la coloca.
+                        if (placementMode && !disabled && cardRef.current) {
+                          onSelectCard(card, cardRef.current);
+                          setExpandedId(null);
+                          onCardFocus?.(null, null);
                           return;
                         }
 
-                        if (cardRef.current) onSelectCard(card, cardRef.current);
+                        const willCollapse = expandedId === card.id;
+                        setExpandedId(willCollapse ? null : card.id);
+                        onCardFocus?.(willCollapse ? null : card, willCollapse ? null : cardRef.current);
                       }}
                       isHidden={hidingCardId === card.id}
                     />
