@@ -77,7 +77,11 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     active: boolean;
   } | null>(null);
   const dragCallbacks = useRef({ onCardDragStart, onCardDragMove, onCardDragEnd });
+  const onCardFocusRef = useRef(onCardFocus);
   dragCallbacks.current = { onCardDragStart, onCardDragMove, onCardDragEnd };
+  onCardFocusRef.current = onCardFocus;
+
+  const handIdentity = player.hand.map(card => card.id).join(':');
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
@@ -172,8 +176,13 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     }
   });
 
-  // Al cambiar la mano (carta jugada/robada), colapsa la ampliada
-  useEffect(() => { setExpandedId(null); }, [player.hand.length]);
+  // Una penalización sustituye una carta por otra sin cambiar el tamaño de la
+  // mano. Por eso se compara su identidad completa y no solo la cantidad.
+  // La carta robada debe destacarse siempre desde el tamaño normal.
+  useEffect(() => {
+    setExpandedId(null);
+    onCardFocusRef.current?.(null, null);
+  }, [player.id, handIdentity, highlightedCardId]);
 
   const titleText = placementMode
     ? 'Elige una carta para colocar'
@@ -245,10 +254,16 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
           style={{
             color: placementMode && !disabled ? 'var(--gold-bright)' : '#c9b891',
             ...(isMobile
-              ? { padding: '3px 14px', borderRadius: 999, border: '1px solid transparent' }
+              ? {
+                  padding: '3px 14px',
+                  borderRadius: 999,
+                  border: expandedId !== null
+                    ? '1px solid rgba(201,162,39,.35)'
+                    : '1px solid transparent',
+                }
               : {}),
             ...(isMobile && expandedId !== null
-              ? { background: 'rgba(10,7,3,.78)', borderColor: 'rgba(201,162,39,.35)' }
+              ? { background: 'rgba(10,7,3,.78)' }
               : {}),
           }}>
           {title}
