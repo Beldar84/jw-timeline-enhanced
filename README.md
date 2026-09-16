@@ -45,3 +45,12 @@ npx firebase-tools@15.23.0 deploy \
 ```
 
 El despliegue de Functions y la tarea programada de caducidad puede requerir que el proyecto de Firebase tenga habilitado el plan de facturación correspondiente.
+
+## Nintendo Switch
+
+El repositorio incluye un port homebrew nativo para Nintendo Switch 1 con el
+mazo completo de 112 cartas, partidas locales, IA, modo estudio, controles
+Joy-Con/táctiles y guardado en SD. La compilación produce `JW-Timeline.nro`.
+
+Consulta [switch-port/README.md](switch-port/README.md) para compilarlo y copiarlo
+a la consola.

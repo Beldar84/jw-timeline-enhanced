@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JW Timeline · Vista previa Nintendo Switch</title>
+  <style>
+    @font-face {
+      font-family: Cinzel;
+      src: url("/switch/Cinzel.ttf");
+    }
+    @font-face {
+      font-family: Garamond;
+      src: url("/switch/EBGaramond.ttf");
+    }
+    @font-face {
+      font-family: Garamond;
+      src: url("/switch/EBGaramond-Italic.ttf");
+      font-style: italic;
+    }
+    :root {
+      --cream: #f2e8d5;
+      --ink: #2b2013;
+      --gold: #c9a227;
+      --gold-bright: #e5c96a;
+      --gold-soft: #a8853c;
+      --muted: #c9b891;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      background: #080502;
+      color: var(--cream);
+      font-family: Garamond, serif;
+    }
+    .switch-frame {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 160% 110% at 50% 15%, #2e2113 0%, #1c1409 55%, #100a05 100%);
+      border-top: 2px solid rgba(201,162,39,.16);
+      border-bottom: 2px solid rgba(201,162,39,.16);
+    }
+    .display { font-family: Cinzel, serif; }
+    .italic { font-style: italic; }
+    .gold-axis {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(to right, transparent, rgba(201,162,39,.62) 12%, rgba(201,162,39,.62) 88%, transparent);
+    }
+    .footer {
+      position: absolute;
+      inset: auto 0 0;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 16px;
+      background: rgba(4,3,2,.92);
+      border-top: 1px solid rgba(201,162,39,.22);
+    }
+    .parchment {
+      background: linear-gradient(175deg, #f2e8d5 0%, #eadfc6 60%, #e3d5b8 100%);
+      color: var(--ink);
+      border: 1px solid rgba(120,94,48,.45);
+      box-shadow: 12px 16px 28px rgba(0,0,0,.45), inset 0 0 0 5px #f2e8d5, inset 0 0 0 6px rgba(120,94,48,.25);
+    }
+
+    /* Menú */
+    .menu .brand-logo {
+      position: absolute;
+      left: 150px;
+      top: 105px;
+      width: 280px;
+      height: 280px;
+    }
+    .menu .brand-title {
+      position: absolute;
+      top: 416px;
+      left: 80px;
+      width: 420px;
+      text-align: center;
+      font-size: 38px;
+    }
+    .menu .brand-copy {
+      position: absolute;
+      top: 468px;
+      left: 65px;
+      width: 450px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 24px;
+    }
+    .menu .brand-rule { left: 92px; top: 532px; width: 396px; }
+    .menu-panel {
+      position: absolute;
+      left: 572px;
+      top: 58px;
+      width: 636px;
+      height: 590px;
+      padding: 32px 38px;
+    }
+    .menu-panel h1 { margin: 0; font-size: 25px; }
+    .menu-panel .sub {
+      margin-top: 12px;
+      color: #7e6843;
+      font-size: 20px;
+      font-style: italic;
+    }
+    .menu-rows { margin-top: 26px; }
+    .menu-row {
+      position: relative;
+      height: 72px;
+      padding: 12px 24px;
+      border-bottom: 1px solid rgba(120,94,48,.18);
+    }
+    .menu-row.selected {
+      background: rgba(201,162,39,.13);
+      border-left: 4px solid var(--gold-soft);
+      padding-left: 20px;
+    }
+    .menu-row b {
+      display: block;
+      font: 18px Cinzel, serif;
+      color: #5c441d;
+    }
+    .menu-row:not(.selected) b { color: var(--ink); }
+    .menu-row span {
+      display: block;
+      margin-top: 3px;
+      color: #7e6843;
+      font-size: 18px;
+    }
+    .menu-row i {
+      position: absolute;
+      right: 16px;
+      top: 15px;
+      color: var(--gold-soft);
+      font-size: 34px;
+    }
+
+    /* Tablero */
+    .game .top-logo {
+      position: absolute;
+      left: 22px;
+      top: 12px;
+      width: 72px;
+      height: 72px;
+    }
+    .chips {
+      position: absolute;
+      left: 112px;
+      top: 14px;
+      display: flex;
+      gap: 8px;
+    }
+    .chip {
+      min-width: 146px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(120,94,48,.36);
+      background: rgba(20,14,8,.58);
+      color: var(--muted);
+      font: 14px Cinzel, serif;
+    }
+    .chip.active {
+      border-color: var(--gold-soft);
+      background: rgba(201,162,39,.18);
+      color: var(--gold-bright);
+    }
+    .turn {
+      position: absolute;
+      left: 114px;
+      top: 54px;
+      color: var(--cream);
+      font-size: 21px;
+      font-style: italic;
+    }
+    .pause {
+      position: absolute;
+      right: 28px;
+      top: 18px;
+      width: 108px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--gold-soft);
+      color: var(--cream);
+      font: 17px Cinzel, serif;
+      background: rgba(54,40,25,.9);
+    }
+    .header-rule {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 92px;
+      border-top: 1px solid rgba(201,162,39,.22);
+    }
+    .pile {
+      position: absolute;
+      top: 126px;
+      width: 112px;
+    }
+    .pile.deck { left: 24px; }
+    .pile.discard { right: 24px; }
+    .pile img, .empty-pile {
+      width: 112px;
+      height: 168px;
+      object-fit: cover;
+      border: 1px solid rgba(168,133,60,.6);
+      box-shadow: 7px 10px 14px rgba(0,0,0,.5);
+    }
+    .empty-pile {
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 21px;
+      font-style: italic;
+      background: rgba(12,8,4,.4);
+      box-shadow: none;
+    }
+    .pile p {
+      margin: 7px -20px 0;
+      width: 152px;
+      text-align: center;
+      color: var(--muted);
+      font: 14px Cinzel, serif;
+    }
+    .timeline-axis { left: 520px; top: 204px; width: 240px; }
+    .slot {
+      position: absolute;
+      top: 179px;
+      width: 50px;
+      height: 50px;
+      display: grid;
+      place-items: center;
+      border: 1.5px dashed rgba(201,162,39,.72);
+      border-radius: 50%;
+      color: var(--gold);
+      font-size: 29px;
+      line-height: 1;
+      background: rgba(18,12,6,.94);
+    }
+    .slot.before { left: 522px; }
+    .slot.after { left: 708px; }
+    .slot label {
+      position: absolute;
+      bottom: 61px;
+      color: var(--gold-bright);
+      font: 12px Cinzel, serif;
+      letter-spacing: .04em;
+    }
+    .timeline-card {
+      position: absolute;
+      left: 574px;
+      top: 104px;
+      width: 132px;
+      height: 200px;
+      object-fit: cover;
+      border: 1px solid rgba(120,94,48,.7);
+      box-shadow: 7px 10px 14px rgba(0,0,0,.55);
+    }
+    .year-chip {
+      position: absolute;
+      left: 571px;
+      top: 311px;
+      width: 138px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      color: var(--gold-bright);
+      border: 1px solid rgba(201,162,39,.48);
+      background: rgba(201,162,39,.11);
+      font: 14px Cinzel, serif;
+    }
+    .hand-title {
+      position: absolute;
+      left: 480px;
+      top: 354px;
+      width: 320px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      border: 1px solid rgba(168,133,60,.38);
+      background: rgba(16,11,6,.75);
+      font-size: 22px;
+      font-style: italic;
+    }
+    .hand-card {
+      position: absolute;
+      width: 148px;
+      height: 224px;
+      object-fit: cover;
+      transform-origin: bottom center;
+      box-shadow: 7px 10px 16px rgba(0,0,0,.55);
+    }
+    .hand-card.c1 { left: 392px; top: 445px; transform: rotate(-8deg); }
+    .hand-card.c2 { left: 508px; top: 433px; transform: rotate(-3deg); }
+    .hand-card.c3 { left: 740px; top: 433px; transform: rotate(3deg); }
+    .hand-card.c4 { left: 856px; top: 445px; transform: rotate(8deg); }
+    .hand-card.selected {
+      left: 610px;
+      top: 391px;
+      width: 176px;
+      height: 266px;
+      transform: none;
+      z-index: 4;
+      border: 2px solid var(--gold-bright);
+      box-shadow: 0 0 0 4px rgba(229,201,106,.18), 8px 13px 22px rgba(0,0,0,.65);
+    }
+  </style>
+</head>
+<body>
+  <section class="switch-frame menu" data-screen="menu">
+    <img class="brand-logo" src="/images/logo.png" alt="" />
+    <div class="brand-title display">JW TIMELINE</div>
+    <div class="brand-copy italic">Cronología bíblica · un juego de cartas</div>
+    <div class="gold-axis brand-rule"></div>
+    <div class="menu-panel parchment">
+      <h1 class="display">ELIGE TU PARTIDA</h1>
+      <div class="sub">El mazo completo de 112 cartas</div>
+      <div class="menu-rows">
+        <div class="menu-row selected"><b>JUGAR CONTRA LA IA</b><span>Cuatro niveles de dificultad</span><i>›</i></div>
+        <div class="menu-row"><b>PARTIDA LOCAL</b><span>De 2 a 6 jugadores en esta consola</span><i>·</i></div>
+        <div class="menu-row"><b>MODO ESTUDIO</b><span>Fechas visibles y sin penalización</span><i>·</i></div>
+        <div class="menu-row"><b>ESTADÍSTICAS</b><span>Progreso y precisión en esta Switch</span><i>·</i></div>
+        <div class="menu-row"><b>SALIR</b><span>Cerrar JW Timeline</span><i>·</i></div>
+      </div>
+    </div>
+    <div class="footer">↑/↓ Elegir&nbsp;&nbsp;&nbsp;&nbsp; A Confirmar&nbsp;&nbsp;&nbsp;&nbsp; + Salir</div>
+  </section>
+
+  <section class="switch-frame game" data-screen="game">
+    <img class="top-logo" src="/images/logo.png" alt="" />
+    <div class="chips">
+      <div class="chip active">HUMANO · 4</div>
+      <div class="chip">RAQUEL · 4</div>
+    </div>
+    <div class="turn">Es el turno de Humano.</div>
+    <div class="pause">PAUSA</div>
+    <div class="header-rule"></div>
+    <div class="pile deck">
+      <img src="/images/card-back.png" alt="" />
+      <p>MAZO · 103</p>
+    </div>
+    <div class="pile discard">
+      <div class="empty-pile">Vacío</div>
+      <p>DESCARTE · 0</p>
+    </div>
+    <div class="gold-axis timeline-axis"></div>
+    <div class="slot before"><label>ANTES</label>+</div>
+    <img class="timeline-card" src="/images/cards/JW Timeline 48.png" alt="" />
+    <div class="year-chip">1.774 A.E.C.</div>
+    <div class="slot after"><label>DESPUÉS</label>+</div>
+    <div class="hand-title">Tu mano · 4 cartas</div>
+    <img class="hand-card c1" src="/images/cards/JW Timeline 97.png" alt="" />
+    <img class="hand-card c2" src="/images/cards/JW Timeline 50.png" alt="" />
+    <img class="hand-card c4" src="/images/cards/JW Timeline 83.png" alt="" />
+    <img class="hand-card selected" src="/images/cards/JW Timeline 57.png" alt="" />
+    <div class="footer">←/→ Carta&nbsp;&nbsp;&nbsp;&nbsp; A Elegir posición&nbsp;&nbsp;&nbsp;&nbsp; X Ampliar&nbsp;&nbsp;&nbsp;&nbsp; + Pausa</div>
+  </section>
+
+  <script>
+    const screen = new URLSearchParams(location.search).get('screen') || 'game';
+    document.querySelectorAll('[data-screen]').forEach(element => {
+      element.hidden = element.dataset.screen !== screen;
+    });
+  </script>
+</body>
+</html>

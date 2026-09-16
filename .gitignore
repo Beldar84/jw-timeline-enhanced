@@ -24,3 +24,9 @@ functions/lib
 *.njsproj
 *.sln
 *.sw?
+
+# Nintendo Switch homebrew build outputs
+switch-port/build/
+switch-port/JW-Timeline.elf
+switch-port/JW-Timeline.nacp
+switch-port/JW-Timeline.nro
